@@ -1,0 +1,216 @@
+@import './theme/tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-base text-ink antialiased;
+    /*
+     * The mode change should feel like the light changing, not a theme switch:
+     * background, accent and card treatment cross-fade over 600ms while text
+     * moves faster so it does not smear.
+     */
+    background-image: linear-gradient(
+      170deg,
+      rgb(var(--grad-top)) 0%,
+      rgb(var(--grad-bottom)) 55%
+    );
+    background-attachment: fixed;
+    min-height: 100dvh;
+    transition:
+      background-color var(--t-mode) ease-in-out,
+      background-image var(--t-mode) ease-in-out,
+      color var(--t-text) ease-in-out;
+    overscroll-behavior-y: none;
+  }
+
+  /* Everything that carries mode colour cross-fades on the same curve. */
+  button,
+  section,
+  header,
+  nav,
+  details,
+  input,
+  textarea,
+  [class*='bg-surface'],
+  [class*='bg-raised'],
+  [class*='border-line'] {
+    transition:
+      background-color var(--t-mode) ease-in-out,
+      border-color var(--t-mode) ease-in-out,
+      color var(--t-text) ease-in-out;
+  }
+
+  /* Touch targets are at least 44px everywhere. Chalky hands, phone propped
+     against a water bottle. */
+  button {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+
+  /* Nav and stage buttons opt out of the minimum where they set their own. */
+  button.h-8,
+  button.h-9,
+  button.h-7 {
+    min-height: 0;
+  }
+
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  ::selection {
+    background: rgb(var(--c-accent) / 0.3);
+  }
+}
+
+@layer components {
+  /*
+   * Stage transitions. Day slides directionally at 120ms; night cross-fades at
+   * 300ms instead, because nothing at night should snap.
+   *
+   * fill-mode is `backwards`, never `forwards`/`both`. A retained transform —
+   * even translateX(0) — turns the element into the containing block for any
+   * `position: fixed` descendant, which silently re-anchors the rest-timer
+   * sheet to the bottom of the scrollable stage instead of the viewport.
+   */
+  .ridge-slide-in {
+    animation: ridge-slide-in var(--t-motion) ease-out backwards;
+  }
+  .ridge-slide-back {
+    animation: ridge-slide-back var(--t-motion) ease-out backwards;
+  }
+  .mode-night .ridge-slide-in,
+  .mode-night .ridge-slide-back {
+    animation: ridge-fade 300ms ease-in-out backwards;
+  }
+
+  .ridge-enter {
+    animation: ridge-enter var(--t-motion) ease-out backwards;
+  }
+
+  .ridge-interstitial {
+    animation: ridge-fade 200ms ease-out both;
+  }
+
+  .ridge-sheet {
+    animation: ridge-sheet-up 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  /* Ring pulse on each counted rep. */
+  .ridge-rep-number {
+    animation: ridge-pop 180ms ease-out both;
+  }
+
+  /* Tempo metronome: down phase then up phase, visual only. */
+  .ridge-tempo {
+    animation: ridge-tempo linear infinite alternate;
+    width: 100%;
+    transform-origin: left center;
+  }
+
+  /* Night cards emit less light: softer edges, no hard borders. */
+  .mode-night [class*='border-line'] {
+    border-color: rgb(var(--c-line) / 0.35);
+  }
+  .mode-night .ridge-hero {
+    box-shadow: var(--shadow-card);
+  }
+}
+
+@keyframes ridge-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes ridge-slide-back {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes ridge-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ridge-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ridge-sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes ridge-pop {
+  0% {
+    transform: scale(0.86);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes ridge-tempo {
+  from {
+    transform: scaleX(0.06);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Rings still fill under reduced motion; pulses and slides are dropped. */
+@media (prefers-reduced-motion: reduce) {
+  .ridge-slide-in,
+  .ridge-slide-back,
+  .ridge-enter,
+  .ridge-rep-number,
+  .ridge-sheet,
+  .ridge-interstitial {
+    animation: none !important;
+  }
+  * {
+    scroll-behavior: auto !important;
+  }
+}

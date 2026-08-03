@@ -1,0 +1,564 @@
+import type { Exercise } from '../types';
+
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ * EXERCISE LIBRARY — treat as near-frozen.
+ *
+ * This selection is medically deliberate. It is built for a climber rehabbing
+ * an L5-S1 disc protrusion. Do NOT add exercises here, however reasonable the
+ * addition looks. If a change seems to call for a new movement, stop and ask.
+ *
+ * EXCLUDED BY DESIGN — do not "helpfully" add these later:
+ *   · Bent-over barbell rows   — sustained loaded lumbar flexion under fatigue
+ *   · Standing overhead press  — axial compression with lumbar extension
+ *   · Crunches and sit-ups     — repeated end-range flexion, the exact
+ *                                mechanism that provokes a posterior disc
+ *                                protrusion (McGill's position)
+ *   · Any loaded rotation      — flexion + rotation under load is the highest
+ *                                risk combination for an annular tear
+ *
+ * The Jefferson curl is the one deliberate exception to the flexion rule: it is
+ * loaded flexion, but very light, very slow, segmental, and always last in the
+ * session on a warm spine. That is the entire reason the spine block renders
+ * last and cannot be reordered.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+/** Shared across all three gym sessions. */
+const cardioWarmup = (id: string, note: string): Exercise => ({
+  id,
+  name: 'Bike or treadmill',
+  block: 'warmup',
+  prescription: '15 min easy',
+  tracking: 'duration',
+  sets: 1,
+  repScheme: [1],
+  durationSeconds: 900,
+  restSeconds: 0,
+  execution:
+    'Conversational pace throughout. You should be able to hold a sentence. ' +
+    'If the bike, keep the seat high enough that you are not rounding to reach the pedals.',
+  cue: 'Easy. This is not the workout.',
+  why:
+    `Fifteen minutes of gentle circulation raises disc and soft-tissue temperature ` +
+    `before anything is loaded. ${note} A cold spine under load is the specific ` +
+    `thing this whole programme is arranged to avoid.`,
+  animation: 'bike',
+  loadTracked: false,
+});
+
+const jeffersonCurl = (id: string): Exercise => ({
+  id,
+  name: 'Jefferson curl',
+  block: 'spine',
+  prescription: '3 × 12 · very light · 5s down / 5s up · rest 90 sec',
+  tracking: 'reps',
+  sets: 3,
+  repScheme: [12, 12, 12],
+  tempo: { down: 5, up: 5 },
+  restSeconds: 90,
+  execution:
+    'Stand on a box, feet hip-width, holding a light weight in both hands. Tuck the chin, ' +
+    'then roll down one vertebra at a time — the movement starts at the neck and travels ' +
+    'downwards. Let the weight hang. Reverse the same way, stacking from the bottom up. ' +
+    'Knees stay soft but do not bend to cheat range.',
+  cue: 'One vertebra at a time. Nothing hinges.',
+  why:
+    'Controlled, graded, very light loaded flexion is what restores tolerance to flexion ' +
+    'rather than avoiding it forever. The load stays trivial on purpose — the adaptation ' +
+    'comes from the tempo and the segmental control, never from the weight. It sits last ' +
+    'in the session because the spine has to be warm and the discs unloaded by the earlier work.',
+  animation: 'roll',
+  loadTracked: true,
+});
+
+export const EXERCISES: Exercise[] = [
+  // ── Session A · Pull ──────────────────────────────────────────────────────
+  cardioWarmup(
+    'a-cardio',
+    'It also settles the nervous system before pulling.',
+  ),
+  {
+    id: 'a-shoulder-prep',
+    name: 'Arm circles + scapular retractions',
+    block: 'warmup',
+    prescription: '2 × 15 · rest 30 sec',
+    tracking: 'reps',
+    sets: 2,
+    repScheme: [15, 15],
+    restSeconds: 30,
+    execution:
+      'Ten slow arm circles each direction, then hang from a bar or hold a light band and ' +
+      'pull the shoulder blades down and back without bending the elbows. Pause one second at the back.',
+    cue: 'Blades down, then back. Elbows stay straight.',
+    why:
+      'Wakes up the scapular stabilisers before they are asked to work under load. ' +
+      'A pulling session driven by the arms rather than the back is how shoulders get irritated.',
+    animation: 'scapRetract',
+    loadTracked: false,
+  },
+  {
+    id: 'a-lat-pulldown',
+    name: 'Lat pulldown, wide grip',
+    block: 'main',
+    prescription: '3 × 12 · rest 90 sec',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [12, 12, 12],
+    restSeconds: 90,
+    execution:
+      'Grip wider than shoulders. Sit tall with the thighs pinned. Lead with the elbows ' +
+      'driving down and in; the bar arrives at the collarbone. Control the way back up — ' +
+      'let the shoulder blades rise at the top without losing the trunk.',
+    cue: 'Elbows into your back pockets.',
+    why:
+      'Vertical pulling is the direct transfer to climbing, and it loads the lats with the ' +
+      'spine supported and vertical. No shear, no flexion — which is why it leads the session ' +
+      'rather than a bent-over row.',
+    animation: 'pull',
+    loadTracked: true,
+  },
+  {
+    id: 'a-cable-row',
+    name: 'Seated cable row',
+    block: 'main',
+    prescription: '3 × 12 · rest 90 sec',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [12, 12, 12],
+    restSeconds: 90,
+    execution:
+      'Chest up, slight forward lean from the hips at the stretch — the lower back stays ' +
+      'neutral, it does not round to chase range. Pull to the navel, pause, return under control.',
+    cue: 'Ribs down. The lower back does not move.',
+    why:
+      'Horizontal pulling balances all the vertical work climbing already provides. Seated and ' +
+      'supported, this gets mid-back volume without the lumbar load of a bent-over row — which is ' +
+      'the reason bent-over rows are absent from this programme entirely.',
+    animation: 'row',
+    loadTracked: true,
+  },
+  {
+    id: 'a-pullups',
+    name: 'Pull-ups (assisted or negatives)',
+    block: 'main',
+    prescription: '3 × 12 · rest 90 sec',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [12, 12, 12],
+    restSeconds: 90,
+    execution:
+      'Full hang to chin over bar. If twelve clean reps are not there, use the assist machine ' +
+      'or do slow negatives — jump to the top and take five seconds down. Keep the legs quiet; ' +
+      'no kipping, no swinging.',
+    cue: 'Start from a dead hang. No swing.',
+    why:
+      'The single most specific strength exercise for climbing. Negatives build the same tissue ' +
+      'as full reps at a fraction of the technical cost. The no-swing rule is spinal, not aesthetic — ' +
+      'a kip is a fast loaded lumbar extension.',
+    animation: 'pullup',
+    loadTracked: false,
+  },
+  {
+    id: 'a-hammer-wrist',
+    name: 'Hammer curls + wrist flexion/extension',
+    block: 'main',
+    prescription: '3 × 12 · rest 60 sec',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [12, 12, 12],
+    restSeconds: 60,
+    execution:
+      'Hammer curls with a neutral grip, elbows fixed at the sides. Then, forearm resting on ' +
+      'the thigh, twelve wrist curls up and twelve down with a light dumbbell.',
+    cue: 'Elbows pinned. No body English.',
+    why:
+      'Elbow and wrist prehab. Climbers load the finger flexors relentlessly and almost never ' +
+      'load the extensors, and that imbalance is where medial and lateral elbow pain comes from.',
+    animation: 'curl',
+    loadTracked: true,
+  },
+  jeffersonCurl('a-jefferson'),
+  {
+    id: 'a-deadlift',
+    name: 'Deadlift, light (trap bar preferred)',
+    block: 'spine',
+    prescription: '3 × 12 · light · rest 90 sec',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [12, 12, 12],
+    restSeconds: 90,
+    execution:
+      'Trap bar if the gym has one — it keeps the load in line with the hips and reduces the ' +
+      'shear a straight bar creates. Set the back flat, take the slack out of the bar, then push ' +
+      'the floor away. Lock out with the glutes, do not lean back. Reset the position every rep.',
+    cue: 'Push the floor away. Back stays flat.',
+    why:
+      'A braced, neutral-spine hinge is the movement that makes the back robust again — the goal ' +
+      'is not to avoid loading the spine but to load it in the position it is strongest in. Light and ' +
+      'high-rep on purpose: this is a motor-pattern session, not a strength test.',
+    animation: 'hinge',
+    loadTracked: true,
+  },
+
+  // ── Session B · Push ──────────────────────────────────────────────────────
+  cardioWarmup('b-cardio', 'It also loosens the thoracic spine before pressing.'),
+  {
+    id: 'b-band-pull-aparts',
+    name: 'Band pull-aparts',
+    block: 'warmup',
+    prescription: '2 × 20 · rest 30 sec',
+    tracking: 'reps',
+    sets: 2,
+    repScheme: [20, 20],
+    restSeconds: 30,
+    execution:
+      'Light band at shoulder height, arms straight. Pull the band apart until it touches the ' +
+      'chest, squeezing the shoulder blades. Return slowly — the return is half the exercise.',
+    cue: 'Slow on the way back.',
+    why:
+      'Two minutes of rear-delt and mid-trap work before pressing keeps the shoulder centred in ' +
+      'the socket. Push sessions without it are how climbers end up with impinged shoulders.',
+    animation: 'pullApart',
+    loadTracked: false,
+  },
+  {
+    id: 'b-bench',
+    name: 'Bench press',
+    block: 'main',
+    prescription: '3 × 12 · rest 90 sec',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [12, 12, 12],
+    restSeconds: 90,
+    execution:
+      'Feet flat, a natural arch only — do not bridge. Shoulder blades pulled down and back into ' +
+      'the bench and kept there. Bar to the lower chest, elbows around 45°, press back over the shoulders.',
+    cue: 'Blades in your back pocket. Glutes stay down.',
+    why:
+      'Antagonist strength for a pulling-dominated sport. The no-bridge instruction is the point: ' +
+      'a heavy arch turns the bench into a lumbar extension exercise, which is the last thing an ' +
+      'irritated L5-S1 needs.',
+    animation: 'press',
+    loadTracked: true,
+  },
+  {
+    id: 'b-dips',
+    name: 'Dips (assisted if needed)',
+    block: 'main',
+    prescription: '3 × 12 · rest 90 sec',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [12, 12, 12],
+    restSeconds: 90,
+    execution:
+      'Descend until the upper arm is roughly parallel, no deeper. Keep a slight forward lean and ' +
+      'the ribs down. Use the assist machine rather than cutting the rep count if twelve is not there.',
+    cue: 'Stop at parallel. Ribs down.',
+    why:
+      'Builds the pressing chain through a long range, and the trunk has to stay braced throughout — ' +
+      'useful anti-extension work that happens to look like an upper-body exercise. Depth is capped ' +
+      'because below parallel the shoulder pays for very little extra.',
+    animation: 'dip',
+    loadTracked: false,
+  },
+  {
+    id: 'b-shoulder-press',
+    name: 'Seated dumbbell shoulder press',
+    block: 'main',
+    prescription: '3 × 12 · rest 90 sec',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [12, 12, 12],
+    restSeconds: 90,
+    execution:
+      'Seated with the back supported. Start at ear height, press to just short of lockout. ' +
+      'Ribs stay down against the pad — if the lower back arches off the bench, the weight is too heavy.',
+    cue: 'Press up, not back. Low back on the pad.',
+    why:
+      'Seated and supported specifically instead of standing overhead press. Standing, the overhead ' +
+      'press becomes an axial-compression exercise with a lumbar extension moment — a bad trade for a ' +
+      'protruding disc. The back pad removes both.',
+    animation: 'shoulderPress',
+    loadTracked: true,
+  },
+  {
+    id: 'b-external-rotation',
+    name: 'Cable external rotation + face pulls',
+    block: 'main',
+    prescription: '3 × 12 · rest 60 sec',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [12, 12, 12],
+    restSeconds: 60,
+    execution:
+      'External rotation with the elbow tucked at the side, rotating from the shoulder not the wrist. ' +
+      'Then face pulls at eye height — pull to the forehead, hands finishing wide, thumbs back.',
+    cue: 'Rotate from the shoulder. Light is correct here.',
+    why:
+      'Direct rotator-cuff and rear-delt work. Everything else in this programme pulls the shoulders ' +
+      'forward and down; this is what pulls them back. It is deliberately the lightest work in the block.',
+    animation: 'externalRotation',
+    loadTracked: true,
+  },
+  jeffersonCurl('b-jefferson'),
+  {
+    id: 'b-rdl',
+    name: 'Romanian deadlift, light',
+    block: 'spine',
+    prescription: '3 × 12 · light · rest 90 sec',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [12, 12, 12],
+    restSeconds: 90,
+    execution:
+      'Soft knees, bar close to the legs. Push the hips back and let the bar travel down the thighs — ' +
+      'stop the moment the lower back would start to round, which is usually mid-shin, often higher. ' +
+      'Drive the hips forward to stand.',
+    cue: 'Hips back, not down. Stop before the back rounds.',
+    why:
+      'Trains the hamstring and glute chain to own the hinge so the lumbar spine does not have to. ' +
+      'The stopping rule matters more than the range: an RDL taken past neutral is just a slow ' +
+      'loaded flexion with a barbell.',
+    animation: 'hinge',
+    loadTracked: true,
+  },
+
+  // ── Session C · Mixed ─────────────────────────────────────────────────────
+  cardioWarmup('c-cardio', 'It also gets blood into the forearms before grip work.'),
+  {
+    id: 'c-wrist-prep',
+    name: 'Wrist prep + finger extensions',
+    block: 'warmup',
+    prescription: '2 × 15 · rest 30 sec',
+    tracking: 'reps',
+    sets: 2,
+    repScheme: [15, 15],
+    restSeconds: 30,
+    execution:
+      'Slow wrist circles both directions, then gentle flexion and extension stretches. Finish with ' +
+      'finger extensions against a rubber band — open the hand fully against the resistance.',
+    cue: 'Open the hand all the way.',
+    why:
+      'Prepares the forearms before grip work and, more importantly, trains the extensors that ' +
+      'climbing never touches. This is the cheapest elbow-pain insurance available.',
+    animation: 'wristRotate',
+    loadTracked: false,
+  },
+  {
+    id: 'c-chinups',
+    name: 'Chin-ups, supinated',
+    block: 'main',
+    prescription: '3 × 12 · rest 90 sec',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [12, 12, 12],
+    restSeconds: 90,
+    execution:
+      'Underhand grip, shoulder width. Dead hang to chin over the bar. Legs quiet — no kipping. ' +
+      'Assist or use negatives if twelve clean reps are not available.',
+    cue: 'Dead hang start. Chest to the bar.',
+    why:
+      'The supinated grip shifts load onto the biceps and brachialis, giving the lats a different ' +
+      'stimulus to session A and adding elbow-flexor strength that carries directly to steep climbing.',
+    animation: 'pullup',
+    loadTracked: false,
+  },
+  {
+    id: 'c-chest-supported-row',
+    name: 'Chest-supported dumbbell row',
+    block: 'main',
+    prescription: '3 × 12 · rest 90 sec',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [12, 12, 12],
+    restSeconds: 90,
+    execution:
+      'Chest on an inclined bench, dumbbells hanging. Row with the elbows tracking past the ribs, ' +
+      'pause at the top, lower fully. The chest never leaves the pad.',
+    cue: 'Chest stays glued to the bench.',
+    why:
+      'All the mid-back benefit of a bent-over row with the bench carrying the load the spine would ' +
+      'otherwise carry. This substitution is the entire reason bent-over barbell rows are excluded.',
+    animation: 'row',
+    loadTracked: true,
+  },
+  {
+    id: 'c-farmers-carry',
+    name: "Farmer's carry",
+    block: 'main',
+    prescription: '3 × 30-40 m · rest 90 sec',
+    tracking: 'distance',
+    sets: 3,
+    repScheme: [1, 1, 1],
+    distanceM: 35,
+    restSeconds: 90,
+    execution:
+      'Heavy dumbbells or a trap bar. Stand tall, ribs stacked over the hips, shoulders down. ' +
+      'Walk with short, quiet steps and do not let the trunk sway side to side. Set the weight ' +
+      'down under control — do not drop and bend to it.',
+    cue: 'Tall and quiet. Do not let the ribs flare.',
+    why:
+      'Loaded carries build grip and, more usefully here, teach the trunk to resist lateral bending ' +
+      'under load with the spine in a neutral stack. It is the closest thing to a functional core ' +
+      'exercise that never asks the spine to flex.',
+    animation: 'carry',
+    loadTracked: true,
+  },
+  {
+    id: 'c-pinch-block',
+    name: 'Pinch block holds + finger extensions',
+    block: 'main',
+    prescription: '3 × 5 · 10s holds · rest 90 sec',
+    tracking: 'hold',
+    sets: 3,
+    repScheme: [5, 5, 5],
+    holdSeconds: 10,
+    restSeconds: 90,
+    execution:
+      'Pinch the block with the thumb opposed, lift and hold for ten seconds, set down. Five holds ' +
+      'per set. Between sets, finger extensions against a band.',
+    cue: 'Thumb does the work. Shoulder stays packed.',
+    why:
+      'Pinch strength is the grip type climbing training most often skips, and it is trained safely ' +
+      'in isolation. Pairing it with extensions keeps the flexor/extensor balance honest.',
+    animation: 'pinch',
+    loadTracked: true,
+  },
+  jeffersonCurl('c-jefferson'),
+  {
+    id: 'c-hip-thrust',
+    name: 'Hip thrust',
+    block: 'spine',
+    prescription: '3 × 12 · rest 90 sec',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [12, 12, 12],
+    restSeconds: 90,
+    execution:
+      'Upper back on a bench, feet flat and close. Tuck the pelvis slightly, then drive through the ' +
+      'heels until the torso is parallel to the floor. Squeeze at the top for a full second. ' +
+      'Do not hyperextend the lower back to gain height.',
+    cue: 'Glutes finish the rep, not the lower back.',
+    why:
+      'Direct glute strength with the spine horizontal and unloaded — no compression at all. Strong ' +
+      'glutes are what let the hips drive a hinge, which is what keeps load off L5-S1 in every other ' +
+      'movement here. The pelvic tuck is what stops it becoming a lumbar extension exercise.',
+    animation: 'hipThrust',
+    loadTracked: true,
+  },
+
+  // ── Daily · Restore (night) ───────────────────────────────────────────────
+  {
+    id: 'd-cobra',
+    name: 'Light cobra / McKenzie',
+    block: 'mobility',
+    prescription: '1 × 10 · 3s holds',
+    tracking: 'hold',
+    sets: 1,
+    repScheme: [10],
+    holdSeconds: 3,
+    restSeconds: 30,
+    execution:
+      'Face down, forearms under the shoulders. Press gently into a small extension, keeping the ' +
+      'hips heavy on the floor. Hold three seconds and lower. Start on the forearms; only progress ' +
+      'to straight arms over weeks, and never into pain.',
+    cue: 'Hips stay on the floor. Small range.',
+    why:
+      'Extension is the direction that tends to move a posterior disc protrusion back towards centre. ' +
+      'Forearms first because the aim is repeated gentle motion, not a maximal stretch — if symptoms ' +
+      'move down the leg rather than up towards the back, stop and reduce the range.',
+    animation: 'cobra',
+    loadTracked: false,
+  },
+  {
+    id: 'd-deadbug',
+    name: 'Dead bug',
+    block: 'mobility',
+    prescription: '6 / 4 / 2 per side · 8s holds',
+    tracking: 'hold',
+    sets: 3,
+    repScheme: [6, 4, 2],
+    holdSeconds: 8,
+    restSeconds: 30,
+    bilateral: true,
+    execution:
+      'On your back, knees and hips at 90°, arms straight up. Press the lower back gently into the ' +
+      'floor and keep it there. Extend the opposite arm and leg away, hold, return. Alternate sides.',
+    cue: 'Lower back stays pressed into the floor.',
+    why:
+      "McGill's anti-extension brace. It trains the trunk to stay stiff while the limbs move — the " +
+      'exact quality a disc needs — with the spine fully supported and at zero compression.',
+    animation: 'deadbug',
+    loadTracked: false,
+  },
+  {
+    id: 'd-side-plank',
+    name: 'Side plank',
+    block: 'mobility',
+    prescription: '6 / 4 / 2 per side · 8s holds',
+    tracking: 'hold',
+    sets: 3,
+    repScheme: [6, 4, 2],
+    holdSeconds: 8,
+    restSeconds: 30,
+    bilateral: true,
+    execution:
+      'On the elbow, knees bent to start or legs straight when ready. Lift the hips into a straight ' +
+      'line from shoulder to knee. Hold eight seconds, lower, repeat. Both sides every set.',
+    cue: 'Straight line. Do not let the hips sag back.',
+    why:
+      'Loads quadratus lumborum and the obliques with very little spinal compression, building the ' +
+      'lateral stability that keeps the spine stacked under load.',
+    animation: 'plank',
+    loadTracked: false,
+  },
+  {
+    id: 'd-bird-dog',
+    name: 'Bird dog',
+    block: 'mobility',
+    prescription: '6 / 4 / 2 per side · 8s holds',
+    tracking: 'hold',
+    sets: 3,
+    repScheme: [6, 4, 2],
+    holdSeconds: 8,
+    restSeconds: 30,
+    bilateral: true,
+    execution:
+      'On hands and knees, spine neutral. Extend the opposite arm and leg to horizontal without ' +
+      'letting the hips rotate. Hold eight seconds. Sweep the elbow and knee together underneath ' +
+      'between reps rather than resting.',
+    cue: 'Hips stay level. Reach long, not high.',
+    why:
+      'The third of the Big 3. Trains the back extensors and glutes together in a neutral spine, ' +
+      'which is precisely the pattern a deadlift needs — this is the unloaded rehearsal for it.',
+    animation: 'birddog',
+    loadTracked: false,
+  },
+  {
+    id: 'd-wall-glides',
+    name: 'Wall glides',
+    block: 'mobility',
+    prescription: '2 × 10 · 3s up / 3s down',
+    tracking: 'reps',
+    sets: 2,
+    repScheme: [10, 10],
+    tempo: { down: 3, up: 3 },
+    restSeconds: 30,
+    execution:
+      'Back to the wall, feet a little forward. Arms in a goalpost against the wall. Slide the arms ' +
+      'up slowly, keeping the wrists and elbows in contact and the lower back flat against the wall. ' +
+      'Slide back down just as slowly.',
+    cue: 'Ribs down, low back flat to the wall.',
+    why:
+      'Reopens a thoracic spine that spends its days closed by climbing and desks. The flat-lower-back ' +
+      'constraint forces the movement to come from the upper back rather than being stolen from the ' +
+      'lumbar spine — which is the whole point of doing it against a wall.',
+    animation: 'wallslide',
+    loadTracked: false,
+  },
+];
+
+export const EXERCISE_BY_ID: Record<string, Exercise> = Object.fromEntries(
+  EXERCISES.map((e) => [e.id, e]),
+);

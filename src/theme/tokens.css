@@ -1,0 +1,75 @@
+/*
+ * Day/night tokens.
+ *
+ * Every token needs BOTH a day and a night value — a token defined in only one
+ * mode will inherit the other's, which is the single most common theme bug in
+ * this codebase. Colours are space-separated RGB triples so Tailwind can apply
+ * its `/ <alpha-value>` opacity modifier.
+ *
+ * The mode is a class on <html> (`.mode-day` / `.mode-night`). Nothing drills
+ * mode through props.
+ */
+
+:root {
+  --t-mode: 600ms; /* background / accent / card cross-fade */
+  --t-text: 220ms; /* text colour, faster so it doesn't smear */
+  --r-card: 11px;
+}
+
+/* ── Day — gym. Near-black, amber, sharp. ─────────────────────────────── */
+.mode-day {
+  --c-base: 26 29 35; /* #1a1d23 */
+  --c-surface: 34 38 46;
+  --c-raised: 44 49 59;
+  --c-line: 62 69 82;
+  --c-ink: 238 240 244;
+  --c-muted: 158 166 180;
+  --c-faint: 108 116 130;
+  --c-accent: 242 165 65; /* #f2a541 */
+  --c-accent-soft: 120 78 26;
+
+  --c-warmup: 122 162 190;
+  --c-main: 242 165 65;
+  --c-spine: 226 122 88; /* warmer than main — spine work reads as its own category */
+  --c-mobility: 160 150 200;
+  --c-danger: 226 106 96;
+
+  --r-card: 11px;
+  --t-motion: 150ms; /* snappy */
+  --grad-top: 38 33 30;
+  --grad-bottom: 22 24 30;
+  --card-border-opacity: 1;
+  --shadow-card: 0 1px 0 0 rgb(255 255 255 / 0.03);
+  --tracking-title: -0.02em;
+  --weight-title: 700;
+  --stage-gap: 1.25rem;
+}
+
+/* ── Night — restore. Deep indigo, violet, low luminance. ─────────────── */
+.mode-night {
+  --c-base: 18 19 34; /* deep indigo */
+  --c-surface: 27 29 50;
+  --c-raised: 36 39 66;
+  --c-line: 55 58 92;
+  --c-ink: 218 219 238;
+  --c-muted: 148 150 182;
+  --c-faint: 104 107 140;
+  --c-accent: 165 154 232; /* violet */
+  --c-accent-soft: 74 68 122;
+
+  --c-warmup: 128 156 200;
+  --c-main: 165 154 232;
+  --c-spine: 196 152 214;
+  --c-mobility: 150 178 218;
+  --c-danger: 208 122 126;
+
+  --r-card: 18px; /* softer edges */
+  --t-motion: 400ms; /* slow, breathing */
+  --grad-top: 30 28 58;
+  --grad-bottom: 15 16 30;
+  --card-border-opacity: 0; /* no hard borders at night */
+  --shadow-card: 0 2px 24px -8px rgb(0 0 0 / 0.5);
+  --tracking-title: 0.01em;
+  --weight-title: 500;
+  --stage-gap: 1.75rem;
+}

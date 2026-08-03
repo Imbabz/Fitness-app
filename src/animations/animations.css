@@ -1,0 +1,589 @@
+/*
+ * Hand-written keyframes for the exercise animations. No animation library,
+ * no Lottie, no GIFs — see CLAUDE.md.
+ *
+ * Transform origins are stated in viewBox units and must match the joint
+ * coordinates drawn in registry.tsx. If you move a joint in the SVG, move the
+ * origin here in the same commit — a mismatch shows up as a limb detaching.
+ */
+
+.ridge-anim [class^='ra-'] {
+  transform-box: view-box;
+  transform-origin: 32px 32px;
+  animation-duration: var(--loop, 2.2s);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.ridge-ground {
+  color: rgb(var(--c-faint));
+  stroke: currentColor;
+  opacity: 0.75;
+}
+
+/*
+ * prefers-reduced-motion: freeze at the mid-point pose rather than dropping to
+ * a neutral stand. A negative delay of half the loop seeks to 50%; pausing
+ * holds it there. The figure still shows the shape of the movement, it just
+ * stops looping.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .ridge-anim [class^='ra-'] {
+    animation-delay: calc(var(--loop, 2.2s) / -2) !important;
+    animation-play-state: paused !important;
+  }
+}
+
+/* ── Bike ──────────────────────────────────────────────────────────────── */
+.ra-bike-crank {
+  transform-origin: 36px 46px;
+  animation-name: ra-spin;
+  animation-timing-function: linear;
+}
+.ra-bike-leg {
+  transform-origin: 28px 34px;
+  animation-name: ra-bike-leg;
+}
+@keyframes ra-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes ra-bike-leg {
+  0%,
+  100% {
+    transform: rotate(-9deg);
+  }
+  50% {
+    transform: rotate(9deg);
+  }
+}
+
+/* ── Scapular retraction / band pull-apart: arms open at the shoulder. ─── */
+.ra-open-l {
+  transform-origin: 32px 22px;
+  animation-name: ra-open-l;
+}
+.ra-open-r {
+  transform-origin: 32px 22px;
+  animation-name: ra-open-r;
+}
+@keyframes ra-open-l {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(16deg);
+  }
+}
+@keyframes ra-open-r {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-16deg);
+  }
+}
+
+/* ── Wrist rotation. ───────────────────────────────────────────────────── */
+.ra-wrist-hand {
+  transform-origin: 32px 32px;
+  animation-name: ra-wrist;
+}
+@keyframes ra-wrist {
+  0%,
+  100% {
+    transform: rotate(-40deg);
+  }
+  50% {
+    transform: rotate(40deg);
+  }
+}
+
+/* ── Lat pulldown: arms sweep down and in, bar follows to the collarbone. ─ */
+.ra-pull-arm-l {
+  transform-origin: 32px 30px;
+  animation-name: ra-pull-l;
+}
+.ra-pull-arm-r {
+  transform-origin: 32px 30px;
+  animation-name: ra-pull-r;
+}
+.ra-pull-bar {
+  transform-box: view-box;
+  animation-duration: var(--loop, 2.2s);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-name: ra-pull-bar;
+}
+@keyframes ra-pull-l {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-45deg);
+  }
+}
+@keyframes ra-pull-r {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(45deg);
+  }
+}
+@keyframes ra-pull-bar {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(17px);
+  }
+}
+
+/* ── Pull-up: arms pivot about the hands, body rises to meet them. ─────── */
+.ra-pullup-arm-l {
+  transform-origin: 22px 12px;
+  animation-name: ra-pullup-arm-l;
+}
+.ra-pullup-arm-r {
+  transform-origin: 42px 12px;
+  animation-name: ra-pullup-arm-r;
+}
+.ra-pullup-body {
+  animation-name: ra-pullup-body;
+}
+@keyframes ra-pullup-arm-l {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  45%,
+  60% {
+    transform: rotate(-28deg);
+  }
+}
+@keyframes ra-pullup-arm-r {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  45%,
+  60% {
+    transform: rotate(28deg);
+  }
+}
+@keyframes ra-pullup-body {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45%,
+  60% {
+    transform: translateY(-8px);
+  }
+}
+
+/* ── Seated row: the whole arm and handle swing back at the shoulder. ──── */
+.ra-row-arm {
+  transform-origin: 20px 28px;
+  animation-name: ra-row-arm;
+}
+@keyframes ra-row-arm {
+  0%,
+  100% {
+    transform: rotate(-8deg);
+  }
+  50% {
+    transform: rotate(26deg);
+  }
+}
+
+/* ── Hammer curl: forearm rotates at the elbow. ────────────────────────── */
+.ra-curl-forearm {
+  transform-origin: 24px 34px;
+  animation-name: ra-curl;
+}
+@keyframes ra-curl {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-120deg);
+  }
+}
+
+/* ── Bench press: arm pivots at the shoulder, bar rides with it. ───────── */
+.ra-press-arm {
+  transform-origin: 24px 38px;
+  animation-name: ra-press;
+}
+@keyframes ra-press {
+  0%,
+  100% {
+    transform: rotate(42deg);
+  }
+  50% {
+    transform: rotate(0deg);
+  }
+}
+
+/* ── Dip: arms pivot about the fixed hands, body drops to match. ───────── */
+.ra-dip-arm-l {
+  transform-origin: 24px 24px;
+  animation-name: ra-dip-arm-l;
+}
+.ra-dip-arm-r {
+  transform-origin: 40px 24px;
+  animation-name: ra-dip-arm-r;
+}
+.ra-dip-body {
+  animation-name: ra-dip-body;
+}
+@keyframes ra-dip-arm-l {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(74deg);
+  }
+}
+@keyframes ra-dip-arm-r {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-74deg);
+  }
+}
+@keyframes ra-dip-body {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(12px);
+  }
+}
+
+/* ── Seated shoulder press: goalpost arms rotate up at the shoulder. ───── */
+.ra-shoulder-arm-l {
+  transform-origin: 32px 24px;
+  animation-name: ra-shoulder-l;
+}
+.ra-shoulder-arm-r {
+  transform-origin: 32px 24px;
+  animation-name: ra-shoulder-r;
+}
+@keyframes ra-shoulder-l {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(24deg);
+  }
+}
+@keyframes ra-shoulder-r {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-24deg);
+  }
+}
+
+/* ── External rotation: forearm swings out at a pinned elbow. ──────────── */
+.ra-extrot-forearm {
+  transform-origin: 26px 32px;
+  animation-name: ra-extrot;
+}
+@keyframes ra-extrot {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-55deg);
+  }
+}
+
+/* ── Farmer's carry: legs stride, the load bobs. ───────────────────────── */
+.ra-carry-leg-l {
+  transform-origin: 32px 36px;
+  animation-name: ra-stride-l;
+}
+.ra-carry-leg-r {
+  transform-origin: 32px 36px;
+  animation-name: ra-stride-r;
+}
+.ra-carry-load {
+  animation-name: ra-bob;
+}
+@keyframes ra-stride-l {
+  0%,
+  100% {
+    transform: rotate(13deg);
+  }
+  50% {
+    transform: rotate(-13deg);
+  }
+}
+@keyframes ra-stride-r {
+  0%,
+  100% {
+    transform: rotate(-13deg);
+  }
+  50% {
+    transform: rotate(13deg);
+  }
+}
+@keyframes ra-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+/* ── Pinch block: lift, hold, set down. Note the long plateau. ─────────── */
+.ra-pinch-lift {
+  animation-name: ra-pinch;
+}
+@keyframes ra-pinch {
+  0%,
+  12% {
+    transform: translateY(5px);
+  }
+  30%,
+  75% {
+    transform: translateY(-4px);
+  }
+  92%,
+  100% {
+    transform: translateY(5px);
+  }
+}
+
+/* ── Jefferson curl. Three nested joints so the roll-down is segmental
+      rather than a single hinge — that distinction is the exercise. The arms
+      counter-rotate so the weight keeps hanging vertically. ─────────────── */
+.ra-roll-lower {
+  transform-origin: 32px 36px;
+  animation-name: ra-roll-lower;
+}
+.ra-roll-upper {
+  transform-origin: 32px 28px;
+  animation-name: ra-roll-upper;
+}
+.ra-roll-arms {
+  transform-origin: 32px 22px;
+  animation-name: ra-roll-arms;
+}
+/*
+ * The three keyframe sets MUST share identical percentages and easing. The arms
+ * counter-rotate by exactly the sum of the two spine segments so the weight
+ * hangs plumb throughout, and that cancellation only holds if all three
+ * interpolate in lockstep. Different magnitudes are what make the roll-down
+ * read as segmental; different *timings* just make the weight swing out.
+ */
+@keyframes ra-roll-lower {
+  0% {
+    transform: rotate(0deg);
+  }
+  42%,
+  58% {
+    transform: rotate(30deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+@keyframes ra-roll-upper {
+  0% {
+    transform: rotate(0deg);
+  }
+  42%,
+  58% {
+    transform: rotate(55deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+@keyframes ra-roll-arms {
+  0% {
+    transform: rotate(0deg);
+  }
+  42%,
+  58% {
+    transform: rotate(-85deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+/* ── Hinge: torso pivots at the hip, arms hang plumb throughout. ───────── */
+.ra-hinge-torso {
+  transform-origin: 32px 36px;
+  animation-name: ra-hinge;
+}
+.ra-hinge-arms {
+  transform-origin: 32px 21px;
+  animation-name: ra-hinge-arms;
+}
+@keyframes ra-hinge {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(68deg);
+  }
+}
+@keyframes ra-hinge-arms {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-68deg);
+  }
+}
+
+/* ── Hip thrust: the body pivots about the planted foot, so the hips rise
+      and the shoulders stay on the bench. ───────────────────────────────── */
+.ra-thrust-body {
+  transform-origin: 46px 52px;
+  animation-name: ra-thrust;
+}
+@keyframes ra-thrust {
+  0%,
+  100% {
+    transform: rotate(-11deg);
+  }
+  45%,
+  62% {
+    transform: rotate(0deg);
+  }
+}
+
+/* ── Night movements. Slower, and they breathe rather than snap. ───────── */
+
+.ra-cobra-torso {
+  transform-origin: 34px 50px;
+  animation-name: ra-cobra;
+}
+@keyframes ra-cobra {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  40%,
+  64% {
+    transform: rotate(24deg);
+  }
+}
+
+.ra-deadbug-arm {
+  transform-origin: 28px 44px;
+  animation-name: ra-deadbug-arm;
+}
+.ra-deadbug-leg {
+  transform-origin: 36px 44px;
+  animation-name: ra-deadbug-leg;
+}
+@keyframes ra-deadbug-arm {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  40%,
+  66% {
+    transform: rotate(-50deg);
+  }
+}
+@keyframes ra-deadbug-leg {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  40%,
+  66% {
+    transform: rotate(46deg);
+  }
+}
+
+.ra-plank-body {
+  transform-origin: 14px 54px;
+  animation-name: ra-plank;
+}
+@keyframes ra-plank {
+  0%,
+  100% {
+    transform: rotate(6deg);
+  }
+  40%,
+  68% {
+    transform: rotate(0deg);
+  }
+}
+
+.ra-birddog-arm {
+  transform-origin: 22px 38px;
+  animation-name: ra-birddog-arm;
+}
+.ra-birddog-leg {
+  transform-origin: 44px 38px;
+  animation-name: ra-birddog-leg;
+}
+@keyframes ra-birddog-arm {
+  0%,
+  100% {
+    transform: rotate(-38deg);
+  }
+  40%,
+  68% {
+    transform: rotate(0deg);
+  }
+}
+@keyframes ra-birddog-leg {
+  0%,
+  100% {
+    transform: rotate(38deg);
+  }
+  40%,
+  68% {
+    transform: rotate(0deg);
+  }
+}
+
+.ra-glide-arm {
+  transform-origin: 22px 24px;
+  animation-name: ra-glide;
+}
+@keyframes ra-glide {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  45%,
+  62% {
+    transform: rotate(-22deg);
+  }
+}
