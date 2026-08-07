@@ -1,9 +1,10 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// `base` targets GitHub Pages at https://<user>.github.io/fitness-app/.
+// `base` targets GitHub Pages at https://<user>.github.io/Fitness-app/ and must
+// match the repository name's casing exactly.
 // Serving from a custom domain or a user-page root? Set BASE_PATH=/ at build time.
-const base = process.env.BASE_PATH ?? '/fitness-app/';
+const base = process.env.BASE_PATH ?? '/Fitness-app/';
 
 export default defineConfig({
   base,

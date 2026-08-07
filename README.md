@@ -9,7 +9,7 @@ and several of the interactions are clinical decisions rather than features.
 
 ```
 npm install
-npm run dev        # http://localhost:5173/fitness-app/
+npm run dev        # http://localhost:5173/Fitness-app/
 npm run build      # type-check + production bundle
 npm run preview
 ```
@@ -101,7 +101,7 @@ Pushes to `main` build and publish to GitHub Pages via
 `.github/workflows/deploy.yml` — enable Pages with **Source: GitHub Actions**
 first.
 
-`vite.config.ts` sets `base` to `/fitness-app/`. Serving from a custom domain or
+`vite.config.ts` sets `base` to `/Fitness-app/`. Serving from a custom domain or
 a user-page root instead? Build with `BASE_PATH=/`.
 
 ---
