@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { createContext, useContext, type CSSProperties, type ReactNode } from 'react';
 
 /*
  * Shared conventions for every exercise animation. See
@@ -18,19 +18,30 @@ export interface AnimProps {
   className?: string;
 }
 
+/**
+ * Overrides every figure's loop length below it. Used to play a movement at the
+ * tempo it is actually prescribed at — a 5-second descent shown in 5 seconds is
+ * instruction; shown in 2 it is decoration. Set by `ExerciseAnimation`, so no
+ * individual animation has to thread the value through.
+ */
+export const LoopOverride = createContext<number | null>(null);
+
 export function Figure({
   children,
   size = 64,
   loop = 2.2,
   className = '',
 }: AnimProps & { children: ReactNode; loop?: number }) {
+  const override = useContext(LoopOverride);
+  const seconds = override ?? loop;
+
   return (
     <svg
       viewBox="0 0 64 64"
       width={size}
       height={size}
       className={`ridge-anim ${className}`}
-      style={{ '--loop': `${loop}s` } as CSSProperties}
+      style={{ '--loop': `${seconds}s` } as CSSProperties}
       fill="none"
       stroke="currentColor"
       strokeWidth={3}

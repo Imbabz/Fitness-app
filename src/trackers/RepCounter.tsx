@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react';
+import { Check, Pause, Play } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Dial, SetPips, WeightInput, targetFor, type TrackerProps } from './shared';
 import { useTapOrHold, useWakeLock } from './hooks';
@@ -23,14 +23,36 @@ export function RepCounter({
   const target = targetFor(exercise, setIndex);
   const [count, setCount] = useState(0);
   const [pulse, setPulse] = useState(0);
+  const [auto, setAuto] = useState(false);
 
   useWakeLock(true);
+
+  // Hands-free pace. A prescribed tempo is the honest interval; without one,
+  // three seconds is a normal controlled rep.
+  const secondsPerRep = exercise.tempo ? exercise.tempo.down + exercise.tempo.up : 3;
 
   // A new set starts from zero. Walking back to a previous stage and returning
   // lands here too, which is correct — the logged set is already stored.
   useEffect(() => {
     setCount(0);
+    setAuto(false);
   }, [exercise.id, setIndex]);
+
+  // Self-rescheduling rather than an interval, so the tick always sees the
+  // current count and stops itself exactly on the target.
+  useEffect(() => {
+    if (!auto) return;
+    if (count >= target) {
+      setAuto(false);
+      return;
+    }
+    const t = window.setTimeout(() => {
+      setCount((c) => c + 1);
+      setPulse((p) => p + 1);
+      haptic(count + 1 >= target ? HAPTIC.complete : HAPTIC.tick);
+    }, secondsPerRep * 1000);
+    return () => window.clearTimeout(t);
+  }, [auto, count, target, secondsPerRep]);
 
   const reached = count >= target;
 
@@ -78,28 +100,53 @@ export function RepCounter({
 
       {exercise.tempo && <TempoBar tempo={exercise.tempo} />}
 
-      <SetPips exercise={exercise} setIndex={setIndex} completedCount={logged.length} />
+      {/* Sharing a row with the pips rather than taking one of its own: the Log
+          button below is the primary action and has to stay above the fold. */}
+      <div className="flex w-full flex-wrap items-center justify-center gap-x-3 gap-y-2">
+        <SetPips exercise={exercise} setIndex={setIndex} completedCount={logged.length} />
+
+        {/* Both hands are on the bar during a set, so tapping once per rep is
+            not something you can actually do. This counts at the prescribed
+            pace instead; tapping the dial still works and overrides nothing. */}
+        <button
+          type="button"
+          onClick={() => {
+            haptic(HAPTIC.tick);
+            setAuto((a) => !a);
+          }}
+          disabled={reached}
+          className={[
+            'flex h-11 items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold transition-colors disabled:opacity-40',
+            auto ? 'border-accent/60 bg-accent/10 text-accent' : 'border-line bg-surface text-muted',
+          ].join(' ')}
+        >
+          {auto ? <Pause size={15} /> : <Play size={15} />}
+          {auto ? 'Counting' : 'Hands-free'}
+          <span className="font-normal text-faint">{secondsPerRep}s</span>
+        </button>
+      </div>
 
       {exercise.loadTracked && <WeightInput weightKg={weightKg} onChange={onWeightChange} />}
 
+      {/* At zero this logs the prescribed set outright: finishing a set without
+          having counted anything is the normal case, not an error. Counting —
+          by tap or hands-free — is for when the set did not go to plan. */}
       <button
         type="button"
         onClick={() => {
           haptic(HAPTIC.complete);
-          onSetComplete(count);
+          setAuto(false);
+          onSetComplete(count === 0 ? target : count);
         }}
-        disabled={count === 0}
         className={[
-          'h-14 w-full rounded-card text-base font-semibold transition-colors disabled:opacity-40',
-          reached
+          'h-14 w-full rounded-card text-base font-semibold transition-colors',
+          reached || count === 0
             ? 'bg-accent text-base'
             : 'border border-line bg-surface text-muted',
         ].join(' ')}
       >
-        {/* At zero the button is disabled, so it says what to do instead of
-            offering to log nothing. */}
         {count === 0
-          ? 'Tap the dial to count'
+          ? `Log ${target} rep${target === 1 ? '' : 's'}`
           : reached
             ? setIndex + 1 < exercise.sets
               ? 'Log set · rest'

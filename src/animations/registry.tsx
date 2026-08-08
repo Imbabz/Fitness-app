@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Figure, Ground, Head, Prop, type AnimProps } from './primitives';
+import { Figure, Ground, Head, LoopOverride, Prop, type AnimProps } from './primitives';
 import './animations.css';
 
 /*
@@ -413,20 +413,26 @@ export function ExerciseAnimation({
   animation,
   size = 64,
   className,
+  loopSeconds,
 }: {
   animation: string;
   size?: number;
   className?: string;
+  /** Play one repetition over this many seconds instead of the figure's own
+   *  loop. Pass an exercise's tempo so the demonstration matches the work. */
+  loopSeconds?: number;
 }) {
   const Anim = ANIMATIONS[animation];
-  if (!Anim) {
-    return (
-      <Figure size={size} className={className}>
-        <Head />
-        <line x1={32} y1={17} x2={32} y2={38} />
-        {legs()}
-      </Figure>
-    );
-  }
-  return <>{Anim({ size, ...(className !== undefined ? { className } : {}) })}</>;
+  const figure = Anim ? (
+    <>{Anim({ size, ...(className !== undefined ? { className } : {}) })}</>
+  ) : (
+    <Figure size={size} className={className}>
+      <Head />
+      <line x1={32} y1={17} x2={32} y2={38} />
+      {legs()}
+    </Figure>
+  );
+
+  if (loopSeconds === undefined) return figure;
+  return <LoopOverride.Provider value={loopSeconds}>{figure}</LoopOverride.Provider>;
 }

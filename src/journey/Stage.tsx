@@ -123,7 +123,14 @@ export function Stage({
         ].join(' ')}
       >
         <span className={isSpine ? 'text-spine' : 'text-accent'}>
-          <ExerciseAnimation animation={exercise.animation} size={140} />
+          <ExerciseAnimation
+            animation={exercise.animation}
+            size={140}
+            // A prescribed tempo is an instruction, so the figure moves at it.
+            {...(exercise.tempo
+              ? { loopSeconds: exercise.tempo.down + exercise.tempo.up }
+              : {})}
+          />
         </span>
         <h2 className="mt-3 text-center text-2xl font-bold tracking-tight text-ink">
           {exercise.name}
