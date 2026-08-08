@@ -70,6 +70,15 @@ export interface CompletedSession {
   sets: LoggedSet[];
   note?: string;
   painFlag: boolean;
+  /**
+   * exerciseId → the repScheme that was prescribed when this session was
+   * finished. Frozen here so "was it clean?" is judged against the target of
+   * the day, not against whatever the exercise has been adjusted to since.
+   *
+   * Absent on sessions logged before adjustments existed; those fall back to
+   * the exercise's current scheme, which is what they were judged by anyway.
+   */
+  targets?: Record<string, number[]>;
 }
 
 export interface ActiveSession {

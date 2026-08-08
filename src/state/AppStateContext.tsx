@@ -17,7 +17,7 @@ import type {
   Settings,
 } from '../types';
 import { applyModeExpiry, flushState, loadState, saveState, seedState } from './store';
-import { computeStreak } from './selectors';
+import { computeStreak, tunedSession } from './selectors';
 import { coerceTuning } from './tuning';
 import { EXERCISE_BY_ID } from '../data/exercises';
 import { setHapticsEnabled } from '../lib/haptics';
@@ -204,6 +204,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     const active = stateRef.current.activeSession;
     if (!active) return null;
 
+    // Freeze what was prescribed today, for the exercises actually worked, so a
+    // later adjustment cannot rewrite whether this session counted as clean.
+    const worked = new Set(active.sets.map((s) => s.exerciseId));
+    const session = tunedSession(stateRef.current, active.sessionId);
+    const targets: Record<string, number[]> = {};
+    for (const ex of session?.exercises ?? []) {
+      if (worked.has(ex.id)) targets[ex.id] = [...ex.repScheme];
+    }
+
     const completed: CompletedSession = {
       sessionId: active.sessionId,
       date: todayKey(),
@@ -214,6 +223,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       ),
       painFlag: opts.painFlag,
       ...(opts.note?.trim() ? { note: opts.note.trim() } : {}),
+      ...(Object.keys(targets).length > 0 ? { targets } : {}),
     };
 
     setState((s) => {

@@ -144,11 +144,18 @@ export function detectPRs(history: CompletedSession[], sets: LoggedSet[]): Perso
 
 // ── Domain rules ───────────────────────────────────────────────────────────
 
-/** Did this session hit every prescribed set at or above its rep target? */
+/**
+ * Did this session hit every prescribed set at or above its rep target?
+ *
+ * Judged against the scheme frozen into the session when it was finished, so
+ * lowering a target later cannot retroactively turn past sessions clean and
+ * raise a progression prompt that was never earned.
+ */
 export function wasClean(session: CompletedSession, exercise: Exercise): boolean {
+  const scheme = session.targets?.[exercise.id] ?? exercise.repScheme;
   const logged = session.sets.filter((s) => s.exerciseId === exercise.id);
-  if (logged.length < exercise.sets) return false;
-  return exercise.repScheme.every((target, i) => {
+  if (logged.length < scheme.length) return false;
+  return scheme.every((target, i) => {
     const set = logged.find((s) => s.setIndex === i);
     return !!set && set.reps >= target;
   });

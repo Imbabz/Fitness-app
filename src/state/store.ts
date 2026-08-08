@@ -62,13 +62,35 @@ export function coerceState(raw: unknown): AppState {
   const settings = (o.settings ?? {}) as Partial<AppState['settings']>;
   const streak = (o.streak ?? {}) as Partial<AppState['streak']>;
 
+  /** exerciseId → repScheme, keeping only entries that are usable rep arrays. */
+  function coerceTargets(v: unknown): Record<string, number[]> | null {
+    if (typeof v !== 'object' || v === null) return null;
+    const out: Record<string, number[]> = {};
+    for (const [id, scheme] of Object.entries(v)) {
+      if (!Array.isArray(scheme)) continue;
+      const reps = scheme.filter(
+        (n): n is number => typeof n === 'number' && Number.isFinite(n) && n > 0,
+      );
+      if (reps.length === scheme.length && reps.length > 0) out[id] = reps;
+    }
+    return Object.keys(out).length > 0 ? out : null;
+  }
+
   return {
     version: 1,
     mode: o.mode === 'night' ? 'night' : o.mode === 'day' ? 'day' : seed.mode,
     modeOverrideDate: typeof o.modeOverrideDate === 'string' ? o.modeOverrideDate : null,
-    history: arr<AppState['history'][number]>(o.history).filter(
-      (h) => h && typeof h.sessionId === 'string' && typeof h.date === 'string',
-    ),
+    history: arr<AppState['history'][number]>(o.history)
+      .filter((h) => h && typeof h.sessionId === 'string' && typeof h.date === 'string')
+      // Frozen targets arrived after the first sessions were logged, so they
+      // are optional: anything missing or malformed is dropped and wasClean()
+      // falls back to the exercise's current scheme, exactly as it used to.
+      .map((h) => {
+        const targets = coerceTargets(h.targets);
+        if (targets) return { ...h, targets };
+        const { targets: _dropped, ...rest } = h;
+        return rest;
+      }),
     activeSession:
       o.activeSession && typeof o.activeSession.sessionId === 'string'
         ? {
