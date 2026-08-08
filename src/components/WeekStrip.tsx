@@ -3,7 +3,8 @@ import { useApp } from '../state/AppStateContext';
 import { weekStrip } from '../state/selectors';
 import { todayKey } from '../lib/time';
 
-const DAY_INITIAL = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+/** Two letters, because single initials cannot tell Tue from Thu or Sat from Sun. */
+const DAY_INITIAL = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
 /** Last 7 days: a filled dot per completed gym session, a crescent for days the
  *  daily routine was done. */

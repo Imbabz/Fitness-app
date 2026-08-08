@@ -27,6 +27,10 @@ export function Summit({
 
   const prs = useMemo(() => detectPRs(state.history, sets), [state.history, sets]);
 
+  // Saving with nothing logged writes an empty entry into history and, for the
+  // daily routine, would mark the day done and extend the streak for no work.
+  const nothingLogged = sets.length === 0;
+
   const save = () => {
     haptic(HAPTIC.complete);
     finishSession({ note, painFlag });
@@ -66,7 +70,11 @@ export function Summit({
       )}
 
       {/* Domain rule 3. The wording is deliberately specific — "sore" is normal,
-          radiating symptoms down a dermatome are not the same thing. */}
+          radiating symptoms down a dermatome are not the same thing. The heading
+          exists so this reads as a question to answer, not an optional field. */}
+      <span className="mt-6 text-xs font-semibold uppercase tracking-wider text-faint">
+        Before you save
+      </span>
       <button
         type="button"
         onClick={() => {
@@ -74,7 +82,7 @@ export function Summit({
           setPainFlag((v) => !v);
         }}
         className={[
-          'mt-5 flex items-start gap-3 rounded-card border p-4 text-left transition-colors',
+          'mt-2 flex items-start gap-3 rounded-card border p-4 text-left transition-colors',
           painFlag ? 'border-danger/50 bg-danger/[0.09]' : 'border-line/60 bg-surface',
         ].join(' ')}
       >
@@ -108,10 +116,17 @@ export function Summit({
       </label>
 
       <div className="mt-auto space-y-3 pt-8">
+        {nothingLogged && (
+          <p className="text-center text-xs leading-relaxed text-faint">
+            Nothing logged yet. Go back and log at least one set — an empty session would still
+            count towards your history.
+          </p>
+        )}
         <button
           type="button"
           onClick={save}
-          className="h-16 w-full rounded-card bg-accent text-lg font-bold text-base active:opacity-90"
+          disabled={nothingLogged}
+          className="h-16 w-full rounded-card bg-accent text-lg font-bold text-base transition-opacity active:opacity-90 disabled:opacity-40"
         >
           Save session
         </button>

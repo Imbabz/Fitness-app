@@ -190,9 +190,15 @@ export function Settings() {
 
       {message && <p className="text-center text-sm text-muted">{message}</p>}
 
-      <p className="pb-2 text-center text-xs leading-relaxed text-faint">
+      <p className="text-center text-xs leading-relaxed text-faint">
         Ridge is a training log, not medical advice. It surfaces patterns and never adjusts a load
         on its own — those decisions stay with you and your physio.
+      </p>
+
+      {/* The service worker updates silently, so "am I on the new version?" was
+          otherwise unanswerable from a phone. */}
+      <p className="pb-2 text-center text-[11px] tabular-nums text-faint/70">
+        Build {__BUILD_ID__} UTC
       </p>
     </div>
   );

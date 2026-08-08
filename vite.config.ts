@@ -96,8 +96,14 @@ self.addEventListener('fetch', (event) => {
   };
 }
 
+// Stamped into the build so the Settings screen can say which version is
+// running — the service worker updates silently, and "is it the new one?" was
+// otherwise unanswerable from a phone.
+const buildId = new Date().toISOString().slice(0, 16).replace('T', ' ');
+
 export default defineConfig({
   base,
+  define: { __BUILD_ID__: JSON.stringify(buildId) },
   plugins: [react(), serviceWorker()],
   build: {
     // The whole app is one bundle; there is nothing worth code-splitting in a

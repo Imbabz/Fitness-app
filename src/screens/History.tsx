@@ -46,7 +46,9 @@ export function History() {
         map.set(s.exerciseId, arr);
       }
     }
-    return [...map.entries()].filter(([, v]) => v.length >= 2);
+    // Two readings of the same weight draw a flat line that reads as "no
+    // progress" when it actually means "not enough data yet".
+    return [...map.entries()].filter(([, v]) => new Set(v).size >= 2);
   }, [state.history]);
 
   if (sorted.length === 0) {
