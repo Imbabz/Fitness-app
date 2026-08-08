@@ -7,9 +7,34 @@ import { friendlyDate, humanDuration } from '../lib/time';
 import { Sparkline } from '../components/Sparkline';
 import type { CompletedSession } from '../types';
 
+type Filter = 'all' | 'gym' | 'routine';
+
+const FILTERS: Array<{ id: Filter; label: string }> = [
+  { id: 'all', label: 'All' },
+  { id: 'gym', label: 'Gym' },
+  { id: 'routine', label: 'Routine' },
+];
+
+const matches = (entry: CompletedSession, filter: Filter) =>
+  filter === 'all' ||
+  (filter === 'gym' ? entry.sessionId !== 'daily' : entry.sessionId === 'daily');
+
 export function History() {
   const { state } = useApp();
-  const sessions = useMemo(() => [...state.history].reverse(), [state.history]);
+  const [filter, setFilter] = useState<Filter>('all');
+
+  // Sorted by the date logged, not by the order entries landed in the array —
+  // an import can put them in any order.
+  const sorted = useMemo(
+    () =>
+      [...state.history].sort(
+        (a, b) => b.date.localeCompare(a.date) || b.startedAt.localeCompare(a.startedAt),
+      ),
+    [state.history],
+  );
+
+  const sessions = useMemo(() => sorted.filter((h) => matches(h, filter)), [sorted, filter]);
+  const anyPainFlag = useMemo(() => sorted.some((h) => h.painFlag), [sorted]);
 
   const tracked = useMemo(() => {
     const map = new Map<string, number[]>();
@@ -24,7 +49,7 @@ export function History() {
     return [...map.entries()].filter(([, v]) => v.length >= 2);
   }, [state.history]);
 
-  if (sessions.length === 0) {
+  if (sorted.length === 0) {
     return (
       <div className="ridge-enter">
         <h1 className="text-[2rem] font-bold tracking-tight text-ink">History</h1>
@@ -65,12 +90,44 @@ export function History() {
       )}
 
       <section className="space-y-2">
-        <h2 className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-faint">
-          Sessions
-        </h2>
-        {sessions.map((h) => (
-          <SessionRow key={`${h.startedAt}-${h.sessionId}`} entry={h} />
-        ))}
+        <div className="mb-2.5 flex items-center justify-between gap-3">
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-faint">
+            Sessions
+          </h2>
+          {/* The daily routine outnumbers gym sessions roughly three to one, so
+              without this the interesting entries are buried. */}
+          <div className="flex gap-1">
+            {FILTERS.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setFilter(f.id)}
+                aria-pressed={filter === f.id}
+                className={[
+                  'h-8 rounded-full px-3 text-xs font-semibold transition-colors',
+                  filter === f.id ? 'bg-accent text-base' : 'bg-raised text-muted active:opacity-80',
+                ].join(' ')}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {anyPainFlag && (
+          <p className="flex items-center gap-1.5 pb-1 text-xs text-faint">
+            <AlertTriangle size={12} className="shrink-0 text-danger" />
+            marks a session where radiating symptoms were flagged.
+          </p>
+        )}
+
+        {sessions.length === 0 ? (
+          <p className="rounded-card border border-line/50 bg-surface p-4 text-sm text-muted">
+            Nothing logged under this filter yet.
+          </p>
+        ) : (
+          sessions.map((h) => <SessionRow key={`${h.startedAt}-${h.sessionId}`} entry={h} />)
+        )}
       </section>
     </div>
   );
@@ -108,7 +165,8 @@ function SessionRow({ entry }: { entry: CompletedSession }) {
             )}
           </span>
           <span className="block text-xs text-faint">
-            {friendlyDate(entry.date)} · {humanDuration(elapsed)} · {entry.sets.length} sets
+            {friendlyDate(entry.date)} · {humanDuration(elapsed)} · {entry.sets.length} set
+            {entry.sets.length === 1 ? '' : 's'}
           </span>
         </span>
         <ChevronDown

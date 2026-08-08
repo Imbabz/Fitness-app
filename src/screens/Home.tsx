@@ -55,6 +55,10 @@ export function Home({ onOpen }: { onOpen: (session: Session) => void }) {
             resuming={resuming === upNext.id}
           />
 
+          {/* The streak is the main lever on daily compliance, so it belongs on
+              the screen actually opened during the day, not only at night. */}
+          <StreakLine />
+
           <div className="grid grid-cols-2 gap-3">
             {GYM_SESSIONS.filter((s) => s.id !== upNext.id).map((s) => (
               <button

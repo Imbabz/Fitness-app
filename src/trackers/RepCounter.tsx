@@ -96,11 +96,15 @@ export function RepCounter({
             : 'border border-line bg-surface text-muted',
         ].join(' ')}
       >
-        {reached
-          ? setIndex + 1 < exercise.sets
-            ? 'Log set · rest'
-            : 'Log final set'
-          : `Log ${count} rep${count === 1 ? '' : 's'}`}
+        {/* At zero the button is disabled, so it says what to do instead of
+            offering to log nothing. */}
+        {count === 0
+          ? 'Tap the dial to count'
+          : reached
+            ? setIndex + 1 < exercise.sets
+              ? 'Log set · rest'
+              : 'Log final set'
+            : `Log ${count} rep${count === 1 ? '' : 's'}`}
       </button>
     </div>
   );

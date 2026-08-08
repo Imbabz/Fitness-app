@@ -27,15 +27,24 @@ const COPY: Record<Block, { line: string; tone: string }> = {
   },
 };
 
+/**
+ * The spine copy is the longest and the only one that is a medical
+ * instruction rather than encouragement, so it waits for a tap instead of
+ * expiring after a second and a half. Every other block still auto-dismisses.
+ */
+const DISMISS_MS = 1500;
+
 export function Interstitial({ block, onDismiss }: { block: Block; onDismiss: () => void }) {
+  const spine = block === 'spine';
+
   useEffect(() => {
     haptic(HAPTIC.transition);
-    const t = window.setTimeout(onDismiss, 1500);
+    if (spine) return;
+    const t = window.setTimeout(onDismiss, DISMISS_MS);
     return () => window.clearTimeout(t);
-  }, [block, onDismiss]);
+  }, [block, onDismiss, spine]);
 
   const copy = COPY[block];
-  const spine = block === 'spine';
 
   return (
     <button
@@ -53,6 +62,11 @@ export function Interstitial({ block, onDismiss }: { block: Block; onDismiss: ()
       </span>
       <span className="text-3xl font-bold tracking-tight text-ink">{copy.line}</span>
       <span className="max-w-xs text-sm leading-relaxed text-muted">{copy.tone}</span>
+      {spine && (
+        <span className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-faint">
+          Tap to continue
+        </span>
+      )}
     </button>
   );
 }

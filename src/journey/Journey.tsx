@@ -125,6 +125,13 @@ export function Journey({ session, onExit }: { session: Session; onExit: () => v
           stageIndex={stageIndex}
           onNext={() => go(stageIndex + 1)}
           onBack={() => go(stageIndex - 1)}
+          // Leaving keeps `activeSession`, so the home screen offers Resume and
+          // the journey reopens on this exact stage.
+          onLeave={onExit}
+          onDiscard={() => {
+            abandonSession();
+            onExit();
+          }}
         />
       </div>
 
