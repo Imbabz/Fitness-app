@@ -1,10 +1,12 @@
-import { ArrowRight, Clock, X } from 'lucide-react';
-import type { Block, Session } from '../types';
+import { ArrowRight, Clock, SlidersHorizontal, X } from 'lucide-react';
+import { useState } from 'react';
+import type { Block, Exercise, Session } from '../types';
 import { BLOCK_LABEL } from '../data/sessions';
 import { ExerciseAnimation } from '../animations/registry';
 import { PainFlagBanner } from './PainFlagBanner';
 import { useApp } from '../state/AppStateContext';
 import { painFlagFollowUp } from '../state/selectors';
+import { TuningSheet } from './TuningSheet';
 
 const BLOCK_DOT: Record<Block, string> = {
   warmup: 'bg-warmup',
@@ -28,6 +30,7 @@ export function Trailhead({
 }) {
   const { state } = useApp();
   const flagged = painFlagFollowUp(state, session);
+  const [editing, setEditing] = useState<Exercise | null>(null);
 
   // The route profile: consecutive stages grouped into their blocks.
   const profile: Array<{ block: Block; count: number }> = [];
@@ -75,37 +78,51 @@ export function Trailhead({
           ))}
         </div>
 
+        <p className="mb-2 text-xs text-faint">Tap an exercise to adjust its sets, reps or rest.</p>
+
         <ul className="space-y-2">
           {session.exercises.map((ex, i) => (
-            <li
-              key={ex.id}
-              className={[
-                'flex items-center gap-3 rounded-card border px-3 py-2.5 transition-colors',
-                ex.block === 'spine'
-                  ? 'border-spine/40 bg-spine/[0.07]'
-                  : 'border-line/60 bg-surface',
-              ].join(' ')}
-            >
-              <span
-                className={`h-8 w-1 shrink-0 rounded-full ${BLOCK_DOT[ex.block]} opacity-80`}
-                aria-hidden="true"
-              />
-              <span className="shrink-0 text-muted">
-                <ExerciseAnimation animation={ex.animation} size={30} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium text-ink">{ex.name}</span>
-                <span className="block truncate text-xs text-faint">{ex.prescription}</span>
-              </span>
-              <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-faint">
-                {i === 0 || session.exercises[i - 1]?.block !== ex.block
-                  ? BLOCK_LABEL[ex.block]
-                  : ''}
-              </span>
+            <li key={ex.id}>
+              <button
+                type="button"
+                onClick={() => setEditing(ex)}
+                aria-label={`Adjust ${ex.name}`}
+                className={[
+                  'flex w-full items-center gap-3 rounded-card border px-3 py-2.5 text-left transition-colors active:bg-raised',
+                  ex.block === 'spine'
+                    ? 'border-spine/40 bg-spine/[0.07]'
+                    : 'border-line/60 bg-surface',
+                ].join(' ')}
+              >
+                <span
+                  className={`h-8 w-1 shrink-0 rounded-full ${BLOCK_DOT[ex.block]} opacity-80`}
+                  aria-hidden="true"
+                />
+                <span className="shrink-0 text-muted">
+                  <ExerciseAnimation animation={ex.animation} size={30} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium text-ink">{ex.name}</span>
+                  <span className="block truncate text-xs text-faint">{ex.prescription}</span>
+                </span>
+                <span className="flex shrink-0 flex-col items-end gap-1">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-faint">
+                    {i === 0 || session.exercises[i - 1]?.block !== ex.block
+                      ? BLOCK_LABEL[ex.block]
+                      : ''}
+                  </span>
+                  <SlidersHorizontal
+                    size={14}
+                    className={state.tuning[ex.id] ? 'text-accent' : 'text-faint/60'}
+                  />
+                </span>
+              </button>
             </li>
           ))}
         </ul>
       </div>
+
+      {editing && <TuningSheet exercise={editing} onClose={() => setEditing(null)} />}
 
       <div className="mt-auto pt-8">
         <button

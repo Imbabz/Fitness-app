@@ -5,7 +5,7 @@ import { exportState, flushState, importState } from '../state/store';
 import { todayKey } from '../lib/time';
 
 export function Settings() {
-  const { state, setMode, updateSettings, replaceState, resetAll } = useApp();
+  const { state, setMode, updateSettings, replaceState, resetAll, resetAllTuning } = useApp();
   const [confirmReset, setConfirmReset] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -76,6 +76,25 @@ export function Settings() {
               </button>
             ))}
           </div>
+        </Row>
+        <Row
+          label="Adjusted exercises"
+          hint="Sets, reps and rest you changed at the trailhead."
+        >
+          {(() => {
+            const count = Object.keys(state.tuning).length;
+            return count === 0 ? (
+              <span className="text-sm text-faint">None</span>
+            ) : (
+              <button
+                type="button"
+                onClick={resetAllTuning}
+                className="h-10 rounded-lg bg-raised px-3 text-sm font-semibold text-muted active:opacity-80"
+              >
+                Restore {count}
+              </button>
+            );
+          })()}
         </Row>
         <Toggle
           label="Timer sound"

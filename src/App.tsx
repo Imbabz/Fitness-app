@@ -1,8 +1,8 @@
-import { Component, useState, type ReactNode } from 'react';
+import { Component, useMemo, useState, type ReactNode } from 'react';
 import { History as HistoryIcon, House, Moon, Settings as SettingsIcon, Sun } from 'lucide-react';
 import type { Session, View } from './types';
 import { AppStateProvider, useApp } from './state/AppStateContext';
-import { SESSION_BY_ID } from './data/sessions';
+import { tunedSession } from './state/selectors';
 import { Home } from './screens/Home';
 import { History } from './screens/History';
 import { Settings } from './screens/Settings';
@@ -23,8 +23,14 @@ export default function App() {
 function Shell() {
   const { state, toggleMode } = useApp();
   const [view, setView] = useState<View>('home');
-  const [session, setSession] = useState<Session | null>(() =>
-    state.activeSession ? (SESSION_BY_ID[state.activeSession.sessionId] ?? null) : null,
+  // Held as an id, not an object: the session is re-derived on every render so
+  // an adjustment made at the trailhead is live in the stages behind it.
+  const [sessionId, setSessionId] = useState<string | null>(
+    () => state.activeSession?.sessionId ?? null,
+  );
+  const session = useMemo(
+    () => (sessionId ? tunedSession(state, sessionId) : null),
+    [state, sessionId],
   );
 
   // A session in progress owns the screen — no header, no nav, one thing to do.
@@ -34,7 +40,7 @@ function Shell() {
         <Journey
           session={session}
           onExit={() => {
-            setSession(null);
+            setSessionId(null);
             setView('home');
           }}
         />
@@ -44,7 +50,7 @@ function Shell() {
 
   const open = (s: Session) => {
     haptic(HAPTIC.transition);
-    setSession(s);
+    setSessionId(s.id);
     setView(s.mode === 'night' ? 'routine' : 'session');
   };
 

@@ -1,8 +1,8 @@
 import { ArrowRight, Check, Clock, Flame, Moon, TriangleAlert } from 'lucide-react';
 import type { Session } from '../types';
 import { useApp } from '../state/AppStateContext';
-import { GYM_SESSIONS, DAILY_SESSION, SESSION_BY_ID } from '../data/sessions';
-import { dailyDoneToday, isTrainingDense, nextSessionId } from '../state/selectors';
+import { GYM_SESSIONS } from '../data/sessions';
+import { dailyDoneToday, isTrainingDense, nextSession, tunedSession } from '../state/selectors';
 import { WeekStrip } from '../components/WeekStrip';
 import { ExerciseAnimation } from '../animations/registry';
 
@@ -14,7 +14,8 @@ import { ExerciseAnimation } from '../animations/registry';
 export function Home({ onOpen }: { onOpen: (session: Session) => void }) {
   const { state, setMode } = useApp();
   const night = state.mode === 'night';
-  const upNext = SESSION_BY_ID[nextSessionId(state)] as Session;
+  const upNext = nextSession(state);
+  const daily = tunedSession(state, 'daily') as Session;
   const routineDone = dailyDoneToday(state);
   const dense = isTrainingDense(state);
 
@@ -37,7 +38,7 @@ export function Home({ onOpen }: { onOpen: (session: Session) => void }) {
       {night ? (
         <>
           <HeroCard
-            session={DAILY_SESSION}
+            session={daily}
             done={routineDone}
             onOpen={onOpen}
             resuming={resuming === 'daily'}
@@ -91,7 +92,7 @@ export function Home({ onOpen }: { onOpen: (session: Session) => void }) {
                 {routineDone ? 'Daily routine done' : 'Daily routine — not yet done'}
               </span>
               <span className="block text-xs text-faint">
-                {routineDone ? 'Nice. See you tomorrow.' : `${DAILY_SESSION.durationMin} min · McGill Big 3`}
+                {routineDone ? 'Nice. See you tomorrow.' : `${daily.durationMin} min · McGill Big 3`}
               </span>
             </span>
             <ArrowRight size={17} className="shrink-0 text-faint" />

@@ -2,6 +2,7 @@ import type { AppState, CompletedSession, Exercise, LoggedSet, Session } from '.
 import { ROTATION, SESSION_BY_ID } from '../data/sessions';
 import { EXERCISE_BY_ID } from '../data/exercises';
 import { addDays, daysBetween, todayKey } from '../lib/time';
+import { tuneSession } from './tuning';
 
 /** Progression thresholds differ by block and must not be unified. */
 export const PROGRESSION_THRESHOLD = { main: 2, spine: 4 } as const;
@@ -20,7 +21,16 @@ export function nextSessionId(state: AppState): 'A' | 'B' | 'C' {
 }
 
 export function nextSession(state: AppState): Session {
-  return SESSION_BY_ID[nextSessionId(state)] as Session;
+  return tunedSession(state, nextSessionId(state)) as Session;
+}
+
+/**
+ * The single way to read a session. Everything user-facing goes through here so
+ * an adjustment shows up in the preview, the stages and the trackers alike.
+ */
+export function tunedSession(state: AppState, sessionId: string): Session | null {
+  const session = SESSION_BY_ID[sessionId];
+  return session ? tuneSession(session, state.tuning) : null;
 }
 
 export function dailyDoneOn(state: AppState, date: string): boolean {

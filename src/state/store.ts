@@ -1,5 +1,6 @@
 import type { AppState, Mode } from '../types';
 import { todayKey } from '../lib/time';
+import { coerceTuningMap } from './tuning';
 
 /** Versioned so a schema change can migrate rather than corrupt. */
 export const STORAGE_KEY = 'ridge:state:v1';
@@ -19,6 +20,7 @@ export function seedState(): AppState {
     history: [],
     activeSession: null,
     lastWeights: {},
+    tuning: {},
     streak: { current: 0, longest: 0, lastDailyDate: null },
     settings: {
       restDefaultSeconds: 90,
@@ -78,6 +80,7 @@ export function coerceState(raw: unknown): AppState {
           }
         : null,
     lastWeights: rec(o.lastWeights),
+    tuning: coerceTuningMap(o.tuning),
     streak: {
       current: typeof streak.current === 'number' ? streak.current : 0,
       longest: typeof streak.longest === 'number' ? streak.longest : 0,

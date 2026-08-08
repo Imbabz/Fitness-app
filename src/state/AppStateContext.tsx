@@ -8,9 +8,18 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import type { AppState, CompletedSession, LoggedSet, Mode, Settings } from '../types';
+import type {
+  AppState,
+  CompletedSession,
+  ExerciseTuning,
+  LoggedSet,
+  Mode,
+  Settings,
+} from '../types';
 import { applyModeExpiry, flushState, loadState, saveState, seedState } from './store';
 import { computeStreak } from './selectors';
+import { coerceTuning } from './tuning';
+import { EXERCISE_BY_ID } from '../data/exercises';
 import { setHapticsEnabled } from '../lib/haptics';
 import { todayKey } from '../lib/time';
 
@@ -19,6 +28,9 @@ interface Api {
   setMode: (mode: Mode) => void;
   toggleMode: () => void;
   updateSettings: (patch: Partial<Settings>) => void;
+  /** Pass null to restore the seed prescription for that exercise. */
+  setTuning: (exerciseId: string, tuning: ExerciseTuning | null) => void;
+  resetAllTuning: () => void;
 
   beginSession: (sessionId: string) => void;
   setStageIndex: (i: number) => void;
@@ -102,6 +114,51 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setState((s) => ({ ...s, settings: { ...s.settings, ...patch } }));
   }, []);
 
+  const setTuning = useCallback((exerciseId: string, tuning: ExerciseTuning | null) => {
+    setState((s) => {
+      const next = { ...s.tuning };
+      const cleaned = tuning ? coerceTuning(tuning) : null;
+      const seed = EXERCISE_BY_ID[exerciseId];
+
+      // Values matching the seed are dropped rather than stored, so "adjusted"
+      // means genuinely different and Reset has something to restore to.
+      const diff: ExerciseTuning = {};
+      if (cleaned && seed) {
+        if (
+          cleaned.repScheme &&
+          (cleaned.repScheme.length !== seed.repScheme.length ||
+            cleaned.repScheme.some((r, i) => r !== seed.repScheme[i]))
+        ) {
+          diff.repScheme = cleaned.repScheme;
+        }
+        if (cleaned.holdSeconds !== undefined && cleaned.holdSeconds !== seed.holdSeconds) {
+          diff.holdSeconds = cleaned.holdSeconds;
+        }
+        if (
+          cleaned.durationSeconds !== undefined &&
+          cleaned.durationSeconds !== seed.durationSeconds
+        ) {
+          diff.durationSeconds = cleaned.durationSeconds;
+        }
+        if (cleaned.distanceM !== undefined && cleaned.distanceM !== seed.distanceM) {
+          diff.distanceM = cleaned.distanceM;
+        }
+        if (cleaned.restSeconds !== undefined && cleaned.restSeconds !== seed.restSeconds) {
+          diff.restSeconds = cleaned.restSeconds;
+        }
+      }
+
+      if (Object.keys(diff).length === 0) delete next[exerciseId];
+      else next[exerciseId] = diff;
+
+      return { ...s, tuning: next };
+    });
+  }, []);
+
+  const resetAllTuning = useCallback(() => {
+    setState((s) => ({ ...s, tuning: {} }));
+  }, []);
+
   const beginSession = useCallback((sessionId: string) => {
     setState((s) => ({
       ...s,
@@ -180,6 +237,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setMode,
       toggleMode,
       updateSettings,
+      setTuning,
+      resetAllTuning,
       beginSession,
       setStageIndex,
       logSet,
@@ -193,6 +252,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       setMode,
       toggleMode,
       updateSettings,
+      setTuning,
+      resetAllTuning,
       beginSession,
       setStageIndex,
       logSet,

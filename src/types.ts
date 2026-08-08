@@ -80,6 +80,22 @@ export interface ActiveSession {
   stageIndex: number;
 }
 
+/**
+ * User adjustments to an exercise's prescribed numbers. Every field is optional
+ * and absent means "use the seed value", so clearing one restores the original.
+ *
+ * Deliberately limited to how much work and for how long. Movement selection,
+ * ordering, block and tempo are medical decisions and are not adjustable here.
+ */
+export interface ExerciseTuning {
+  /** One entry per set, so `sets` stays derived. Never collapse to a count. */
+  repScheme?: number[];
+  holdSeconds?: number;
+  durationSeconds?: number;
+  distanceM?: number;
+  restSeconds?: number;
+}
+
 export interface Settings {
   /** Fallback when an exercise has no restSeconds of its own. */
   restDefaultSeconds: number;
@@ -99,6 +115,8 @@ export interface AppState {
   activeSession: ActiveSession | null;
   /** exerciseId → last used kg. */
   lastWeights: Record<string, number>;
+  /** exerciseId → adjusted prescription. Absent entries use the seed values. */
+  tuning: Record<string, ExerciseTuning>;
   streak: { current: number; longest: number; lastDailyDate: string | null };
   settings: Settings;
 }
