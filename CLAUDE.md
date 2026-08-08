@@ -59,6 +59,10 @@ These are not preferences. Breaking them breaks the product.
   corrupt store must degrade, never white-screen.
 - Writes to localStorage are debounced to 500ms and flushed on `pagehide`.
 - No router library. A `view` state machine covers it.
+- The service worker is **generated** by an inline plugin in `vite.config.ts`;
+  there is no `sw.js` in the tree to edit. Navigations are network-first so a
+  deploy is never stale, hashed assets are cache-first, and the cache name is
+  derived from the built filenames so the old one is dropped on activate.
 - Animations are hand-written CSS keyframes on inline SVG. No animation
   libraries, no Lottie, no GIFs.
 - Touch targets ≥ 44px. Assume chalky hands and a phone propped against a
