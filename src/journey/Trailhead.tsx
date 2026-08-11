@@ -1,10 +1,11 @@
-import { ArrowRight, ChevronDown, ChevronUp, Clock, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import { ArrowRight, Clock, GripVertical, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
+import { useRef, useState } from 'react';
 import type { Block, Exercise, Session } from '../types';
 import { BLOCK_LABEL } from '../data/sessions';
 import { ExerciseAnimation } from '../animations/registry';
 import { PainFlagBanner } from './PainFlagBanner';
 import { useApp } from '../state/AppStateContext';
+import { haptic, HAPTIC } from '../lib/haptics';
 import { painFlagFollowUp } from '../state/selectors';
 import { TuningSheet } from './TuningSheet';
 
@@ -31,13 +32,52 @@ export function Trailhead({
   const { state, moveExercise, resetOrder } = useApp();
   const flagged = painFlagFollowUp(state, session);
   const [editing, setEditing] = useState<Exercise | null>(null);
-  const [reordering, setReordering] = useState(false);
 
-  // Only within a block: the block sequence is structural, so an arrow that
-  // would cross a boundary is disabled rather than silently doing nothing.
+  const listRef = useRef<HTMLUListElement>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dy, setDy] = useState(0);
+  const drag = useRef({ startY: 0, rowH: 64 });
+
+  // Only within a block: the block sequence is structural, so a drag that would
+  // cross a boundary meets resistance instead of moving anything.
   const canMove = (i: number, delta: -1 | 1) => {
     const target = session.exercises[i + delta];
     return !!target && target.block === session.exercises[i]?.block;
+  };
+
+  const startDrag = (e: React.PointerEvent, id: string) => {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const row = (e.currentTarget as HTMLElement).closest('li');
+    // Row height plus the list's 8px gap: one row of travel is one swap.
+    drag.current = { startY: e.clientY, rowH: (row?.offsetHeight ?? 56) + 8 };
+    setDragId(id);
+    setDy(0);
+    haptic(HAPTIC.tick);
+  };
+
+  const onDragMove = (e: React.PointerEvent) => {
+    if (!dragId) return;
+    let offset = e.clientY - drag.current.startY;
+    const from = session.exercises.findIndex((x) => x.id === dragId);
+    const dir: -1 | 1 = offset > 0 ? 1 : -1;
+
+    if (Math.abs(offset) >= drag.current.rowH && canMove(from, dir)) {
+      moveExercise(session.id, dragId, dir);
+      drag.current.startY += dir * drag.current.rowH;
+      offset -= dir * drag.current.rowH;
+      haptic(HAPTIC.tick);
+    }
+    // Held at one row past the last legal position, so the block boundary is
+    // something you can feel rather than a control that silently does nothing.
+    const limit = drag.current.rowH;
+    setDy(Math.max(-limit, Math.min(limit, offset)));
+  };
+
+  const endDrag = () => {
+    if (dragId) haptic(HAPTIC.complete);
+    setDragId(null);
+    setDy(0);
   };
 
   // The route profile: consecutive stages grouped into their blocks.
@@ -88,68 +128,62 @@ export function Trailhead({
 
         <div className="mb-2 flex items-center justify-between gap-3">
           <p className="min-w-0 flex-1 text-xs text-faint">
-            {reordering
-              ? 'Reorder within a block. Blocks keep their sequence.'
-              : 'Tap an exercise to swap it or adjust its sets, reps and rest.'}
+            Tap to swap or adjust. Drag the handle to reorder within a block.
           </p>
-          <div className="flex shrink-0 gap-1">
-            {reordering && state.order[session.id] && (
-              <button
-                type="button"
-                onClick={() => resetOrder(session.id)}
-                className="flex h-8 items-center gap-1 rounded-full bg-raised px-3 text-xs font-semibold text-muted active:opacity-80"
-              >
-                <RotateCcw size={13} />
-                Reset
-              </button>
-            )}
+          {state.order[session.id] && (
             <button
               type="button"
-              onClick={() => setReordering((v) => !v)}
-              aria-pressed={reordering}
-              className={[
-                'h-8 rounded-full px-3 text-xs font-semibold transition-colors',
-                reordering ? 'bg-accent text-base' : 'bg-raised text-muted active:opacity-80',
-              ].join(' ')}
+              onClick={() => resetOrder(session.id)}
+              className="flex h-8 shrink-0 items-center gap-1 rounded-full bg-raised px-3 text-xs font-semibold text-muted active:opacity-80"
             >
-              {reordering ? 'Done' : 'Reorder'}
+              <RotateCcw size={13} />
+              Order
             </button>
-          </div>
+          )}
         </div>
 
-        <ul className="space-y-2">
-          {session.exercises.map((ex, i) => (
-            <li key={ex.id} className="relative">
-              <button
-                type="button"
-                onClick={() => !reordering && setEditing(ex)}
-                disabled={reordering}
-                aria-label={`Adjust ${ex.name}`}
-                className={[
-                  'flex w-full items-center gap-3 rounded-card border px-3 py-2.5 text-left transition-colors active:bg-raised',
-                  ex.block === 'spine'
-                    ? 'border-spine/40 bg-spine/[0.07]'
-                    : 'border-line/60 bg-surface',
-                ].join(' ')}
+        <ul ref={listRef} className="space-y-2">
+          {session.exercises.map((ex, i) => {
+            const dragging = ex.id === dragId;
+            return (
+              <li
+                key={ex.id}
+                className="relative"
+                style={
+                  dragging
+                    ? { transform: `translateY(${dy}px)`, zIndex: 20, position: 'relative' }
+                    : undefined
+                }
               >
-                <span
-                  className={`h-8 w-1 shrink-0 rounded-full ${BLOCK_DOT[ex.block]} opacity-80`}
-                  aria-hidden="true"
-                />
-                <span className="shrink-0 text-muted">
-                  <ExerciseAnimation animation={ex.animation} size={30} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium text-ink">{ex.name}</span>
-                  <span className="block truncate text-xs text-faint">{ex.prescription}</span>
-                </span>
-                <span className="flex shrink-0 flex-col items-end gap-1">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-faint">
-                    {i === 0 || session.exercises[i - 1]?.block !== ex.block
-                      ? BLOCK_LABEL[ex.block]
-                      : ''}
+                <button
+                  type="button"
+                  onClick={() => setEditing(ex)}
+                  aria-label={`Adjust ${ex.name}`}
+                  className={[
+                    'flex w-full items-center gap-3 rounded-card border py-2.5 pl-3 pr-12 text-left transition-colors active:bg-raised',
+                    ex.block === 'spine'
+                      ? 'border-spine/40 bg-spine/[0.07]'
+                      : 'border-line/60 bg-surface',
+                    dragging ? 'border-accent/60 shadow-lg' : '',
+                  ].join(' ')}
+                >
+                  <span
+                    className={`h-8 w-1 shrink-0 rounded-full ${BLOCK_DOT[ex.block]} opacity-80`}
+                    aria-hidden="true"
+                  />
+                  <span className="shrink-0 text-muted">
+                    <ExerciseAnimation animation={ex.animation} size={30} />
                   </span>
-                  {!reordering && (
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-ink">{ex.name}</span>
+                    <span className="block truncate text-xs text-faint">{ex.prescription}</span>
+                  </span>
+                  <span className="flex shrink-0 flex-col items-end gap-1">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-faint">
+                      {i === 0 || session.exercises[i - 1]?.block !== ex.block
+                        ? BLOCK_LABEL[ex.block]
+                        : ''}
+                    </span>
                     <SlidersHorizontal
                       size={14}
                       className={
@@ -158,30 +192,28 @@ export function Trailhead({
                           : 'text-faint/60'
                       }
                     />
-                  )}
-                </span>
-              </button>
+                  </span>
+                </button>
 
-              {reordering && (
-                <span className="absolute inset-y-0 right-2 flex items-center gap-0.5">
-                  <ArrowButton
-                    label={`Move ${ex.name} up`}
-                    disabled={!canMove(i, -1)}
-                    onClick={() => moveExercise(session.id, ex.id, -1)}
-                  >
-                    <ChevronUp size={18} />
-                  </ArrowButton>
-                  <ArrowButton
-                    label={`Move ${ex.name} down`}
-                    disabled={!canMove(i, 1)}
-                    onClick={() => moveExercise(session.id, ex.id, 1)}
-                  >
-                    <ChevronDown size={18} />
-                  </ArrowButton>
+                {/* Its own pointer target, so a tap on the row still opens the
+                    sheet. `touch-none` stops the page scrolling under the drag. */}
+                <span
+                  role="button"
+                  tabIndex={-1}
+                  aria-label={`Reorder ${ex.name}`}
+                  onPointerDown={(e) => startDrag(e, ex.id)}
+                  onPointerMove={onDragMove}
+                  onPointerUp={endDrag}
+                  onPointerCancel={endDrag}
+                  className={`absolute inset-y-0 right-0 grid w-11 touch-none place-items-center ${
+                    dragging ? 'text-accent' : 'text-faint/50'
+                  }`}
+                >
+                  <GripVertical size={17} />
                 </span>
-              )}
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       </div>
 
@@ -200,29 +232,5 @@ export function Trailhead({
         </button>
       </div>
     </div>
-  );
-}
-
-function ArrowButton({
-  label,
-  disabled,
-  onClick,
-  children,
-}: {
-  label: string;
-  disabled: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      disabled={disabled}
-      onClick={onClick}
-      className="grid h-11 w-9 place-items-center rounded-lg text-muted active:bg-raised disabled:opacity-25"
-    >
-      {children}
-    </button>
   );
 }

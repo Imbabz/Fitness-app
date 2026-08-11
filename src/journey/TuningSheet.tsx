@@ -118,7 +118,52 @@ export function TuningSheet({
           </button>
         </div>
 
-        <div className="mt-5 space-y-4">
+        <div className="mt-5">
+          <div className="flex items-baseline justify-between">
+            <span className="text-sm font-medium text-ink">Movement</span>
+            <span className="text-xs text-faint">{BLOCK_LABEL[original.block].toLowerCase()}</span>
+          </div>
+
+          <div className="mt-2 space-y-1.5">
+            <Choice
+              exercise={original}
+              active={exercise.id === original.id}
+              badge="original"
+              onPick={() => pick(null)}
+            />
+            {suggested.map((choice) => (
+              <Choice
+                key={choice.id}
+                exercise={choice}
+                active={choice.id === exercise.id}
+                badge="suggested"
+                onPick={() => pick(choice.id)}
+              />
+            ))}
+          </div>
+
+          {others.length > 0 && (
+            <details className="mt-2">
+              <summary className="flex h-11 cursor-pointer list-none items-center justify-between rounded-card px-1 text-sm font-medium text-muted [&::-webkit-details-marker]:hidden">
+                Anything else in this block
+                <span className="text-xs text-faint">{others.length}</span>
+              </summary>
+              <div className="mt-1.5 space-y-1.5">
+                {others.map((choice) => (
+                  <Choice
+                    key={choice.id}
+                    exercise={choice}
+                    active={choice.id === exercise.id}
+                    onPick={() => pick(choice.id)}
+                  />
+                ))}
+              </div>
+            </details>
+          )}
+        </div>
+
+        <div className="mt-7 space-y-4">
+          <span className="block text-sm font-medium text-ink">How much</span>
           {isDuration ? (
             <Stepper
               label="Duration"
@@ -211,50 +256,6 @@ export function TuningSheet({
             max={TUNING_LIMITS.restSeconds.max}
             onChange={(v) => patch({ restSeconds: v })}
           />
-        </div>
-
-        <div className="mt-6">
-          <div className="flex items-baseline justify-between">
-            <span className="text-sm font-medium text-ink">Movement</span>
-            <span className="text-xs text-faint">{BLOCK_LABEL[original.block].toLowerCase()}</span>
-          </div>
-
-          <div className="mt-2 space-y-1.5">
-            <Choice
-              exercise={original}
-              active={exercise.id === original.id}
-              badge="original"
-              onPick={() => pick(null)}
-            />
-            {suggested.map((choice) => (
-              <Choice
-                key={choice.id}
-                exercise={choice}
-                active={choice.id === exercise.id}
-                badge="suggested"
-                onPick={() => pick(choice.id)}
-              />
-            ))}
-          </div>
-
-          {others.length > 0 && (
-            <details className="mt-2">
-              <summary className="flex h-11 cursor-pointer list-none items-center justify-between rounded-card px-1 text-sm font-medium text-muted [&::-webkit-details-marker]:hidden">
-                Anything else in this block
-                <span className="text-xs text-faint">{others.length}</span>
-              </summary>
-              <div className="mt-1.5 space-y-1.5">
-                {others.map((choice) => (
-                  <Choice
-                    key={choice.id}
-                    exercise={choice}
-                    active={choice.id === exercise.id}
-                    onPick={() => pick(choice.id)}
-                  />
-                ))}
-              </div>
-            </details>
-          )}
         </div>
 
         {seed.block === 'spine' && (
