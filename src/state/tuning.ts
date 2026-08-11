@@ -207,10 +207,25 @@ export function resolveSession(session: Session, custom: Customisation): Session
   // Substitute first, then order. The stored order therefore holds the ids the
   // user is actually looking at, which is what the reorder controls hand back.
   // Undoing a swap drops that one exercise back to its seed position.
+  const prescribed = new Set(session.exercises.map((e) => e.id));
+  const taken = new Set<string>();
+
   let exercises = session.exercises.map((ex) => {
     const substituteId = custom.swaps[ex.id];
-    if (!substituteId || !isVettedSwap(ex.id, substituteId)) return ex;
-    return EXERCISE_BY_ID[substituteId] as Exercise;
+    const substitute = substituteId ? EXERCISE_BY_ID[substituteId] : undefined;
+
+    // Refused if the session already prescribes that movement, or if an earlier
+    // swap has claimed it: either way the session would contain it twice, and
+    // the second copy would silently overwrite the first one's logged sets.
+    const wouldDuplicate =
+      !!substituteId && (prescribed.has(substituteId) || taken.has(substituteId));
+
+    if (!substituteId || !substitute || wouldDuplicate || !isVettedSwap(ex.id, substituteId)) {
+      taken.add(ex.id);
+      return ex;
+    }
+    taken.add(substituteId);
+    return substitute;
   });
 
   const preferred = custom.order[session.id];

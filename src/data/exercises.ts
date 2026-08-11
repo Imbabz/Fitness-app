@@ -45,6 +45,7 @@ const cardioWarmup = (id: string, note: string): Exercise => ({
     `thing this whole programme is arranged to avoid.`,
   animation: 'bike',
   loadTracked: false,
+  alternates: ['alt-walk'],
 });
 
 const jeffersonCurl = (id: string): Exercise => ({
@@ -96,6 +97,7 @@ export const EXERCISES: Exercise[] = [
       'A pulling session driven by the arms rather than the back is how shoulders get irritated.',
     animation: 'scapRetract',
     loadTracked: false,
+    alternates: ['b-band-pull-aparts'],
   },
   {
     id: 'a-lat-pulldown',
@@ -117,6 +119,7 @@ export const EXERCISES: Exercise[] = [
       'rather than a bent-over row.',
     animation: 'pull',
     loadTracked: true,
+    alternates: ['c-chinups', 'alt-inverted-row'],
   },
   {
     id: 'a-cable-row',
@@ -137,6 +140,7 @@ export const EXERCISES: Exercise[] = [
       'the reason bent-over rows are absent from this programme entirely.',
     animation: 'row',
     loadTracked: true,
+    alternates: ['c-chest-supported-row', 'alt-inverted-row'],
   },
   {
     id: 'a-pullups',
@@ -158,6 +162,7 @@ export const EXERCISES: Exercise[] = [
       'a kip is a fast loaded lumbar extension.',
     animation: 'pullup',
     loadTracked: false,
+    alternates: ['c-chinups'],
   },
   {
     id: 'a-hammer-wrist',
@@ -177,6 +182,7 @@ export const EXERCISES: Exercise[] = [
       'load the extensors, and that imbalance is where medial and lateral elbow pain comes from.',
     animation: 'curl',
     loadTracked: true,
+    alternates: ['c-pinch-block'],
   },
   jeffersonCurl('a-jefferson'),
   {
@@ -199,6 +205,7 @@ export const EXERCISES: Exercise[] = [
       'high-rep on purpose: this is a motor-pattern session, not a strength test.',
     animation: 'hinge',
     loadTracked: true,
+    alternates: ['b-rdl', 'alt-kb-deadlift'],
   },
 
   // ── Session B · Push ──────────────────────────────────────────────────────
@@ -221,6 +228,7 @@ export const EXERCISES: Exercise[] = [
       'the socket. Push sessions without it are how climbers end up with impinged shoulders.',
     animation: 'pullApart',
     loadTracked: false,
+    alternates: ['a-shoulder-prep'],
   },
   {
     id: 'b-bench',
@@ -241,6 +249,7 @@ export const EXERCISES: Exercise[] = [
       'irritated L5-S1 needs.',
     animation: 'press',
     loadTracked: true,
+    alternates: ['alt-floor-press', 'alt-pushup'],
   },
   {
     id: 'b-dips',
@@ -261,6 +270,7 @@ export const EXERCISES: Exercise[] = [
       'because below parallel the shoulder pays for very little extra.',
     animation: 'dip',
     loadTracked: false,
+    alternates: ['alt-pushup', 'alt-floor-press'],
   },
   {
     id: 'b-shoulder-press',
@@ -281,6 +291,7 @@ export const EXERCISES: Exercise[] = [
       'protruding disc. The back pad removes both.',
     animation: 'shoulderPress',
     loadTracked: true,
+    alternates: ['alt-lateral-raise'],
   },
   {
     id: 'b-external-rotation',
@@ -300,6 +311,7 @@ export const EXERCISES: Exercise[] = [
       'forward and down; this is what pulls them back. It is deliberately the lightest work in the block.',
     animation: 'externalRotation',
     loadTracked: true,
+    alternates: ['alt-face-pull'],
   },
   jeffersonCurl('b-jefferson'),
   {
@@ -322,6 +334,7 @@ export const EXERCISES: Exercise[] = [
       'loaded flexion with a barbell.',
     animation: 'hinge',
     loadTracked: true,
+    alternates: ['a-deadlift', 'alt-kb-deadlift'],
   },
 
   // ── Session C · Mixed ─────────────────────────────────────────────────────
@@ -344,6 +357,7 @@ export const EXERCISES: Exercise[] = [
       'climbing never touches. This is the cheapest elbow-pain insurance available.',
     animation: 'wristRotate',
     loadTracked: false,
+    alternates: ['a-shoulder-prep'],
   },
   {
     id: 'c-chinups',
@@ -363,6 +377,7 @@ export const EXERCISES: Exercise[] = [
       'stimulus to session A and adding elbow-flexor strength that carries directly to steep climbing.',
     animation: 'pullup',
     loadTracked: false,
+    alternates: ['a-pullups', 'a-lat-pulldown'],
   },
   {
     id: 'c-chest-supported-row',
@@ -382,6 +397,7 @@ export const EXERCISES: Exercise[] = [
       'otherwise carry. This substitution is the entire reason bent-over barbell rows are excluded.',
     animation: 'row',
     loadTracked: true,
+    alternates: ['a-cable-row', 'alt-inverted-row'],
   },
   {
     id: 'c-farmers-carry',
@@ -424,6 +440,7 @@ export const EXERCISES: Exercise[] = [
       'in isolation. Pairing it with extensions keeps the flexor/extensor balance honest.',
     animation: 'pinch',
     loadTracked: true,
+    alternates: ['a-hammer-wrist'],
   },
   jeffersonCurl('c-jefferson'),
   {
@@ -446,6 +463,7 @@ export const EXERCISES: Exercise[] = [
       'movement here. The pelvic tuck is what stops it becoming a lumbar extension exercise.',
     animation: 'hipThrust',
     loadTracked: true,
+    alternates: ['b-rdl'],
   },
 
   // ── Daily · Restore (night) ───────────────────────────────────────────────
@@ -729,6 +747,166 @@ export const EXERCISES: Exercise[] = [
       'both ends at once would stretch an already irritated nerve, which reliably makes it worse.',
     animation: 'nerveglide',
     loadTracked: false,
+  },
+
+  // ── Gym · shared alternates ───────────────────────────────────────────────
+  //
+  // Not part of any fixed session — hence the `alt-` prefix rather than a
+  // session letter. They exist so that "the machine is taken" has an answer
+  // that is not "skip it". Each is a plain, well-established movement chosen
+  // for the same pattern as what it replaces, and none introduces loaded
+  // flexion, loaded rotation, or overhead axial compression.
+  {
+    id: 'alt-walk',
+    name: 'Brisk walk',
+    block: 'warmup',
+    prescription: '15 min easy',
+    tracking: 'duration',
+    sets: 1,
+    repScheme: [1],
+    durationSeconds: 900,
+    restSeconds: 0,
+    execution:
+      'Outside or on a treadmill at a flat gradient. Quick enough that talking takes a little ' +
+      'effort, slow enough that it never becomes jogging. Let the arms swing.',
+    cue: 'Brisk, not fast.',
+    why:
+      'Walking is the most consistently recommended activity for a disc, and the one McGill puts ' +
+      'above almost everything else: it loads and unloads the disc rhythmically at very low ' +
+      'magnitude. Fully interchangeable with the bike here — use it when the machines are busy.',
+    animation: 'walk',
+    loadTracked: false,
+    alternates: ['a-cardio'],
+  },
+  {
+    id: 'alt-inverted-row',
+    name: 'Inverted row',
+    block: 'main',
+    prescription: '3 × 12 · rest 90 sec',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [12, 12, 12],
+    restSeconds: 90,
+    execution:
+      'Bar at hip height, heels on the floor, body straight from heel to shoulder. Pull the chest ' +
+      'to the bar leading with the elbows, pause, lower under control. Raise the bar to make it ' +
+      'easier rather than letting the hips drop.',
+    cue: 'One straight line. Hips do not sag.',
+    why:
+      'A horizontal pull that costs the spine nothing: the trunk is rigid and horizontal, so there ' +
+      'is no loaded flexion at any point. The obvious answer when the cable station is taken, and ' +
+      'the reason bent-over rows are still not in this programme.',
+    animation: 'row',
+    loadTracked: false,
+    alternates: ['a-cable-row', 'c-chest-supported-row'],
+  },
+  {
+    id: 'alt-pushup',
+    name: 'Push-ups',
+    block: 'main',
+    prescription: '3 × 12 · rest 90 sec',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [12, 12, 12],
+    restSeconds: 90,
+    execution:
+      'Hands under the shoulders, body straight from heel to head, ribs down. Lower until the ' +
+      'chest is a fist off the floor, press back up. Raise the hands onto a bench if the hips ' +
+      'start to sag — that sag is lumbar extension under load.',
+    cue: 'Straight line. Squeeze the glutes.',
+    why:
+      'The same pressing pattern as the bench with no external load and no bench to queue for. ' +
+      'Holding the plank position while pressing is itself trunk work, which is a bonus here ' +
+      'rather than a distraction.',
+    animation: 'pushup',
+    loadTracked: false,
+    alternates: ['b-bench', 'b-dips'],
+  },
+  {
+    id: 'alt-floor-press',
+    name: 'Dumbbell floor press',
+    block: 'main',
+    prescription: '3 × 12 · rest 90 sec',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [12, 12, 12],
+    restSeconds: 90,
+    execution:
+      'Lying on the floor, knees bent, dumbbells over the chest. Press up and lower until the ' +
+      'upper arms touch the floor, then press again. The floor stops the range, which is the point.',
+    cue: 'Elbows touch, then press.',
+    why:
+      'The floor caps the range at the shoulder, which spares a cranky shoulder, and it puts the ' +
+      'whole spine flat with no arch at all — a bench press invites one, this does not. Needs two ' +
+      'dumbbells and a patch of floor.',
+    animation: 'press',
+    loadTracked: true,
+    alternates: ['b-bench', 'alt-pushup'],
+  },
+  {
+    id: 'alt-lateral-raise',
+    name: 'Lateral raise',
+    block: 'main',
+    prescription: '3 × 12 · light · rest 60 sec',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [12, 12, 12],
+    restSeconds: 60,
+    execution:
+      'Standing, light dumbbells at the sides, a small bend at the elbows. Raise to shoulder ' +
+      'height and no further, lead with the elbows, lower slowly. If the trunk starts swinging to ' +
+      'launch the weight, the weight is too heavy.',
+    cue: 'To shoulder height. No swing.',
+    why:
+      'Shoulder volume with the arms below the head, so there is none of the axial compression ' +
+      'that keeps the standing overhead press out of this programme. The no-swing rule is spinal: ' +
+      'a swing is a fast loaded lumbar extension.',
+    animation: 'latraise',
+    loadTracked: true,
+    alternates: ['b-shoulder-press'],
+  },
+  {
+    id: 'alt-face-pull',
+    name: 'Face pull',
+    block: 'main',
+    prescription: '3 × 15 · rest 60 sec',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [15, 15, 15],
+    restSeconds: 60,
+    execution:
+      'Cable or band at face height. Pull towards the forehead, splitting the hands apart and ' +
+      'rotating the knuckles up at the end. Stand tall — do not lean back to move more weight.',
+    cue: 'Hands split. Knuckles up.',
+    why:
+      'External rotation and rear delts under a bit more load than the band work, both of which a ' +
+      'climber is chronically short of. The same job as the cable external rotation, in a position ' +
+      'most gyms have free.',
+    animation: 'pullApart',
+    loadTracked: true,
+    alternates: ['b-external-rotation'],
+  },
+  {
+    id: 'alt-kb-deadlift',
+    name: 'Kettlebell deadlift',
+    block: 'spine',
+    prescription: '3 × 10 · rest 90 sec',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [10, 10, 10],
+    restSeconds: 90,
+    execution:
+      'Kettlebell between the feet, hips back, chest proud, shins near vertical. Stand up by ' +
+      'pushing the floor away and finish with the glutes. Lower by sending the hips back, and stop ' +
+      'the moment the lower back would round.',
+    cue: 'Hips back, not down. Stop before the back rounds.',
+    why:
+      'The same hinge as the trap-bar deadlift with the load closer to the floor and lighter, so ' +
+      'the pattern can be trained on a day when the full lift is too much. The handle sits between ' +
+      'the feet, which keeps the weight directly under the hips and the shear low.',
+    animation: 'hinge',
+    loadTracked: true,
+    alternates: ['a-deadlift', 'b-rdl'],
   },
 ];
 

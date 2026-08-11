@@ -426,6 +426,55 @@ const nerveGlide = ({ size, className }: AnimProps) => (
   </Figure>
 );
 
+const walk = ({ size, className }: AnimProps) => (
+  <Figure size={size} loop={2} className={className}>
+    <Ground />
+    <Head />
+    <line x1={32} y1={17} x2={32} y2={36} />
+    <g className="ra-carry-leg-l">
+      <line x1={32} y1={36} x2={28} y2={54} />
+    </g>
+    <g className="ra-carry-leg-r">
+      <line x1={32} y1={36} x2={36} y2={54} />
+    </g>
+    <g className="ra-walk-arm-l">
+      <line x1={32} y1={22} x2={26} y2={34} />
+    </g>
+    <g className="ra-walk-arm-r">
+      <line x1={32} y1={22} x2={38} y2={34} />
+    </g>
+  </Figure>
+);
+
+const pushup = ({ size, className }: AnimProps) => (
+  <Figure size={size} loop={2.2} className={className}>
+    <Ground y={54} />
+    <g className="ra-pushup-body">
+      <Head cx={14} cy={30} r={4.5} />
+      <line x1={19} y1={32} x2={48} y2={40} />
+      <line x1={48} y1={40} x2={54} y2={52} />
+    </g>
+    <line x1={22} y1={34} x2={22} y2={54} />
+  </Figure>
+);
+
+const lateralRaise = ({ size, className }: AnimProps) => (
+  <Figure size={size} loop={2.2} className={className}>
+    <Ground />
+    <Head />
+    <line x1={32} y1={17} x2={32} y2={38} />
+    {legs()}
+    <g className="ra-raise-arm-l">
+      <line x1={32} y1={23} x2={22} y2={38} />
+      <line x1={18} y1={38} x2={26} y2={38} />
+    </g>
+    <g className="ra-raise-arm-r">
+      <line x1={32} y1={23} x2={42} y2={38} />
+      <line x1={38} y1={38} x2={46} y2={38} />
+    </g>
+  </Figure>
+);
+
 export const ANIMATIONS: Record<string, (p: AnimProps) => ReactNode> = {
   bike,
   scapRetract,
@@ -452,6 +501,9 @@ export const ANIMATIONS: Record<string, (p: AnimProps) => ReactNode> = {
   standext: standExt,
   downdog: downDog,
   nerveglide: nerveGlide,
+  walk,
+  pushup,
+  latraise: lateralRaise,
 };
 
 /** Renders the animation for a key, or a neutral placeholder if it is missing.

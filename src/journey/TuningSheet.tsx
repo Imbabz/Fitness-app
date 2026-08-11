@@ -1,7 +1,7 @@
 import { Check, Minus, Plus, RotateCcw, X } from 'lucide-react';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import type { Exercise, ExerciseTuning } from '../types';
+import type { Exercise, ExerciseTuning, Session } from '../types';
 import { BLOCK_LABEL } from '../data/sessions';
 import { EXERCISE_BY_ID } from '../data/exercises';
 import { ExerciseAnimation } from '../animations/registry';
@@ -17,7 +17,15 @@ import { haptic, HAPTIC } from '../lib/haptics';
  * rest. Movement selection, ordering and the Jefferson curl's tempo are medical
  * decisions and are not offered here. See CLAUDE.md.
  */
-export function TuningSheet({ exercise, onClose }: { exercise: Exercise; onClose: () => void }) {
+export function TuningSheet({
+  session,
+  exercise,
+  onClose,
+}: {
+  session: Session;
+  exercise: Exercise;
+  onClose: () => void;
+}) {
   const { state, setTuning, setSwap } = useApp();
   const seed = EXERCISE_BY_ID[exercise.id] as Exercise;
 
@@ -26,8 +34,15 @@ export function TuningSheet({ exercise, onClose }: { exercise: Exercise; onClose
   const originalId =
     Object.entries(state.swaps).find(([, sub]) => sub === exercise.id)?.[0] ?? exercise.id;
   const original = (EXERCISE_BY_ID[originalId] ?? seed) as Exercise;
+  // A movement the session already prescribes elsewhere is left out: resolving
+  // it would be refused to avoid a duplicate, and a dead option is worse than
+  // no option.
+  const elsewhere = new Set(
+    session.exercises.filter((e) => e.id !== exercise.id).map((e) => e.id),
+  );
   const swapChoices = [original, ...(original.alternates ?? []).map((id) => EXERCISE_BY_ID[id])]
-    .filter((e): e is Exercise => !!e);
+    .filter((e): e is Exercise => !!e)
+    .filter((e) => e.id === exercise.id || !elsewhere.has(e.id));
 
   const [draft, setDraft] = useState<ExerciseTuning>(() => ({
     repScheme: [...exercise.repScheme],

@@ -185,7 +185,9 @@ export function Trailhead({
         </ul>
       </div>
 
-      {editing && <TuningSheet exercise={editing} onClose={() => setEditing(null)} />}
+      {editing && (
+        <TuningSheet session={session} exercise={editing} onClose={() => setEditing(null)} />
+      )}
 
       <div className="mt-auto pt-8">
         <button

@@ -649,3 +649,60 @@
     transform: rotate(-6deg);
   }
 }
+
+/* ── Gym · shared alternates ────────────────────────────────────────────── */
+
+/* Arms counter-swing against the legs, which reuse the carry's stride. */
+.ra-walk-arm-l {
+  transform-origin: 32px 22px;
+  animation-name: ra-stride-r;
+}
+.ra-walk-arm-r {
+  transform-origin: 32px 22px;
+  animation-name: ra-stride-l;
+}
+
+/* The body is one rigid plank pivoting at the feet — a sagging hip is the
+   fault this exercise's cue warns about, so the figure must never show it. */
+.ra-pushup-body {
+  transform-origin: 54px 52px;
+  animation-name: ra-pushup;
+}
+@keyframes ra-pushup {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(7deg);
+  }
+}
+
+.ra-raise-arm-l {
+  transform-origin: 32px 23px;
+  animation-name: ra-raise-l;
+}
+@keyframes ra-raise-l {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  45%,
+  60% {
+    transform: rotate(52deg);
+  }
+}
+.ra-raise-arm-r {
+  transform-origin: 32px 23px;
+  animation-name: ra-raise-r;
+}
+@keyframes ra-raise-r {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  45%,
+  60% {
+    transform: rotate(-52deg);
+  }
+}
