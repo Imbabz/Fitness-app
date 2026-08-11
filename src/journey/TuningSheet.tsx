@@ -1,9 +1,10 @@
-import { Minus, Plus, RotateCcw, X } from 'lucide-react';
+import { Check, Minus, Plus, RotateCcw, X } from 'lucide-react';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Exercise, ExerciseTuning } from '../types';
 import { BLOCK_LABEL } from '../data/sessions';
 import { EXERCISE_BY_ID } from '../data/exercises';
+import { ExerciseAnimation } from '../animations/registry';
 import { useApp } from '../state/AppStateContext';
 import { clampTo, tuneExercise, TUNING_LIMITS } from '../state/tuning';
 import { haptic, HAPTIC } from '../lib/haptics';
@@ -17,8 +18,16 @@ import { haptic, HAPTIC } from '../lib/haptics';
  * decisions and are not offered here. See CLAUDE.md.
  */
 export function TuningSheet({ exercise, onClose }: { exercise: Exercise; onClose: () => void }) {
-  const { state, setTuning } = useApp();
+  const { state, setTuning, setSwap } = useApp();
   const seed = EXERCISE_BY_ID[exercise.id] as Exercise;
+
+  // The exercise currently on screen may itself be a substitute, so the swap
+  // list has to hang off whichever movement the session originally prescribed.
+  const originalId =
+    Object.entries(state.swaps).find(([, sub]) => sub === exercise.id)?.[0] ?? exercise.id;
+  const original = (EXERCISE_BY_ID[originalId] ?? seed) as Exercise;
+  const swapChoices = [original, ...(original.alternates ?? []).map((id) => EXERCISE_BY_ID[id])]
+    .filter((e): e is Exercise => !!e);
 
   const [draft, setDraft] = useState<ExerciseTuning>(() => ({
     repScheme: [...exercise.repScheme],
@@ -183,6 +192,57 @@ export function TuningSheet({ exercise, onClose }: { exercise: Exercise; onClose
             onChange={(v) => patch({ restSeconds: v })}
           />
         </div>
+
+        {swapChoices.length > 1 && (
+          <div className="mt-6">
+            <div className="flex items-baseline justify-between">
+              <span className="text-sm font-medium text-ink">Movement</span>
+              <span className="text-xs text-faint">pre-approved swaps</span>
+            </div>
+            {/* The list is authored in exercises.ts, not assembled here: that is
+                what keeps a substitution inside the programme's logic. */}
+            <div className="mt-2 space-y-1.5">
+              {swapChoices.map((choice) => {
+                const active = choice.id === exercise.id;
+                return (
+                  <button
+                    key={choice.id}
+                    type="button"
+                    onClick={() => {
+                      haptic(HAPTIC.tick);
+                      setSwap(original.id, choice.id === original.id ? null : choice.id);
+                      onClose();
+                    }}
+                    className={[
+                      'flex w-full items-center gap-3 rounded-card border px-3 py-2.5 text-left transition-colors',
+                      active
+                        ? 'border-accent/60 bg-accent/[0.08]'
+                        : 'border-line/60 bg-raised/40 active:bg-raised',
+                    ].join(' ')}
+                  >
+                    <span className={active ? 'text-accent' : 'text-muted'}>
+                      <ExerciseAnimation animation={choice.animation} size={26} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span
+                        className={`block truncate text-sm font-medium ${active ? 'text-ink' : 'text-muted'}`}
+                      >
+                        {choice.name}
+                        {choice.id === original.id && (
+                          <span className="ml-1.5 text-xs font-normal text-faint">original</span>
+                        )}
+                      </span>
+                      <span className="block truncate text-xs text-faint">
+                        {choice.prescription}
+                      </span>
+                    </span>
+                    {active && <Check size={16} className="shrink-0 text-accent" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {seed.block === 'spine' && (
           <p className="mt-4 rounded-card border border-spine/35 bg-spine/[0.07] p-3 text-xs leading-relaxed text-muted">

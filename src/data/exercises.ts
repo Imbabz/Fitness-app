@@ -470,6 +470,7 @@ export const EXERCISES: Exercise[] = [
       'move down the leg rather than up towards the back, stop and reduce the range.',
     animation: 'cobra',
     loadTracked: false,
+    alternates: ['d-sphinx', 'd-standing-extension'],
   },
   {
     id: 'd-deadbug',
@@ -491,6 +492,7 @@ export const EXERCISES: Exercise[] = [
       'exact quality a disc needs — with the spine fully supported and at zero compression.',
     animation: 'deadbug',
     loadTracked: false,
+    alternates: ['d-glute-bridge'],
   },
   {
     id: 'd-side-plank',
@@ -512,6 +514,7 @@ export const EXERCISES: Exercise[] = [
       'lateral stability that keeps the spine stacked under load.',
     animation: 'plank',
     loadTracked: false,
+    alternates: ['d-side-plank-knees'],
   },
   {
     id: 'd-bird-dog',
@@ -534,6 +537,7 @@ export const EXERCISES: Exercise[] = [
       'which is precisely the pattern a deadlift needs — this is the unloaded rehearsal for it.',
     animation: 'birddog',
     loadTracked: false,
+    alternates: ['d-bird-dog-single'],
   },
   {
     id: 'd-wall-glides',
@@ -555,6 +559,175 @@ export const EXERCISES: Exercise[] = [
       'constraint forces the movement to come from the upper back rather than being stolen from the ' +
       'lumbar spine — which is the whole point of doing it against a wall.',
     animation: 'wallslide',
+    loadTracked: false,
+    alternates: ['d-down-dog'],
+  },
+
+  // ── Daily · Restore · alternates ──────────────────────────────────────────
+  //
+  // Added deliberately and with the owner's sign-off, so that substitution is
+  // possible without leaving the programme's logic. Every one is unloaded, sits
+  // in the mobility block, and is either extension-biased, a regression of a
+  // Big 3 lift, or nerve mobility. None introduces loaded flexion or rotation.
+  {
+    id: 'd-sphinx',
+    name: 'Sphinx hold',
+    block: 'mobility',
+    prescription: '1 × 5 · 10s holds',
+    tracking: 'hold',
+    sets: 1,
+    repScheme: [5],
+    holdSeconds: 10,
+    restSeconds: 30,
+    execution:
+      'Face down, forearms flat and parallel, elbows directly under the shoulders. Let the hips and ' +
+      'legs go heavy and rest there rather than pressing up. Hold ten seconds and lower the chest ' +
+      'fully between reps. If anything travels further down the leg, come out and stop for the day.',
+    cue: 'Rest into it. No pressing.',
+    why:
+      'The same extension direction as the cobra, held rather than repeated and through a smaller ' +
+      'range. For days when the cobra feels like too much movement — a sustained low-grade extension ' +
+      'is usually better tolerated than a repeated one when things are irritable.',
+    animation: 'cobra',
+    loadTracked: false,
+    alternates: ['d-cobra', 'd-standing-extension'],
+  },
+  {
+    id: 'd-standing-extension',
+    name: 'Standing extension',
+    block: 'mobility',
+    prescription: '1 × 10 · 3s holds',
+    tracking: 'hold',
+    sets: 1,
+    repScheme: [10],
+    holdSeconds: 3,
+    restSeconds: 30,
+    execution:
+      'Standing, hands on the back of the hips, feet under the shoulders. Lean back over the hands ' +
+      'through a small range, hold three seconds, return upright. Keep the knees straight so the ' +
+      'movement comes from the lower back rather than from bending the knees.',
+    cue: 'Small range. Hands do the work.',
+    why:
+      'The cobra direction, standing, so it can be done at a desk or at the base of a route without ' +
+      'lying on the floor. Its value is in breaking up a day spent seated, not in replacing the ' +
+      'floor work at night.',
+    animation: 'standext',
+    loadTracked: false,
+    alternates: ['d-cobra', 'd-sphinx'],
+  },
+  {
+    id: 'd-down-dog',
+    name: 'Downward dog, knees soft',
+    block: 'mobility',
+    prescription: '3 × 30s holds',
+    tracking: 'hold',
+    sets: 3,
+    repScheme: [1, 1, 1],
+    holdSeconds: 30,
+    restSeconds: 30,
+    execution:
+      'From hands and knees, lift the hips back and up. Keep the knees clearly bent and the heels ' +
+      'off the floor — the aim is a long spine, not straight legs. Push the floor away to lengthen ' +
+      'through the arms and ribs. Straightening the knees is not a progression here.',
+    cue: 'Knees bent. Long spine, not long hamstrings.',
+    why:
+      'Lengthens the posterior chain and decompresses through the arms with no load on the spine. ' +
+      'The bent knees are the whole safety of it: with straight legs and tight hamstrings the pelvis ' +
+      'tucks under and the lumbar spine rounds, which is the direction being avoided.',
+    animation: 'downdog',
+    loadTracked: false,
+    alternates: ['d-wall-glides'],
+  },
+  {
+    id: 'd-side-plank-knees',
+    name: 'Side plank from knees',
+    block: 'mobility',
+    prescription: '6 / 4 / 2 per side · 8s holds',
+    tracking: 'hold',
+    sets: 3,
+    repScheme: [6, 4, 2],
+    holdSeconds: 8,
+    restSeconds: 30,
+    bilateral: true,
+    execution:
+      'On the elbow with the knees bent and stacked, lift the hips into a straight line from ' +
+      'shoulder to knee. Hold eight seconds, lower under control, repeat. Both sides every set.',
+    cue: 'Straight line shoulder to knee.',
+    why:
+      'The same lateral stability work as the full side plank with roughly half the lever, so the ' +
+      'obliques and quadratus lumborum still load while the spine carries less. The version for a ' +
+      'flared-up week, instead of skipping the movement altogether.',
+    animation: 'plank',
+    loadTracked: false,
+    alternates: ['d-side-plank'],
+  },
+  {
+    id: 'd-bird-dog-single',
+    name: 'Bird dog, one limb',
+    block: 'mobility',
+    prescription: '6 / 4 / 2 per side · 8s holds',
+    tracking: 'hold',
+    sets: 3,
+    repScheme: [6, 4, 2],
+    holdSeconds: 8,
+    restSeconds: 30,
+    bilateral: true,
+    execution:
+      'On hands and knees, spine neutral. Extend one leg to horizontal, or one arm, but never both. ' +
+      'Hold eight seconds without letting the hips rotate or the back arch. Alternate sides.',
+    cue: 'Hips level. One limb only.',
+    why:
+      'The bird dog with half the destabilising torque. Opposite arm and leg together is the harder ' +
+      'version, and performing it badly — hips rotating, back arching to reach further — trains the ' +
+      'opposite of what it is for. Use this until the hips stay quiet.',
+    animation: 'birddog',
+    loadTracked: false,
+    alternates: ['d-bird-dog'],
+  },
+  {
+    id: 'd-glute-bridge',
+    name: 'Glute bridge',
+    block: 'mobility',
+    prescription: '2 × 10 · 3s holds',
+    tracking: 'hold',
+    sets: 2,
+    repScheme: [10, 10],
+    holdSeconds: 3,
+    restSeconds: 30,
+    execution:
+      'On your back, knees bent, feet flat and close to the hips. Push through the heels and lift ' +
+      'the hips until the body is straight from knee to shoulder. Hold three seconds and lower. ' +
+      'Finish with the glutes rather than arching the lower back to gain height.',
+    cue: 'Glutes lift the hips, not the low back.',
+    why:
+      'Glute strength with the spine flat on the floor and under no compression at all. Weak glutes ' +
+      'are why a hinge turns into a back movement, so this is the unloaded groundwork for every ' +
+      'hinge in the gym sessions.',
+    animation: 'hipThrust',
+    loadTracked: false,
+    alternates: ['d-deadbug'],
+  },
+  {
+    id: 'd-nerve-glide',
+    name: 'Sciatic nerve glide',
+    block: 'mobility',
+    prescription: '2 × 10 each side',
+    tracking: 'reps',
+    sets: 2,
+    repScheme: [10, 10],
+    restSeconds: 30,
+    execution:
+      'Sitting, slightly slumped, one leg hanging. Straighten that knee and look up at the same ' +
+      'time; then bend the knee back down as you tuck the chin. The two ends move in opposite ' +
+      'directions on purpose. Ten each side, continuous and gentle — never push into the symptom, ' +
+      'and never hold at the end of the range.',
+    cue: 'Oscillate. Never hold at the end.',
+    why:
+      'A protruding disc can leave the sciatic nerve sensitised and tethered to the tissue around it. ' +
+      'Moving the two ends in opposite directions slides the nerve within its sheath while the total ' +
+      'tension on it stays roughly constant — that is what settles referred symptoms. Lengthening ' +
+      'both ends at once would stretch an already irritated nerve, which reliably makes it worse.',
+    animation: 'nerveglide',
     loadTracked: false,
   },
 ];

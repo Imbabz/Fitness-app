@@ -2,7 +2,7 @@ import type { AppState, CompletedSession, Exercise, LoggedSet, Session } from '.
 import { ROTATION, SESSION_BY_ID } from '../data/sessions';
 import { EXERCISE_BY_ID } from '../data/exercises';
 import { addDays, daysBetween, todayKey } from '../lib/time';
-import { tuneSession } from './tuning';
+import { resolveSession } from './tuning';
 
 /** Progression thresholds differ by block and must not be unified. */
 export const PROGRESSION_THRESHOLD = { main: 2, spine: 4 } as const;
@@ -30,7 +30,7 @@ export function nextSession(state: AppState): Session {
  */
 export function tunedSession(state: AppState, sessionId: string): Session | null {
   const session = SESSION_BY_ID[sessionId];
-  return session ? tuneSession(session, state.tuning) : null;
+  return session ? resolveSession(session, state) : null;
 }
 
 export function dailyDoneOn(state: AppState, date: string): boolean {

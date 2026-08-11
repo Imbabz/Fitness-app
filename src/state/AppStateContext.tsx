@@ -18,7 +18,7 @@ import type {
 } from '../types';
 import { applyModeExpiry, flushState, loadState, saveState, seedState } from './store';
 import { computeStreak, tunedSession } from './selectors';
-import { coerceTuning } from './tuning';
+import { coerceTuning, isVettedSwap } from './tuning';
 import { EXERCISE_BY_ID } from '../data/exercises';
 import { setHapticsEnabled } from '../lib/haptics';
 import { todayKey } from '../lib/time';
@@ -31,6 +31,11 @@ interface Api {
   /** Pass null to restore the seed prescription for that exercise. */
   setTuning: (exerciseId: string, tuning: ExerciseTuning | null) => void;
   resetAllTuning: () => void;
+  /** Pass null to put the original movement back. */
+  setSwap: (exerciseId: string, substituteId: string | null) => void;
+  /** Move an exercise within its block. Blocks themselves never move. */
+  moveExercise: (sessionId: string, exerciseId: string, direction: -1 | 1) => void;
+  resetOrder: (sessionId: string) => void;
 
   beginSession: (sessionId: string) => void;
   setStageIndex: (i: number) => void;
@@ -159,6 +164,46 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setState((s) => ({ ...s, tuning: {} }));
   }, []);
 
+  const setSwap = useCallback((exerciseId: string, substituteId: string | null) => {
+    setState((s) => {
+      const swaps = { ...s.swaps };
+      if (substituteId && isVettedSwap(exerciseId, substituteId)) swaps[exerciseId] = substituteId;
+      else delete swaps[exerciseId];
+      return { ...s, swaps };
+    });
+  }, []);
+
+  const moveExercise = useCallback(
+    (sessionId: string, exerciseId: string, direction: -1 | 1) => {
+      setState((s) => {
+        const session = tunedSession(s, sessionId);
+        if (!session) return s;
+
+        // Reordering happens inside a block. Swapping with a neighbour from a
+        // different block would be a no-op after resolveSession sorts by block
+        // anyway, so it is refused here rather than silently ignored.
+        const ids = session.exercises.map((e) => e.id);
+        const from = ids.indexOf(exerciseId);
+        const to = from + direction;
+        if (from < 0 || to < 0 || to >= ids.length) return s;
+        if (session.exercises[from]?.block !== session.exercises[to]?.block) return s;
+
+        const next = [...ids];
+        [next[from], next[to]] = [next[to] as string, next[from] as string];
+        return { ...s, order: { ...s.order, [sessionId]: next } };
+      });
+    },
+    [],
+  );
+
+  const resetOrder = useCallback((sessionId: string) => {
+    setState((s) => {
+      const order = { ...s.order };
+      delete order[sessionId];
+      return { ...s, order };
+    });
+  }, []);
+
   const beginSession = useCallback((sessionId: string) => {
     setState((s) => ({
       ...s,
@@ -249,6 +294,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       updateSettings,
       setTuning,
       resetAllTuning,
+      setSwap,
+      moveExercise,
+      resetOrder,
       beginSession,
       setStageIndex,
       logSet,
@@ -264,6 +312,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       updateSettings,
       setTuning,
       resetAllTuning,
+      setSwap,
+      moveExercise,
+      resetOrder,
       beginSession,
       setStageIndex,
       logSet,

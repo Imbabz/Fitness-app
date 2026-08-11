@@ -587,3 +587,65 @@
     transform: rotate(-22deg);
   }
 }
+
+/* ── Night · alternates ─────────────────────────────────────────────────── */
+
+.ra-standext-torso {
+  transform-origin: 32px 38px;
+  animation-name: ra-standext;
+}
+@keyframes ra-standext {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  45%,
+  65% {
+    transform: rotate(-15deg);
+  }
+}
+
+/* The whole shape lifts at the hips rather than any joint changing angle:
+   the knees stay bent throughout, which is the point of this version. */
+.ra-downdog {
+  animation-name: ra-downdog;
+}
+@keyframes ra-downdog {
+  0%,
+  100% {
+    transform: translateY(3px);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+/* A slider, not a stretch: the knee extends while the head comes up, so the
+   two ends of the nerve move in opposite directions. The counter-phase is the
+   whole clinical point, so both keyframes must stay aligned. */
+.ra-glide-shin {
+  transform-origin: 36px 38px;
+  animation-name: ra-glide-shin;
+}
+@keyframes ra-glide-shin {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-78deg);
+  }
+}
+.ra-glide-torso {
+  transform-origin: 22px 38px;
+  animation-name: ra-glide-torso;
+}
+@keyframes ra-glide-torso {
+  0%,
+  100% {
+    transform: rotate(12deg);
+  }
+  50% {
+    transform: rotate(-6deg);
+  }
+}

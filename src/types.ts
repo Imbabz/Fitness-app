@@ -42,6 +42,15 @@ export interface Exercise {
    * completed before the set counts. Only meaningful for tracking: 'hold'.
    */
   bilateral?: boolean;
+  /**
+   * Pre-vetted swaps, by exercise id. Authored here rather than user-editable,
+   * which is what keeps the medical logic intact while still letting a machine
+   * being occupied, or a movement aggravating today, be worked around.
+   *
+   * An alternate must sit in the same block, or swapping it would move work
+   * across the block ordering that `sessions.ts` enforces.
+   */
+  alternates?: string[];
 }
 
 export interface Session {
@@ -126,6 +135,18 @@ export interface AppState {
   lastWeights: Record<string, number>;
   /** exerciseId → adjusted prescription. Absent entries use the seed values. */
   tuning: Record<string, ExerciseTuning>;
+  /**
+   * exerciseId → the pre-vetted alternate standing in for it. Only ids listed
+   * in that exercise's own `alternates` are honoured, so a hand-edited import
+   * cannot substitute an arbitrary movement.
+   */
+  swaps: Record<string, string>;
+  /**
+   * sessionId → exercise ids in the user's preferred order. Applied *within*
+   * each block only: block order stays structural, so no stored order can move
+   * spine work off the end of a session. See CLAUDE.md rule 2.
+   */
+  order: Record<string, string[]>;
   streak: { current: number; longest: number; lastDailyDate: string | null };
   settings: Settings;
 }

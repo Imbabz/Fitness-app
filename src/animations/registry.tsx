@@ -382,6 +382,50 @@ const wallslide = ({ size, className }: AnimProps) => (
   </Figure>
 );
 
+const standExt = ({ size, className }: AnimProps) => (
+  <Figure size={size} loop={2.6} className={className}>
+    <Ground />
+    {legs(32, 38, 54, 5)}
+    <g className="ra-standext-torso">
+      <line x1={32} y1={38} x2={32} y2={17} />
+      <Head />
+      <polyline points="32,26 23,32 29,38" />
+      <polyline points="32,26 41,32 35,38" />
+    </g>
+  </Figure>
+);
+
+const downDog = ({ size, className }: AnimProps) => (
+  <Figure size={size} loop={3.2} className={className}>
+    <Ground />
+    <g className="ra-downdog">
+      <line x1={32} y1={24} x2={13} y2={54} />
+      <Head cx={20} cy={41} r={4.5} />
+      <line x1={32} y1={24} x2={45} y2={42} />
+      <line x1={45} y1={42} x2={50} y2={54} />
+    </g>
+  </Figure>
+);
+
+const nerveGlide = ({ size, className }: AnimProps) => (
+  <Figure size={size} loop={2.4} className={className}>
+    <Ground y={58} />
+    <Prop>
+      <line x1={10} y1={38} x2={30} y2={38} />
+      <line x1={12} y1={38} x2={12} y2={56} />
+    </Prop>
+    <g className="ra-glide-torso">
+      <line x1={22} y1={38} x2={22} y2={20} />
+      <Head cx={22} cy={15} r={4.5} />
+    </g>
+    <line x1={22} y1={38} x2={36} y2={38} />
+    <g className="ra-glide-shin">
+      <line x1={36} y1={38} x2={36} y2={52} />
+      <line x1={36} y1={52} x2={43} y2={52} />
+    </g>
+  </Figure>
+);
+
 export const ANIMATIONS: Record<string, (p: AnimProps) => ReactNode> = {
   bike,
   scapRetract,
@@ -405,6 +449,9 @@ export const ANIMATIONS: Record<string, (p: AnimProps) => ReactNode> = {
   plank,
   birddog,
   wallslide,
+  standext: standExt,
+  downdog: downDog,
+  nerveglide: nerveGlide,
 };
 
 /** Renders the animation for a key, or a neutral placeholder if it is missing.

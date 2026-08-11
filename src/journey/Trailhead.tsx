@@ -1,5 +1,5 @@
-import { ArrowRight, Clock, SlidersHorizontal, X } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowRight, ChevronDown, ChevronUp, Clock, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
 import type { Block, Exercise, Session } from '../types';
 import { BLOCK_LABEL } from '../data/sessions';
 import { ExerciseAnimation } from '../animations/registry';
@@ -28,9 +28,17 @@ export function Trailhead({
   onBegin: () => void;
   onExit: () => void;
 }) {
-  const { state } = useApp();
+  const { state, moveExercise, resetOrder } = useApp();
   const flagged = painFlagFollowUp(state, session);
   const [editing, setEditing] = useState<Exercise | null>(null);
+  const [reordering, setReordering] = useState(false);
+
+  // Only within a block: the block sequence is structural, so an arrow that
+  // would cross a boundary is disabled rather than silently doing nothing.
+  const canMove = (i: number, delta: -1 | 1) => {
+    const target = session.exercises[i + delta];
+    return !!target && target.block === session.exercises[i]?.block;
+  };
 
   // The route profile: consecutive stages grouped into their blocks.
   const profile: Array<{ block: Block; count: number }> = [];
@@ -78,14 +86,44 @@ export function Trailhead({
           ))}
         </div>
 
-        <p className="mb-2 text-xs text-faint">Tap an exercise to adjust its sets, reps or rest.</p>
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <p className="min-w-0 flex-1 text-xs text-faint">
+            {reordering
+              ? 'Reorder within a block. Blocks keep their sequence.'
+              : 'Tap an exercise to swap it or adjust its sets, reps and rest.'}
+          </p>
+          <div className="flex shrink-0 gap-1">
+            {reordering && state.order[session.id] && (
+              <button
+                type="button"
+                onClick={() => resetOrder(session.id)}
+                className="flex h-8 items-center gap-1 rounded-full bg-raised px-3 text-xs font-semibold text-muted active:opacity-80"
+              >
+                <RotateCcw size={13} />
+                Reset
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setReordering((v) => !v)}
+              aria-pressed={reordering}
+              className={[
+                'h-8 rounded-full px-3 text-xs font-semibold transition-colors',
+                reordering ? 'bg-accent text-base' : 'bg-raised text-muted active:opacity-80',
+              ].join(' ')}
+            >
+              {reordering ? 'Done' : 'Reorder'}
+            </button>
+          </div>
+        </div>
 
         <ul className="space-y-2">
           {session.exercises.map((ex, i) => (
-            <li key={ex.id}>
+            <li key={ex.id} className="relative">
               <button
                 type="button"
-                onClick={() => setEditing(ex)}
+                onClick={() => !reordering && setEditing(ex)}
+                disabled={reordering}
                 aria-label={`Adjust ${ex.name}`}
                 className={[
                   'flex w-full items-center gap-3 rounded-card border px-3 py-2.5 text-left transition-colors active:bg-raised',
@@ -111,12 +149,37 @@ export function Trailhead({
                       ? BLOCK_LABEL[ex.block]
                       : ''}
                   </span>
-                  <SlidersHorizontal
-                    size={14}
-                    className={state.tuning[ex.id] ? 'text-accent' : 'text-faint/60'}
-                  />
+                  {!reordering && (
+                    <SlidersHorizontal
+                      size={14}
+                      className={
+                        state.tuning[ex.id] || Object.values(state.swaps).includes(ex.id)
+                          ? 'text-accent'
+                          : 'text-faint/60'
+                      }
+                    />
+                  )}
                 </span>
               </button>
+
+              {reordering && (
+                <span className="absolute inset-y-0 right-2 flex items-center gap-0.5">
+                  <ArrowButton
+                    label={`Move ${ex.name} up`}
+                    disabled={!canMove(i, -1)}
+                    onClick={() => moveExercise(session.id, ex.id, -1)}
+                  >
+                    <ChevronUp size={18} />
+                  </ArrowButton>
+                  <ArrowButton
+                    label={`Move ${ex.name} down`}
+                    disabled={!canMove(i, 1)}
+                    onClick={() => moveExercise(session.id, ex.id, 1)}
+                  >
+                    <ChevronDown size={18} />
+                  </ArrowButton>
+                </span>
+              )}
             </li>
           ))}
         </ul>
@@ -135,5 +198,29 @@ export function Trailhead({
         </button>
       </div>
     </div>
+  );
+}
+
+function ArrowButton({
+  label,
+  disabled,
+  onClick,
+  children,
+}: {
+  label: string;
+  disabled: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+      className="grid h-11 w-9 place-items-center rounded-lg text-muted active:bg-raised disabled:opacity-25"
+    >
+      {children}
+    </button>
   );
 }

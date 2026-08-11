@@ -57,7 +57,11 @@ as frozen.
 session definition does not matter — but do not remove that sort thinking it is
 redundant. It is the guard that makes a careless edit safe.
 
-Never add a user-facing reorder control. Never add "smart" reshuffling.
+Never add "smart" reshuffling, and never let ordering cross a block boundary.
+
+Reordering *within* a block is user-facing and supported (`order` in AppState,
+applied by `resolveSession`). It is safe precisely because the block sort runs
+first: a stored order listing spine work first still renders it last.
 
 ### `repScheme` is an array, never a count
 
@@ -100,6 +104,7 @@ the spine copy more conservative than the main copy.
 | `animation` | Key into `ANIMATIONS`. A missing key renders a neutral figure rather than crashing, but check it. |
 | `loadTracked` | `true` for main lifts and both spine lifts. `false` for bodyweight, mobility and cardio. |
 | `bilateral` | `true` for side-specific holds (dead bug, side plank, bird dog). Requires both sides before a rep banks. |
+| `alternates` | Pre-vetted swap targets, by id. **Same block only** — `isVettedSwap()` refuses anything else. Authored here, never user-editable, which is what keeps substitution inside the programme's logic. |
 
 ## `why` is not optional
 

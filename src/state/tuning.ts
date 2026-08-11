@@ -1,4 +1,6 @@
 import type { Exercise, ExerciseTuning, Session } from '../types';
+import { EXERCISE_BY_ID } from '../data/exercises';
+import { BLOCK_ORDER } from '../data/sessions';
 
 /*
  * User adjustments to the prescribed numbers, layered over the seed data at
@@ -147,6 +149,81 @@ function estimateMinutes(session: Session): number {
   }, 0);
 
   return Math.max(1, Math.round(total / 60));
+}
+
+export function coerceSwaps(raw: unknown): Record<string, string> {
+  if (typeof raw !== 'object' || raw === null) return {};
+  const out: Record<string, string> = {};
+  for (const [id, sub] of Object.entries(raw)) {
+    if (typeof sub === 'string' && isVettedSwap(id, sub)) out[id] = sub;
+  }
+  return out;
+}
+
+export function coerceOrder(raw: unknown): Record<string, string[]> {
+  if (typeof raw !== 'object' || raw === null) return {};
+  const out: Record<string, string[]> = {};
+  for (const [sessionId, ids] of Object.entries(raw)) {
+    if (!Array.isArray(ids)) continue;
+    const clean = [...new Set(ids.filter((v): v is string => typeof v === 'string'))];
+    if (clean.length > 0) out[sessionId] = clean;
+  }
+  return out;
+}
+
+/**
+ * A swap is only honoured if the original itself lists it, and if the two sit
+ * in the same block. Both halves matter: the first keeps substitution inside
+ * the authored, medically vetted set rather than the whole library; the second
+ * stops a swap quietly moving work across the block ordering.
+ */
+export function isVettedSwap(exerciseId: string, substituteId: string): boolean {
+  const original = EXERCISE_BY_ID[exerciseId];
+  const substitute = EXERCISE_BY_ID[substituteId];
+  return (
+    !!original &&
+    !!substitute &&
+    (original.alternates?.includes(substituteId) ?? false) &&
+    original.block === substitute.block
+  );
+}
+
+export interface Customisation {
+  tuning: Record<string, ExerciseTuning>;
+  swaps: Record<string, string>;
+  order: Record<string, string[]>;
+}
+
+/**
+ * The single place user customisation is layered over the seed: reorder, then
+ * substitute, then apply the numbers.
+ *
+ * Ordering is by block first and the stored preference only second, so no
+ * stored order — however it was written, imported or corrupted — can lift spine
+ * work off the end of a session. That is CLAUDE.md rule 2, kept structural
+ * rather than trusted to the UI.
+ */
+export function resolveSession(session: Session, custom: Customisation): Session {
+  // Substitute first, then order. The stored order therefore holds the ids the
+  // user is actually looking at, which is what the reorder controls hand back.
+  // Undoing a swap drops that one exercise back to its seed position.
+  let exercises = session.exercises.map((ex) => {
+    const substituteId = custom.swaps[ex.id];
+    if (!substituteId || !isVettedSwap(ex.id, substituteId)) return ex;
+    return EXERCISE_BY_ID[substituteId] as Exercise;
+  });
+
+  const preferred = custom.order[session.id];
+  if (preferred?.length) {
+    const rank = new Map(preferred.map((id, i) => [id, i]));
+    const at = (ex: Exercise) => rank.get(ex.id) ?? Number.MAX_SAFE_INTEGER;
+    exercises = [...exercises].sort(
+      (a, b) => BLOCK_ORDER[a.block] - BLOCK_ORDER[b.block] || at(a) - at(b),
+    );
+  }
+
+  const changed = exercises.some((ex, i) => ex.id !== session.exercises[i]?.id);
+  return tuneSession(changed ? { ...session, exercises } : session, custom.tuning);
 }
 
 /** A session with every adjustment applied. Untouched sessions pass through unchanged. */

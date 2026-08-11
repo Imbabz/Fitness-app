@@ -28,10 +28,24 @@ These are not preferences. Breaking them breaks the product.
    crunches, sit-ups and loaded rotation are excluded on purpose. If a change
    seems to call for a new exercise, stop and ask.
 
-2. **The spine block renders last, always.** No reordering, no user-configurable
-   ordering, no "smart" reshuffling. Loaded spinal flexion on a cold spine is
-   the specific thing being avoided. `sessions.ts` enforces this structurally in
-   `pick()` — leave that sort in place.
+   Seven mobility-block alternates were added under this rule, with the owner's
+   explicit sign-off, so that substitution had somewhere to go: sphinx, standing
+   extension, downward dog, side plank from knees, one-limb bird dog, glute
+   bridge and sciatic nerve glide. The McGill curl-up was proposed at the same
+   time and **declined**. That an exception was granted once does not make the
+   rule softer — ask again.
+
+2. **The spine block renders last, always.** No "smart" reshuffling, and no
+   ordering control that can move work between blocks. Loaded spinal flexion on
+   a cold spine is the specific thing being avoided. `sessions.ts` enforces this
+   structurally in `pick()`, and `resolveSession()` re-sorts by block *before*
+   honouring any stored order — leave both in place.
+
+   Users may reorder **within** a block, and swap an exercise for one of its
+   authored `alternates`. Both are constrained so they cannot reach across
+   blocks: `isVettedSwap()` refuses a cross-block substitute, and a stored order
+   that puts spine work first still renders it last. There is a test for exactly
+   that; do not "simplify" the double sort away.
 
 3. **`repScheme` is an array, never a count.** McGill's 6/4/2 descending format
    must survive. Any code that assumes uniform sets across an exercise is a bug.

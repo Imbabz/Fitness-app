@@ -12,7 +12,7 @@ import { EXERCISE_BY_ID } from './exercises';
  * thing this programme exists to avoid.
  */
 
-const BLOCK_ORDER: Record<Block, number> = {
+export const BLOCK_ORDER: Record<Block, number> = {
   warmup: 0,
   main: 1,
   mobility: 2,
