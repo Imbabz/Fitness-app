@@ -43,12 +43,12 @@ export interface Exercise {
    */
   bilateral?: boolean;
   /**
-   * Pre-vetted swaps, by exercise id. Authored here rather than user-editable,
-   * which is what keeps the medical logic intact while still letting a machine
-   * being occupied, or a movement aggravating today, be worked around.
+   * Suggested stand-ins, by exercise id — the movements that genuinely cover the
+   * same pattern. A **suggestion, not a gate**: anything in the same block may
+   * be substituted. These are surfaced first because "which one actually
+   * replaces this" is knowledge worth keeping, not a restriction worth imposing.
    *
-   * An alternate must sit in the same block, or swapping it would move work
-   * across the block ordering that `sessions.ts` enforces.
+   * Must sit in the same block, or the suggestion could not be honoured.
    */
   alternates?: string[];
 }
@@ -136,9 +136,10 @@ export interface AppState {
   /** exerciseId → adjusted prescription. Absent entries use the seed values. */
   tuning: Record<string, ExerciseTuning>;
   /**
-   * exerciseId → the pre-vetted alternate standing in for it. Only ids listed
-   * in that exercise's own `alternates` are honoured, so a hand-edited import
-   * cannot substitute an arbitrary movement.
+   * exerciseId → the movement standing in for it. Any exercise in the library
+   * may stand in for any other **in the same block**: the library is itself the
+   * vetted set, so a second allow-list on top of it would be curation rather
+   * than safety. The block constraint is what protects ordering.
    */
   swaps: Record<string, string>;
   /**

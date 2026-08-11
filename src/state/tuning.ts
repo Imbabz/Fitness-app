@@ -1,5 +1,5 @@
 import type { Exercise, ExerciseTuning, Session } from '../types';
-import { EXERCISE_BY_ID } from '../data/exercises';
+import { EXERCISES, EXERCISE_BY_ID } from '../data/exercises';
 import { BLOCK_ORDER } from '../data/sessions';
 
 /*
@@ -155,7 +155,7 @@ export function coerceSwaps(raw: unknown): Record<string, string> {
   if (typeof raw !== 'object' || raw === null) return {};
   const out: Record<string, string> = {};
   for (const [id, sub] of Object.entries(raw)) {
-    if (typeof sub === 'string' && isVettedSwap(id, sub)) out[id] = sub;
+    if (typeof sub === 'string' && canSubstitute(id, sub)) out[id] = sub;
   }
   return out;
 }
@@ -172,20 +172,63 @@ export function coerceOrder(raw: unknown): Record<string, string[]> {
 }
 
 /**
- * A swap is only honoured if the original itself lists it, and if the two sit
- * in the same block. Both halves matter: the first keeps substitution inside
- * the authored, medically vetted set rather than the whole library; the second
- * stops a swap quietly moving work across the block ordering.
+ * Any movement in the library may stand in for any other in the same block.
+ *
+ * The library is the vetted set — dangerous movements are absent from it rather
+ * than excluded by a list — so a second allow-list on top would be curation
+ * rather than safety, and would put a judgement in the app's hands that belongs
+ * to the user's. The block check is the part that carries weight: it is what
+ * stops a substitution quietly moving work across the block ordering.
  */
-export function isVettedSwap(exerciseId: string, substituteId: string): boolean {
+export function canSubstitute(exerciseId: string, substituteId: string): boolean {
   const original = EXERCISE_BY_ID[exerciseId];
   const substitute = EXERCISE_BY_ID[substituteId];
   return (
     !!original &&
     !!substitute &&
-    (original.alternates?.includes(substituteId) ?? false) &&
+    original.id !== substitute.id &&
     original.block === substitute.block
   );
+}
+
+/**
+ * Everything that may stand in for an exercise: its whole block, minus itself,
+ * minus anything the session already prescribes, and with same-named clones
+ * collapsed — `a-cardio`, `b-cardio` and `c-cardio` are one movement to a
+ * reader even though history keys them separately.
+ */
+export function substitutesFor(
+  exercise: Exercise,
+  sessionExerciseIds: string[],
+): { suggested: Exercise[]; others: Exercise[] } {
+  const inSession = new Set(sessionExerciseIds.filter((id) => id !== exercise.id));
+  const seen = new Set<string>([exercise.name]);
+
+  const usable = (candidate: Exercise | undefined): candidate is Exercise =>
+    !!candidate &&
+    canSubstitute(exercise.id, candidate.id) &&
+    !inSession.has(candidate.id) &&
+    !seen.has(candidate.name);
+
+  // Suggestions first, in the order they were authored — that order carries
+  // meaning, so it is not alphabetised the way the rest of the block is.
+  const suggested: Exercise[] = [];
+  for (const id of exercise.alternates ?? []) {
+    const candidate = EXERCISE_BY_ID[id];
+    if (!usable(candidate)) continue;
+    seen.add(candidate.name);
+    suggested.push(candidate);
+  }
+
+  const others: Exercise[] = [];
+  for (const candidate of EXERCISES) {
+    if (!usable(candidate)) continue;
+    seen.add(candidate.name);
+    others.push(candidate);
+  }
+  others.sort((a, b) => a.name.localeCompare(b.name));
+
+  return { suggested, others };
 }
 
 export interface Customisation {
@@ -220,7 +263,7 @@ export function resolveSession(session: Session, custom: Customisation): Session
     const wouldDuplicate =
       !!substituteId && (prescribed.has(substituteId) || taken.has(substituteId));
 
-    if (!substituteId || !substitute || wouldDuplicate || !isVettedSwap(ex.id, substituteId)) {
+    if (!substituteId || !substitute || wouldDuplicate || !canSubstitute(ex.id, substituteId)) {
       taken.add(ex.id);
       return ex;
     }

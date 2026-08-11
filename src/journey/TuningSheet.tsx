@@ -6,7 +6,7 @@ import { BLOCK_LABEL } from '../data/sessions';
 import { EXERCISE_BY_ID } from '../data/exercises';
 import { ExerciseAnimation } from '../animations/registry';
 import { useApp } from '../state/AppStateContext';
-import { clampTo, tuneExercise, TUNING_LIMITS } from '../state/tuning';
+import { clampTo, substitutesFor, tuneExercise, TUNING_LIMITS } from '../state/tuning';
 import { haptic, HAPTIC } from '../lib/haptics';
 
 /**
@@ -34,15 +34,14 @@ export function TuningSheet({
   const originalId =
     Object.entries(state.swaps).find(([, sub]) => sub === exercise.id)?.[0] ?? exercise.id;
   const original = (EXERCISE_BY_ID[originalId] ?? seed) as Exercise;
-  // A movement the session already prescribes elsewhere is left out: resolving
-  // it would be refused to avoid a duplicate, and a dead option is worse than
-  // no option.
-  const elsewhere = new Set(
-    session.exercises.filter((e) => e.id !== exercise.id).map((e) => e.id),
+  // Suggestions carry the "which one actually replaces this" knowledge; the
+  // rest of the block is there because the block is the real boundary and the
+  // choice is the user's. Movements already in the session are left out — the
+  // swap would be refused to avoid a duplicate, and a dead option is worse.
+  const { suggested, others } = substitutesFor(
+    original,
+    session.exercises.map((e) => e.id),
   );
-  const swapChoices = [original, ...(original.alternates ?? []).map((id) => EXERCISE_BY_ID[id])]
-    .filter((e): e is Exercise => !!e)
-    .filter((e) => e.id === exercise.id || !elsewhere.has(e.id));
 
   const [draft, setDraft] = useState<ExerciseTuning>(() => ({
     repScheme: [...exercise.repScheme],
@@ -81,6 +80,12 @@ export function TuningSheet({
   const save = () => {
     haptic(HAPTIC.complete);
     setTuning(exercise.id, draft);
+    onClose();
+  };
+
+  const pick = (substituteId: string | null) => {
+    haptic(HAPTIC.tick);
+    setSwap(original.id, substituteId);
     onClose();
   };
 
@@ -208,56 +213,49 @@ export function TuningSheet({
           />
         </div>
 
-        {swapChoices.length > 1 && (
-          <div className="mt-6">
-            <div className="flex items-baseline justify-between">
-              <span className="text-sm font-medium text-ink">Movement</span>
-              <span className="text-xs text-faint">pre-approved swaps</span>
-            </div>
-            {/* The list is authored in exercises.ts, not assembled here: that is
-                what keeps a substitution inside the programme's logic. */}
-            <div className="mt-2 space-y-1.5">
-              {swapChoices.map((choice) => {
-                const active = choice.id === exercise.id;
-                return (
-                  <button
-                    key={choice.id}
-                    type="button"
-                    onClick={() => {
-                      haptic(HAPTIC.tick);
-                      setSwap(original.id, choice.id === original.id ? null : choice.id);
-                      onClose();
-                    }}
-                    className={[
-                      'flex w-full items-center gap-3 rounded-card border px-3 py-2.5 text-left transition-colors',
-                      active
-                        ? 'border-accent/60 bg-accent/[0.08]'
-                        : 'border-line/60 bg-raised/40 active:bg-raised',
-                    ].join(' ')}
-                  >
-                    <span className={active ? 'text-accent' : 'text-muted'}>
-                      <ExerciseAnimation animation={choice.animation} size={26} />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span
-                        className={`block truncate text-sm font-medium ${active ? 'text-ink' : 'text-muted'}`}
-                      >
-                        {choice.name}
-                        {choice.id === original.id && (
-                          <span className="ml-1.5 text-xs font-normal text-faint">original</span>
-                        )}
-                      </span>
-                      <span className="block truncate text-xs text-faint">
-                        {choice.prescription}
-                      </span>
-                    </span>
-                    {active && <Check size={16} className="shrink-0 text-accent" />}
-                  </button>
-                );
-              })}
-            </div>
+        <div className="mt-6">
+          <div className="flex items-baseline justify-between">
+            <span className="text-sm font-medium text-ink">Movement</span>
+            <span className="text-xs text-faint">{BLOCK_LABEL[original.block].toLowerCase()}</span>
           </div>
-        )}
+
+          <div className="mt-2 space-y-1.5">
+            <Choice
+              exercise={original}
+              active={exercise.id === original.id}
+              badge="original"
+              onPick={() => pick(null)}
+            />
+            {suggested.map((choice) => (
+              <Choice
+                key={choice.id}
+                exercise={choice}
+                active={choice.id === exercise.id}
+                badge="suggested"
+                onPick={() => pick(choice.id)}
+              />
+            ))}
+          </div>
+
+          {others.length > 0 && (
+            <details className="mt-2">
+              <summary className="flex h-11 cursor-pointer list-none items-center justify-between rounded-card px-1 text-sm font-medium text-muted [&::-webkit-details-marker]:hidden">
+                Anything else in this block
+                <span className="text-xs text-faint">{others.length}</span>
+              </summary>
+              <div className="mt-1.5 space-y-1.5">
+                {others.map((choice) => (
+                  <Choice
+                    key={choice.id}
+                    exercise={choice}
+                    active={choice.id === exercise.id}
+                    onPick={() => pick(choice.id)}
+                  />
+                ))}
+              </div>
+            </details>
+          )}
+        </div>
 
         {seed.block === 'spine' && (
           <p className="mt-4 rounded-card border border-spine/35 bg-spine/[0.07] p-3 text-xs leading-relaxed text-muted">
@@ -344,5 +342,40 @@ function Stepper({
         </IconButton>
       </div>
     </div>
+  );
+}
+
+function Choice({
+  exercise,
+  active,
+  badge,
+  onPick,
+}: {
+  exercise: Exercise;
+  active: boolean;
+  badge?: string;
+  onPick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onPick}
+      className={[
+        'flex w-full items-center gap-3 rounded-card border px-3 py-2.5 text-left transition-colors',
+        active ? 'border-accent/60 bg-accent/[0.08]' : 'border-line/60 bg-raised/40 active:bg-raised',
+      ].join(' ')}
+    >
+      <span className={active ? 'text-accent' : 'text-muted'}>
+        <ExerciseAnimation animation={exercise.animation} size={26} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className={`block truncate text-sm font-medium ${active ? 'text-ink' : 'text-muted'}`}>
+          {exercise.name}
+          {badge && <span className="ml-1.5 text-xs font-normal text-faint">{badge}</span>}
+        </span>
+        <span className="block truncate text-xs text-faint">{exercise.prescription}</span>
+      </span>
+      {active && <Check size={16} className="shrink-0 text-accent" />}
+    </button>
   );
 }

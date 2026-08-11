@@ -18,6 +18,11 @@ mobility drill for balance". If a change appears to call for a movement that
 does not already exist in `EXERCISES`, stop and ask the user. There is no
 version of this where quietly adding one is correct.
 
+Note what this rule now protects. The user can substitute any movement in this
+library into any session in the same block, so adding one here adds it to every
+picker for that block. The library *is* the safety boundary — there is no
+allow-list behind it.
+
 Removing is safer than adding, but still ask.
 
 ## Excluded by design
@@ -104,7 +109,7 @@ the spine copy more conservative than the main copy.
 | `animation` | Key into `ANIMATIONS`. A missing key renders a neutral figure rather than crashing, but check it. |
 | `loadTracked` | `true` for main lifts and both spine lifts. `false` for bodyweight, mobility and cardio. |
 | `bilateral` | `true` for side-specific holds (dead bug, side plank, bird dog). Requires both sides before a rep banks. |
-| `alternates` | Pre-vetted swap targets, by id. **Same block only** — `isVettedSwap()` refuses anything else. Authored here, never user-editable, which is what keeps substitution inside the programme's logic. |
+| `alternates` | **Suggested** stand-ins, by id — shown first in the swap picker. Same block only. A suggestion, not a restriction: `canSubstitute()` allows any movement in the same block, because membership of this library is itself the vetting. Curate these for usefulness, not for safety. |
 
 ## `why` is not optional
 

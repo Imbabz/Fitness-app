@@ -41,11 +41,17 @@ These are not preferences. Breaking them breaks the product.
    structurally in `pick()`, and `resolveSession()` re-sorts by block *before*
    honouring any stored order — leave both in place.
 
-   Users may reorder **within** a block, and swap an exercise for one of its
-   authored `alternates`. Both are constrained so they cannot reach across
-   blocks: `isVettedSwap()` refuses a cross-block substitute, and a stored order
-   that puts spine work first still renders it last. There is a test for exactly
+   Users may reorder **within** a block, and substitute any movement for any
+   other **in the same block**. The block is the boundary and it is the only
+   one: `canSubstitute()` refuses a cross-block swap, and a stored order that
+   puts spine work first still renders it last. There are tests for exactly
    that; do not "simplify" the double sort away.
+
+   `alternates` is a **suggestion list, not a gate** — the movements that
+   genuinely cover the same pattern, surfaced first in the picker. The library
+   itself is the vetted set (dangerous movements are absent from it, not blocked
+   by a list), so a second allow-list on top would be curation rather than
+   safety. Do not reintroduce one.
 
 3. **`repScheme` is an array, never a count.** McGill's 6/4/2 descending format
    must survive. Any code that assumes uniform sets across an exercise is a bug.

@@ -18,7 +18,7 @@ import type {
 } from '../types';
 import { applyModeExpiry, flushState, loadState, saveState, seedState } from './store';
 import { computeStreak, tunedSession } from './selectors';
-import { coerceTuning, isVettedSwap } from './tuning';
+import { canSubstitute, coerceTuning } from './tuning';
 import { EXERCISE_BY_ID } from '../data/exercises';
 import { setHapticsEnabled } from '../lib/haptics';
 import { todayKey } from '../lib/time';
@@ -167,7 +167,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const setSwap = useCallback((exerciseId: string, substituteId: string | null) => {
     setState((s) => {
       const swaps = { ...s.swaps };
-      if (substituteId && isVettedSwap(exerciseId, substituteId)) swaps[exerciseId] = substituteId;
+      if (substituteId && canSubstitute(exerciseId, substituteId)) swaps[exerciseId] = substituteId;
       else delete swaps[exerciseId];
       return { ...s, swaps };
     });
