@@ -706,3 +706,83 @@
     transform: rotate(-52deg);
   }
 }
+
+/* ── Physio programme ───────────────────────────────────────────────────── */
+
+/* Knees drawn in and released — a passive stretch, so the motion is small. */
+.ra-kneehug {
+  transform-origin: 34px 46px;
+  animation-name: ra-kneehug;
+}
+@keyframes ra-kneehug {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  45%,
+  70% {
+    transform: rotate(-16deg);
+  }
+}
+
+/* Hips travel back towards the heels; the arms stay planted. */
+.ra-childpose {
+  transform-origin: 44px 44px;
+  animation-name: ra-childpose;
+}
+@keyframes ra-childpose {
+  0%,
+  100% {
+    transform: translateX(2px);
+  }
+  50% {
+    transform: translateX(-3px);
+  }
+}
+
+/* One rigid plank pivoting at the elbows. The whole exercise is holding this
+   line, so the figure only ever breathes — it must never show a sagging hip. */
+.ra-frontplank {
+  transform-origin: 16px 33px;
+  animation-name: ra-frontplank;
+}
+@keyframes ra-frontplank {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(1.6deg);
+  }
+}
+
+/* Hips travel back and down while the torso stays proud and the arms come
+   forward as the counterweight — that is the movement, not a knee bend. */
+.ra-squat-body {
+  transform-origin: 32px 36px;
+  animation-name: ra-squat-body;
+}
+@keyframes ra-squat-body {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  45%,
+  60% {
+    transform: translateY(7px) rotate(18deg);
+  }
+}
+.ra-squat-thigh {
+  transform-origin: 32px 36px;
+  animation-name: ra-squat-thigh;
+}
+@keyframes ra-squat-thigh {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  45%,
+  60% {
+    transform: translateY(7px) rotate(-34deg);
+  }
+}

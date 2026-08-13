@@ -908,6 +908,220 @@ export const EXERCISES: Exercise[] = [
     loadTracked: true,
     alternates: ['a-deadlift', 'b-rdl'],
   },
+
+  // ── Physio programme (UCL, Pré-EDD) ───────────────────────────────────────
+  //
+  // Prescribed on paper and transcribed here, hence the `p-` prefix. Numbering
+  // follows the printed sheet so the two can be checked against each other.
+  // Sets, reps and holds are the physio's, not this app's conventions.
+  //
+  // Sheet items 7, 10 and 11 are not here: bird dog, side plank from knees and
+  // side plank already exist above, and duplicating them would split their
+  // logged history across two ids.
+  {
+    id: 'p1-knee-to-chest',
+    name: 'Knee-to-chest stretch',
+    block: 'mobility',
+    prescription: '3 × 30s holds',
+    tracking: 'hold',
+    sets: 3,
+    repScheme: [1, 1, 1],
+    holdSeconds: 30,
+    restSeconds: 30,
+    execution:
+      'On your back, knees bent. Bring one knee towards the chest, then the other, and hold both ' +
+      'with the hands around the knees. Draw them gently in until a stretch is felt in the back. ' +
+      'Stop and come out if anything travels further down the leg.',
+    cue: 'Gentle. Nothing should travel down the leg.',
+    why:
+      'Sheet item 1. A passive, unloaded lumbar flexion stretch, which many people find settles ' +
+      'the low back — but flexion is the direction a posterior protrusion is normally moved away ' +
+      'from, so it is prescribed by feel rather than by rule. Symptoms moving up towards the back ' +
+      'is the response to keep; symptoms moving down the leg means stop.',
+    animation: 'kneehug',
+    loadTracked: false,
+    alternates: ['p2-childs-pose'],
+  },
+  {
+    id: 'p2-childs-pose',
+    name: "Child's pose",
+    block: 'mobility',
+    prescription: '3 × 30s holds',
+    tracking: 'hold',
+    sets: 3,
+    repScheme: [1, 1, 1],
+    holdSeconds: 30,
+    restSeconds: 30,
+    execution:
+      'From hands and knees, hands a little wider than the shoulders, bring the tops of the feet ' +
+      'flat to the floor. Sit the hips back towards the heels and let the upper back melt towards ' +
+      'the floor, arms active and straight. Three to five breaths.',
+    cue: 'Sit back. Let the upper back melt.',
+    why:
+      'Sheet item 2. Opens the hips and lets the lumbar erectors let go, at the cost of taking the ' +
+      'spine into flexion — the same trade-off as the knee-to-chest, and judged the same way. If ' +
+      'sitting is already the position that aggravates things, this is unlikely to be the one.',
+    animation: 'childpose',
+    loadTracked: false,
+    alternates: ['p1-knee-to-chest'],
+  },
+  {
+    id: 'p3-tra-pelvic-tilt',
+    name: 'TrA activation + pelvic tilt',
+    block: 'mobility',
+    prescription: '2 × 10',
+    tracking: 'reps',
+    sets: 2,
+    repScheme: [10, 10],
+    restSeconds: 30,
+    execution:
+      'On your back, knees bent. Draw the navel in and engage the pelvic floor to about 20-30% of ' +
+      'a maximum contraction — not a hard brace. Keep breathing throughout. Tilt the pelvis to ' +
+      'flatten the low back to the floor, return slowly, then continue into a small arch.',
+    cue: 'Twenty per cent. Keep breathing.',
+    why:
+      'Sheet item 3. Teaches the deep abdominal wall to switch on at a low, sustainable level and ' +
+      'the pelvis to move independently of the ribcage. Everything else in this programme assumes ' +
+      'that control exists; this is where it is built.',
+    animation: 'deadbug',
+    loadTracked: false,
+  },
+  {
+    id: 'p4-tra-leg-lift',
+    name: 'Transverse activation, leg lift',
+    block: 'mobility',
+    prescription: '3 × 10',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [10, 10, 10],
+    restSeconds: 30,
+    execution:
+      'On your back, knees bent, spine neutral and lightly arched. Engage the lower abdominals to ' +
+      '20-30%. Keeping the breath constant, lift one knee until the hip is at 90°. Hold it still, ' +
+      'lift the other leg, then lower one at a time. The back must not move at any point.',
+    cue: 'The back does not move.',
+    why:
+      'Sheet item 4. The first progression from the pelvic tilt: the trunk now has to hold its ' +
+      'position while a limb loads it. That is the same quality the dead bug trains, approached ' +
+      'more gradually.',
+    animation: 'deadbug',
+    loadTracked: false,
+    alternates: ['d-deadbug', 'p5-tra-leg-extension'],
+  },
+  {
+    id: 'p5-tra-leg-extension',
+    name: 'Transverse, alternating extension',
+    block: 'mobility',
+    prescription: '4 × 15s per side',
+    tracking: 'hold',
+    sets: 4,
+    repScheme: [1, 1, 1, 1],
+    holdSeconds: 15,
+    restSeconds: 30,
+    bilateral: true,
+    execution:
+      'On your back, knees bent, spine neutral. Engage the deep abdominals and keep breathing. ' +
+      'Slide one leg out into extension until the heel touches the floor, keeping the low back ' +
+      'flat throughout. Return slowly and repeat on the other side.',
+    cue: 'Heel to the floor, back stays flat.',
+    why:
+      'Sheet item 5. A longer lever than the leg lift, so the demand on the deep abdominals rises ' +
+      'while the spine stays supported by the floor. The moment the back lifts, the leg has gone ' +
+      'further than the trunk can currently hold.',
+    animation: 'deadbug',
+    loadTracked: false,
+    alternates: ['p4-tra-leg-lift'],
+  },
+  {
+    id: 'p6-heel-taps',
+    name: 'Alternating heel taps',
+    block: 'mobility',
+    prescription: '3 × 10',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [10, 10, 10],
+    restSeconds: 30,
+    execution:
+      'On your back, hips and knees at 90°. Keep the low back flat. Lower one leg to touch the ' +
+      'floor with the heel, then return to the start without losing the abdominal contraction. ' +
+      'Fingers on the bony points at the front of the hips will tell you whether it has been lost.',
+    cue: 'Tap, do not drop.',
+    why:
+      'Sheet item 6. Both legs start unsupported, so the abdominal wall works throughout rather ' +
+      'than only during the movement. The finger check is the useful part — losing the contraction ' +
+      'is what turns this into a hip flexor exercise pulling on the lumbar spine.',
+    animation: 'deadbug',
+    loadTracked: false,
+    alternates: ['d-deadbug'],
+  },
+  {
+    id: 'p8-knee-plank',
+    name: 'Front plank from knees',
+    block: 'mobility',
+    prescription: '3 × 30s holds',
+    tracking: 'hold',
+    sets: 3,
+    repScheme: [1, 1, 1],
+    holdSeconds: 30,
+    restSeconds: 30,
+    execution:
+      'Face down, knees bent, elbows on the floor and hands joined. Engage the deep abdominals and ' +
+      'pelvic floor. Lift the abdomen off the floor to make a straight line from knees to head. ' +
+      'Hold, then lower the trunk back down.',
+    cue: 'Straight line knees to head.',
+    why:
+      'Sheet item 8. The front plank with the lever halved at the knees, so the anterior wall can ' +
+      'be loaded before the full version is tolerable. Progress by time before progressing to the ' +
+      'toes.',
+    animation: 'frontplank',
+    loadTracked: false,
+    alternates: ['p9-front-plank'],
+  },
+  {
+    id: 'p9-front-plank',
+    name: 'Front plank',
+    block: 'mobility',
+    prescription: '3 × 30s holds',
+    tracking: 'hold',
+    sets: 3,
+    repScheme: [1, 1, 1],
+    holdSeconds: 30,
+    restSeconds: 30,
+    execution:
+      'On the elbows and toes, chin tucked. Lift the pelvis to create one straight line from heel ' +
+      'to head. Hold without letting the low back arch — an arching back is the fault this ' +
+      'exercise exists to train out, so come down rather than hold through it.',
+    cue: 'One line. Do not let the back arch.',
+    why:
+      'Sheet item 9. Anti-extension work for the whole anterior chain with the spine in neutral ' +
+      'and no compression beyond bodyweight. The complement to the side plank already in the ' +
+      'routine, which covers the lateral wall.',
+    animation: 'frontplank',
+    loadTracked: false,
+    alternates: ['p8-knee-plank'],
+  },
+  {
+    id: 'p12-foundation-squat',
+    name: 'Foundation squat',
+    block: 'mobility',
+    prescription: '3 × 15',
+    tracking: 'reps',
+    sets: 3,
+    repScheme: [15, 15, 15],
+    restSeconds: 30,
+    execution:
+      'Stand with the feet slightly wider than the shoulders. Keep the weight in the heels and try ' +
+      'to push the floor apart with the feet. Raise the arms in front as the hips travel back, ' +
+      'keeping the back straight. Continue to the point where the knees are near 90°, then press ' +
+      'through the heels to stand, bringing the arms back to the sides.',
+    cue: 'Hips back, chest proud, weight in the heels.',
+    why:
+      'Sheet item 12. Trains the hip hinge with the arms counterbalancing at the front, which is ' +
+      'what lets the back stay straight through the descent. Unloaded rehearsal of the pattern ' +
+      'every hinge in the gym sessions depends on.',
+    animation: 'squat',
+    loadTracked: false,
+  },
 ];
 
 export const EXERCISE_BY_ID: Record<string, Exercise> = Object.fromEntries(

@@ -475,6 +475,58 @@ const lateralRaise = ({ size, className }: AnimProps) => (
   </Figure>
 );
 
+const kneeHug = ({ size, className }: AnimProps) => (
+  <Figure size={size} loop={3} className={className}>
+    <Ground y={52} />
+    <Head cx={12} cy={44} r={4.5} />
+    <line x1={17} y1={45} x2={34} y2={46} />
+    <g className="ra-kneehug">
+      <polyline points="34,46 40,32 30,26" />
+      <line x1={26} y1={31} x2={34} y2={25} />
+    </g>
+  </Figure>
+);
+
+const childPose = ({ size, className }: AnimProps) => (
+  <Figure size={size} loop={3.2} className={className}>
+    <Ground y={52} />
+    <g className="ra-childpose">
+      <polyline points="12,44 30,48 44,44" />
+      <Head cx={12} cy={40} r={4.5} />
+      <line x1={44} y1={44} x2={46} y2={52} />
+    </g>
+  </Figure>
+);
+
+const frontPlank = ({ size, className }: AnimProps) => (
+  <Figure size={size} loop={3} className={className}>
+    <Ground y={52} />
+    <Prop>
+      <line x1={16} y1={44} x2={16} y2={52} />
+    </Prop>
+    <g className="ra-frontplank">
+      <Head cx={12} cy={30} r={4.5} />
+      <line x1={16} y1={33} x2={50} y2={44} />
+      <line x1={50} y1={44} x2={52} y2={52} />
+    </g>
+  </Figure>
+);
+
+const squat = ({ size, className }: AnimProps) => (
+  <Figure size={size} loop={2.6} className={className}>
+    <Ground />
+    <g className="ra-squat-body">
+      <Head cx={30} cy={14} />
+      <line x1={30} y1={19} x2={32} y2={36} />
+      <line x1={30} y1={22} x2={46} y2={22} />
+    </g>
+    <g className="ra-squat-thigh">
+      <line x1={32} y1={36} x2={28} y2={45} />
+    </g>
+    <line x1={28} y1={45} x2={30} y2={54} />
+  </Figure>
+);
+
 export const ANIMATIONS: Record<string, (p: AnimProps) => ReactNode> = {
   bike,
   scapRetract,
@@ -504,6 +556,10 @@ export const ANIMATIONS: Record<string, (p: AnimProps) => ReactNode> = {
   walk,
   pushup,
   latraise: lateralRaise,
+  kneehug: kneeHug,
+  childpose: childPose,
+  frontplank: frontPlank,
+  squat,
 };
 
 /** Renders the animation for a key, or a neutral placeholder if it is missing.

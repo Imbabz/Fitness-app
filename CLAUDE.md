@@ -28,12 +28,17 @@ These are not preferences. Breaking them breaks the product.
    crunches, sit-ups and loaded rotation are excluded on purpose. If a change
    seems to call for a new exercise, stop and ask.
 
-   Seven mobility-block alternates were added under this rule, with the owner's
-   explicit sign-off, so that substitution had somewhere to go: sphinx, standing
-   extension, downward dog, side plank from knees, one-limb bird dog, glute
-   bridge and sciatic nerve glide. The McGill curl-up was proposed at the same
-   time and **declined**. That an exception was granted once does not make the
-   rule softer — ask again.
+   Three sets have been added since, each with the owner's explicit sign-off:
+   seven mobility alternates (sphinx, standing extension, downward dog, side
+   plank from knees, one-limb bird dog, glute bridge, sciatic nerve glide);
+   seven gym alternates prefixed `alt-`; and nine items prefixed `p-`,
+   transcribed from a physiotherapist's printed programme (UCL, Pré-EDD). The
+   McGill curl-up was proposed and **declined**.
+
+   That exceptions were granted does not make the rule softer — ask again. The
+   `p-` items in particular are somebody else's prescription: do not edit their
+   sets, reps or holds to match this app's conventions, and do not "correct"
+   them. Sheet numbers are cited in each `why` so the two can be reconciled.
 
 2. **The spine block renders last, always.** No "smart" reshuffling, and no
    ordering control that can move work between blocks. Loaded spinal flexion on
