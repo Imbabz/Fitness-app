@@ -18,8 +18,9 @@ import type {
 } from '../types';
 import { applyModeExpiry, flushState, loadState, saveState, seedState } from './store';
 import { computeStreak, tunedSession } from './selectors';
-import { canSubstitute, coerceTuning } from './tuning';
+import { canSubstitute, coerceTuning, compositionOf } from './tuning';
 import { EXERCISE_BY_ID } from '../data/exercises';
+import { SESSION_BY_ID } from '../data/sessions';
 import { setHapticsEnabled } from '../lib/haptics';
 import { todayKey } from '../lib/time';
 
@@ -31,11 +32,14 @@ interface Api {
   /** Pass null to restore the seed prescription for that exercise. */
   setTuning: (exerciseId: string, tuning: ExerciseTuning | null) => void;
   resetAllTuning: () => void;
-  /** Pass null to put the original movement back. */
-  setSwap: (exerciseId: string, substituteId: string | null) => void;
+  /** Swap one movement for another. Same block only. */
+  replaceExercise: (sessionId: string, exerciseId: string, substituteId: string) => void;
+  /** Append a movement; it lands at the end of its own block. */
+  addExercise: (sessionId: string, exerciseId: string) => void;
+  removeExercise: (sessionId: string, exerciseId: string) => void;
   /** Move an exercise within its block. Blocks themselves never move. */
   moveExercise: (sessionId: string, exerciseId: string, direction: -1 | 1) => void;
-  resetOrder: (sessionId: string) => void;
+  resetComposition: (sessionId: string) => void;
 
   beginSession: (sessionId: string) => void;
   setStageIndex: (i: number) => void;
@@ -164,43 +168,94 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setState((s) => ({ ...s, tuning: {} }));
   }, []);
 
-  const setSwap = useCallback((exerciseId: string, substituteId: string | null) => {
-    setState((s) => {
-      const swaps = { ...s.swaps };
-      if (substituteId && canSubstitute(exerciseId, substituteId)) swaps[exerciseId] = substituteId;
-      else delete swaps[exerciseId];
-      return { ...s, swaps };
-    });
-  }, []);
-
-  const moveExercise = useCallback(
-    (sessionId: string, exerciseId: string, direction: -1 | 1) => {
+  /** Every session edit is the same shape: rewrite that session's id list. */
+  const editComposition = useCallback(
+    (sessionId: string, edit: (ids: string[]) => string[] | null) => {
       setState((s) => {
-        const session = tunedSession(s, sessionId);
-        if (!session) return s;
+        const seed = SESSION_BY_ID[sessionId];
+        if (!seed) return s;
 
-        // Reordering happens inside a block. Swapping with a neighbour from a
-        // different block would be a no-op after resolveSession sorts by block
-        // anyway, so it is refused here rather than silently ignored.
-        const ids = session.exercises.map((e) => e.id);
-        const from = ids.indexOf(exerciseId);
-        const to = from + direction;
-        if (from < 0 || to < 0 || to >= ids.length) return s;
-        if (session.exercises[from]?.block !== session.exercises[to]?.block) return s;
+        const current = compositionOf(seed, s.composition);
+        const next = edit(current);
+        if (!next) return s;
 
-        const next = [...ids];
-        [next[from], next[to]] = [next[to] as string, next[from] as string];
-        return { ...s, order: { ...s.order, [sessionId]: next } };
+        const composition = { ...s.composition };
+        const seedIds = seed.exercises.map((e) => e.id);
+        // Back to the seed means no stored composition at all, so a later
+        // change to the programme itself still reaches this session.
+        if (next.length === seedIds.length && next.every((id, i) => id === seedIds[i])) {
+          delete composition[sessionId];
+        } else {
+          composition[sessionId] = next;
+        }
+        return { ...s, composition };
       });
     },
     [],
   );
 
-  const resetOrder = useCallback((sessionId: string) => {
+  const replaceExercise = useCallback(
+    (sessionId: string, exerciseId: string, substituteId: string) => {
+      editComposition(sessionId, (ids) => {
+        if (!canSubstitute(exerciseId, substituteId) || ids.includes(substituteId)) return null;
+        const at = ids.indexOf(exerciseId);
+        if (at < 0) return null;
+        const next = [...ids];
+        next[at] = substituteId;
+        return next;
+      });
+    },
+    [editComposition],
+  );
+
+  const addExercise = useCallback(
+    (sessionId: string, exerciseId: string) => {
+      editComposition(sessionId, (ids) => {
+        if (ids.includes(exerciseId) || !EXERCISE_BY_ID[exerciseId]) return null;
+        // Appended plainly; resolveSession sorts it into its block on read.
+        return [...ids, exerciseId];
+      });
+    },
+    [editComposition],
+  );
+
+  const removeExercise = useCallback(
+    (sessionId: string, exerciseId: string) => {
+      editComposition(sessionId, (ids) =>
+        ids.length <= 1 ? null : ids.filter((id) => id !== exerciseId),
+      );
+    },
+    [editComposition],
+  );
+
+  const moveExercise = useCallback(
+    (sessionId: string, exerciseId: string, direction: -1 | 1) => {
+      setState((s) => {
+        const session = tunedSession(s, sessionId);
+        const seed = SESSION_BY_ID[sessionId];
+        if (!session || !seed) return s;
+
+        // Read the positions off the resolved session, so what moves is what
+        // the user is looking at, then write the whole order back.
+        const shown = session.exercises.map((e) => e.id);
+        const from = shown.indexOf(exerciseId);
+        const to = from + direction;
+        if (from < 0 || to < 0 || to >= shown.length) return s;
+        if (session.exercises[from]?.block !== session.exercises[to]?.block) return s;
+
+        const next = [...shown];
+        [next[from], next[to]] = [next[to] as string, next[from] as string];
+        return { ...s, composition: { ...s.composition, [sessionId]: next } };
+      });
+    },
+    [],
+  );
+
+  const resetComposition = useCallback((sessionId: string) => {
     setState((s) => {
-      const order = { ...s.order };
-      delete order[sessionId];
-      return { ...s, order };
+      const composition = { ...s.composition };
+      delete composition[sessionId];
+      return { ...s, composition };
     });
   }, []);
 
@@ -294,9 +349,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       updateSettings,
       setTuning,
       resetAllTuning,
-      setSwap,
+      replaceExercise,
+      addExercise,
+      removeExercise,
       moveExercise,
-      resetOrder,
+      resetComposition,
       beginSession,
       setStageIndex,
       logSet,
@@ -312,9 +369,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       updateSettings,
       setTuning,
       resetAllTuning,
-      setSwap,
+      replaceExercise,
+      addExercise,
+      removeExercise,
       moveExercise,
-      resetOrder,
+      resetComposition,
       beginSession,
       setStageIndex,
       logSet,

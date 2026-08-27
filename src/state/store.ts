@@ -1,6 +1,8 @@
 import type { AppState, Mode } from '../types';
 import { todayKey } from '../lib/time';
-import { coerceOrder, coerceSwaps, coerceTuningMap } from './tuning';
+import { coerceComposition, coerceTuningMap } from './tuning';
+import { SESSIONS } from '../data/sessions';
+import { EXERCISE_BY_ID } from '../data/exercises';
 
 /** Versioned so a schema change can migrate rather than corrupt. */
 export const STORAGE_KEY = 'ridge:state:v1';
@@ -21,8 +23,7 @@ export function seedState(): AppState {
     activeSession: null,
     lastWeights: {},
     tuning: {},
-    swaps: {},
-    order: {},
+    composition: {},
     streak: { current: 0, longest: 0, lastDailyDate: null },
     settings: {
       restDefaultSeconds: 90,
@@ -78,6 +79,57 @@ export function coerceState(raw: unknown): AppState {
     return Object.keys(out).length > 0 ? out : null;
   }
 
+  /**
+   * Composition replaced two earlier fields, `swaps` and `order`. A store
+   * written before that still has them, so they are folded into a composition
+   * once rather than dropped — losing a customisation silently would be worse
+   * than carrying this for a while.
+   */
+  function readComposition(raw: Record<string, unknown>): Record<string, string[]> {
+    const current = coerceComposition(raw.composition);
+    if (Object.keys(current).length > 0) return current;
+
+    const swaps = (typeof raw.swaps === 'object' && raw.swaps ? raw.swaps : {}) as Record<
+      string,
+      unknown
+    >;
+    const order = (typeof raw.order === 'object' && raw.order ? raw.order : {}) as Record<
+      string,
+      unknown
+    >;
+    if (Object.keys(swaps).length === 0 && Object.keys(order).length === 0) return {};
+
+    const migrated: Record<string, string[]> = {};
+    for (const session of SESSIONS) {
+      let ids = session.exercises.map((e) => e.id);
+
+      const preferred = order[session.id];
+      if (Array.isArray(preferred)) {
+        const rank = new Map(preferred.map((id, i) => [id, i]));
+        ids = [...ids].sort(
+          (a, b) =>
+            (rank.get(a) ?? Number.MAX_SAFE_INTEGER) - (rank.get(b) ?? Number.MAX_SAFE_INTEGER),
+        );
+      }
+
+      const taken = new Set<string>();
+      ids = ids.map((id) => {
+        const sub = swaps[id];
+        const replacement = typeof sub === 'string' ? EXERCISE_BY_ID[sub] : undefined;
+        if (!replacement || taken.has(replacement.id) || replacement.block !== EXERCISE_BY_ID[id]?.block) {
+          taken.add(id);
+          return id;
+        }
+        taken.add(replacement.id);
+        return replacement.id;
+      });
+
+      const seed = session.exercises.map((e) => e.id);
+      if (ids.some((id, i) => id !== seed[i])) migrated[session.id] = ids;
+    }
+    return coerceComposition(migrated);
+  }
+
   return {
     version: 1,
     mode: o.mode === 'night' ? 'night' : o.mode === 'day' ? 'day' : seed.mode,
@@ -105,8 +157,7 @@ export function coerceState(raw: unknown): AppState {
         : null,
     lastWeights: rec(o.lastWeights),
     tuning: coerceTuningMap(o.tuning),
-    swaps: coerceSwaps(o.swaps),
-    order: coerceOrder(o.order),
+    composition: readComposition(o),
     streak: {
       current: typeof streak.current === 'number' ? streak.current : 0,
       longest: typeof streak.longest === 'number' ? streak.longest : 0,

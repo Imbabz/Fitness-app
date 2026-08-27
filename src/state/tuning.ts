@@ -151,26 +151,6 @@ function estimateMinutes(session: Session): number {
   return Math.max(1, Math.round(total / 60));
 }
 
-export function coerceSwaps(raw: unknown): Record<string, string> {
-  if (typeof raw !== 'object' || raw === null) return {};
-  const out: Record<string, string> = {};
-  for (const [id, sub] of Object.entries(raw)) {
-    if (typeof sub === 'string' && canSubstitute(id, sub)) out[id] = sub;
-  }
-  return out;
-}
-
-export function coerceOrder(raw: unknown): Record<string, string[]> {
-  if (typeof raw !== 'object' || raw === null) return {};
-  const out: Record<string, string[]> = {};
-  for (const [sessionId, ids] of Object.entries(raw)) {
-    if (!Array.isArray(ids)) continue;
-    const clean = [...new Set(ids.filter((v): v is string => typeof v === 'string'))];
-    if (clean.length > 0) out[sessionId] = clean;
-  }
-  return out;
-}
-
 /**
  * Any movement in the library may stand in for any other in the same block.
  *
@@ -231,10 +211,51 @@ export function substitutesFor(
   return { suggested, others };
 }
 
+/** Everything that could be added to a session: its blocks, minus what is in it. */
+export function additionsFor(
+  session: Session,
+  sessionExerciseIds: string[],
+): Array<{ block: Exercise['block']; exercises: Exercise[] }> {
+  const inSession = new Set(sessionExerciseIds);
+  const blocks = [...new Set(session.exercises.map((e) => e.block))].sort(
+    (a, b) => BLOCK_ORDER[a] - BLOCK_ORDER[b],
+  );
+
+  return blocks
+    .map((block) => {
+      const seen = new Set<string>(
+        EXERCISES.filter((e) => inSession.has(e.id)).map((e) => e.name),
+      );
+      const exercises: Exercise[] = [];
+      for (const candidate of EXERCISES) {
+        if (candidate.block !== block || inSession.has(candidate.id)) continue;
+        if (seen.has(candidate.name)) continue;
+        seen.add(candidate.name);
+        exercises.push(candidate);
+      }
+      exercises.sort((a, b) => a.name.localeCompare(b.name));
+      return { block, exercises };
+    })
+    .filter((g) => g.exercises.length > 0);
+}
+
 export interface Customisation {
   tuning: Record<string, ExerciseTuning>;
-  swaps: Record<string, string>;
-  order: Record<string, string[]>;
+  composition: Record<string, string[]>;
+}
+
+/** Keeps ids that name a real exercise, in order, without repeats. */
+export function coerceComposition(raw: unknown): Record<string, string[]> {
+  if (typeof raw !== 'object' || raw === null) return {};
+  const out: Record<string, string[]> = {};
+  for (const [sessionId, ids] of Object.entries(raw)) {
+    if (!Array.isArray(ids)) continue;
+    const clean = [...new Set(ids.filter((v): v is string => typeof v === 'string'))].filter(
+      (id) => EXERCISE_BY_ID[id],
+    );
+    if (clean.length > 0) out[sessionId] = clean;
+  }
+  return out;
 }
 
 /**
@@ -247,41 +268,35 @@ export interface Customisation {
  * rather than trusted to the UI.
  */
 export function resolveSession(session: Session, custom: Customisation): Session {
-  // Substitute first, then order. The stored order therefore holds the ids the
-  // user is actually looking at, which is what the reorder controls hand back.
-  // Undoing a swap drops that one exercise back to its seed position.
-  const prescribed = new Set(session.exercises.map((e) => e.id));
-  const taken = new Set<string>();
+  const stored = custom.composition[session.id];
+  const seedIds = session.exercises.map((e) => e.id);
+  const ids = stored?.length ? stored : seedIds;
 
-  let exercises = session.exercises.map((ex) => {
-    const substituteId = custom.swaps[ex.id];
-    const substitute = substituteId ? EXERCISE_BY_ID[substituteId] : undefined;
+  const resolved = ids.map((id) => EXERCISE_BY_ID[id]).filter((e): e is Exercise => !!e);
 
-    // Refused if the session already prescribes that movement, or if an earlier
-    // swap has claimed it: either way the session would contain it twice, and
-    // the second copy would silently overwrite the first one's logged sets.
-    const wouldDuplicate =
-      !!substituteId && (prescribed.has(substituteId) || taken.has(substituteId));
+  // A session with no exercises would be a blank journey. Storage is scrubbed
+  // on load, so this only fires if a composition names nothing real — but it is
+  // the last line before the UI, and degrading to the seed beats degrading to
+  // nothing.
+  const exercises = (resolved.length > 0 ? resolved : session.exercises)
+    // Block order is structural and wins over anything stored. A composition
+    // listing spine work first still renders it last: that is CLAUDE.md rule 2,
+    // kept in code rather than trusted to the UI that writes the list.
+    .map((ex, i) => ({ ex, i }))
+    .sort((a, b) => BLOCK_ORDER[a.ex.block] - BLOCK_ORDER[b.ex.block] || a.i - b.i)
+    .map(({ ex }) => ex);
 
-    if (!substituteId || !substitute || wouldDuplicate || !canSubstitute(ex.id, substituteId)) {
-      taken.add(ex.id);
-      return ex;
-    }
-    taken.add(substituteId);
-    return substitute;
-  });
+  const changed =
+    exercises.length !== session.exercises.length ||
+    exercises.some((ex, i) => ex.id !== session.exercises[i]?.id);
 
-  const preferred = custom.order[session.id];
-  if (preferred?.length) {
-    const rank = new Map(preferred.map((id, i) => [id, i]));
-    const at = (ex: Exercise) => rank.get(ex.id) ?? Number.MAX_SAFE_INTEGER;
-    exercises = [...exercises].sort(
-      (a, b) => BLOCK_ORDER[a.block] - BLOCK_ORDER[b.block] || at(a) - at(b),
-    );
-  }
-
-  const changed = exercises.some((ex, i) => ex.id !== session.exercises[i]?.id);
   return tuneSession(changed ? { ...session, exercises } : session, custom.tuning);
+}
+
+/** The list a session edit starts from — stored if there is one, else the seed. */
+export function compositionOf(session: Session, composition: Record<string, string[]>): string[] {
+  const stored = composition[session.id];
+  return stored?.length ? [...stored] : session.exercises.map((e) => e.id);
 }
 
 /** A session with every adjustment applied. Untouched sessions pass through unchanged. */

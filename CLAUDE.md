@@ -46,11 +46,14 @@ These are not preferences. Breaking them breaks the product.
    structurally in `pick()`, and `resolveSession()` re-sorts by block *before*
    honouring any stored order — leave both in place.
 
-   Users may reorder **within** a block, and substitute any movement for any
-   other **in the same block**. The block is the boundary and it is the only
-   one: `canSubstitute()` refuses a cross-block swap, and a stored order that
-   puts spine work first still renders it last. There are tests for exactly
-   that; do not "simplify" the double sort away.
+   Users may add, remove, reorder and substitute — all four are edits to one
+   field, `composition`, a per-session list of exercise ids. The block is the
+   only boundary: `canSubstitute()` refuses a cross-block swap, `additionsFor()`
+   offers only blocks the session already has, and `resolveSession()` sorts by
+   block before honouring the stored list, so a composition that puts spine work
+   first still renders it last. There are tests for exactly that; do not
+   "simplify" that sort away. `resolveSession()` also falls back to the seed if a
+   composition resolves to nothing, because an empty session is a blank screen.
 
    `alternates` is a **suggestion list, not a gate** — the movements that
    genuinely cover the same pattern, surfaced first in the picker. The library

@@ -1,4 +1,4 @@
-import { ArrowRight, Clock, GripVertical, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
+import { ArrowRight, Clock, GripVertical, Plus, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import type { Block, Exercise, Session } from '../types';
 import { BLOCK_LABEL } from '../data/sessions';
@@ -8,6 +8,7 @@ import { useApp } from '../state/AppStateContext';
 import { haptic, HAPTIC } from '../lib/haptics';
 import { painFlagFollowUp } from '../state/selectors';
 import { TuningSheet } from './TuningSheet';
+import { AddSheet } from './AddSheet';
 
 const BLOCK_DOT: Record<Block, string> = {
   warmup: 'bg-warmup',
@@ -29,9 +30,10 @@ export function Trailhead({
   onBegin: () => void;
   onExit: () => void;
 }) {
-  const { state, moveExercise, resetOrder } = useApp();
+  const { state, moveExercise, addExercise, resetComposition } = useApp();
   const flagged = painFlagFollowUp(state, session);
   const [editing, setEditing] = useState<Exercise | null>(null);
+  const [adding, setAdding] = useState(false);
 
   const listRef = useRef<HTMLUListElement>(null);
   const [dragId, setDragId] = useState<string | null>(null);
@@ -128,16 +130,16 @@ export function Trailhead({
 
         <div className="mb-2 flex items-center justify-between gap-3">
           <p className="min-w-0 flex-1 text-xs text-faint">
-            Tap to swap or adjust. Drag the handle to reorder within a block.
+            Tap to swap, adjust or remove. Drag the handle to reorder.
           </p>
-          {state.order[session.id] && (
+          {state.composition[session.id] && (
             <button
               type="button"
-              onClick={() => resetOrder(session.id)}
+              onClick={() => resetComposition(session.id)}
               className="flex h-8 shrink-0 items-center gap-1 rounded-full bg-raised px-3 text-xs font-semibold text-muted active:opacity-80"
             >
               <RotateCcw size={13} />
-              Order
+              Reset
             </button>
           )}
         </div>
@@ -187,9 +189,7 @@ export function Trailhead({
                     <SlidersHorizontal
                       size={14}
                       className={
-                        state.tuning[ex.id] || Object.values(state.swaps).includes(ex.id)
-                          ? 'text-accent'
-                          : 'text-faint/60'
+                        state.tuning[ex.id] ? 'text-accent' : 'text-faint/60'
                       }
                     />
                   </span>
@@ -215,10 +215,29 @@ export function Trailhead({
             );
           })}
         </ul>
+
+        <button
+          type="button"
+          onClick={() => setAdding(true)}
+          className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-card border border-dashed border-line text-sm font-medium text-muted active:bg-raised"
+        >
+          <Plus size={16} />
+          Add an exercise
+        </button>
       </div>
 
       {editing && (
         <TuningSheet session={session} exercise={editing} onClose={() => setEditing(null)} />
+      )}
+      {adding && (
+        <AddSheet
+          session={session}
+          onAdd={(id) => {
+            addExercise(session.id, id);
+            setAdding(false);
+          }}
+          onClose={() => setAdding(false)}
+        />
       )}
 
       <div className="mt-auto pt-8">

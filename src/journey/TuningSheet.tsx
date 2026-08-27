@@ -1,4 +1,4 @@
-import { Check, Minus, Plus, RotateCcw, X } from 'lucide-react';
+import { Check, Minus, Plus, RotateCcw, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Exercise, ExerciseTuning, Session } from '../types';
@@ -26,22 +26,16 @@ export function TuningSheet({
   exercise: Exercise;
   onClose: () => void;
 }) {
-  const { state, setTuning, setSwap } = useApp();
+  const { state, setTuning, replaceExercise, removeExercise } = useApp();
   const seed = EXERCISE_BY_ID[exercise.id] as Exercise;
 
-  // The exercise currently on screen may itself be a substitute, so the swap
-  // list has to hang off whichever movement the session originally prescribed.
-  const originalId =
-    Object.entries(state.swaps).find(([, sub]) => sub === exercise.id)?.[0] ?? exercise.id;
-  const original = (EXERCISE_BY_ID[originalId] ?? seed) as Exercise;
+  const ids = session.exercises.map((e) => e.id);
   // Suggestions carry the "which one actually replaces this" knowledge; the
   // rest of the block is there because the block is the real boundary and the
   // choice is the user's. Movements already in the session are left out — the
   // swap would be refused to avoid a duplicate, and a dead option is worse.
-  const { suggested, others } = substitutesFor(
-    original,
-    session.exercises.map((e) => e.id),
-  );
+  const { suggested, others } = substitutesFor(exercise, ids);
+  const canRemove = ids.length > 1;
 
   const [draft, setDraft] = useState<ExerciseTuning>(() => ({
     repScheme: [...exercise.repScheme],
@@ -83,9 +77,9 @@ export function TuningSheet({
     onClose();
   };
 
-  const pick = (substituteId: string | null) => {
+  const pick = (substituteId: string) => {
     haptic(HAPTIC.tick);
-    setSwap(original.id, substituteId);
+    replaceExercise(session.id, exercise.id, substituteId);
     onClose();
   };
 
@@ -121,16 +115,11 @@ export function TuningSheet({
         <div className="mt-5">
           <div className="flex items-baseline justify-between">
             <span className="text-sm font-medium text-ink">Movement</span>
-            <span className="text-xs text-faint">{BLOCK_LABEL[original.block].toLowerCase()}</span>
+            <span className="text-xs text-faint">{BLOCK_LABEL[seed.block].toLowerCase()}</span>
           </div>
 
           <div className="mt-2 space-y-1.5">
-            <Choice
-              exercise={original}
-              active={exercise.id === original.id}
-              badge="original"
-              onPick={() => pick(null)}
-            />
+            <Choice exercise={exercise} active badge="current" onPick={() => undefined} />
             {suggested.map((choice) => (
               <Choice
                 key={choice.id}
@@ -257,6 +246,21 @@ export function TuningSheet({
             onChange={(v) => patch({ restSeconds: v })}
           />
         </div>
+
+        {canRemove && (
+          <button
+            type="button"
+            onClick={() => {
+              haptic(HAPTIC.tick);
+              removeExercise(session.id, exercise.id);
+              onClose();
+            }}
+            className="mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-card text-sm font-medium text-danger active:bg-raised"
+          >
+            <Trash2 size={15} />
+            Remove from this session
+          </button>
+        )}
 
         {seed.block === 'spine' && (
           <p className="mt-4 rounded-card border border-spine/35 bg-spine/[0.07] p-3 text-xs leading-relaxed text-muted">

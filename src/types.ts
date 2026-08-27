@@ -136,18 +136,15 @@ export interface AppState {
   /** exerciseId → adjusted prescription. Absent entries use the seed values. */
   tuning: Record<string, ExerciseTuning>;
   /**
-   * exerciseId → the movement standing in for it. Any exercise in the library
-   * may stand in for any other **in the same block**: the library is itself the
-   * vetted set, so a second allow-list on top of it would be curation rather
-   * than safety. The block constraint is what protects ordering.
+   * sessionId → the exercises that session contains, in order. Absent means
+   * "as seeded". This one field covers adding, removing, replacing and
+   * reordering: each is just a different edit to the same list.
+   *
+   * Order within it is honoured only *within* a block. `resolveSession()`
+   * sorts by block first, so no stored composition — however written, imported
+   * or corrupted — can lift spine work off the end. See CLAUDE.md rule 2.
    */
-  swaps: Record<string, string>;
-  /**
-   * sessionId → exercise ids in the user's preferred order. Applied *within*
-   * each block only: block order stays structural, so no stored order can move
-   * spine work off the end of a session. See CLAUDE.md rule 2.
-   */
-  order: Record<string, string[]>;
+  composition: Record<string, string[]>;
   streak: { current: number; longest: number; lastDailyDate: string | null };
   settings: Settings;
 }
