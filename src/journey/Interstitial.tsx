@@ -60,7 +60,7 @@ export function Interstitial({ block, onDismiss }: { block: Block; onDismiss: ()
       >
         {BLOCK_LABEL[block]}
       </span>
-      <span className="text-3xl font-bold tracking-tight text-ink">{copy.line}</span>
+      <span className="text-3xl ridge-title text-ink">{copy.line}</span>
       <span className="max-w-xs text-sm leading-relaxed text-muted">{copy.tone}</span>
       {spine && (
         <span className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-faint">

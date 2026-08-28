@@ -1,5 +1,5 @@
 import { ArrowRight, Clock, GripVertical, Plus, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import type { Block, Exercise, Session } from '../types';
 import { BLOCK_LABEL } from '../data/sessions';
 import { ExerciseAnimation } from '../animations/registry';
@@ -36,6 +36,8 @@ export function Trailhead({
   const [adding, setAdding] = useState(false);
 
   const listRef = useRef<HTMLUListElement>(null);
+  const rows = useRef(new Map<string, HTMLLIElement>());
+  const lastTops = useRef(new Map<string, number>());
   const [dragId, setDragId] = useState<string | null>(null);
   const [dy, setDy] = useState(0);
   const drag = useRef({ startY: 0, rowH: 64 });
@@ -82,6 +84,38 @@ export function Trailhead({
     setDy(0);
   };
 
+  /*
+   * Reordering changes the DOM order, which CSS cannot transition on its own —
+   * rows simply appear in their new places. FLIP fills that in: measure where
+   * each row was, put it back there with a transform, then let it travel to
+   * where it now is.
+   *
+   * The dragged row is skipped: it is already following the finger, and giving
+   * it a second transform would fight that.
+   */
+  const orderKey = session.exercises.map((e) => e.id).join();
+  useLayoutEffect(() => {
+    const tops = new Map<string, number>();
+    for (const [id, el] of rows.current) tops.set(id, el.getBoundingClientRect().top);
+
+    for (const [id, el] of rows.current) {
+      const was = lastTops.current.get(id);
+      const now = tops.get(id);
+      if (was === undefined || now === undefined || id === dragId) continue;
+
+      const delta = was - now;
+      if (Math.abs(delta) < 1) continue;
+
+      el.style.transition = 'none';
+      el.style.transform = `translateY(${delta}px)`;
+      requestAnimationFrame(() => {
+        el.style.transition = 'transform var(--t-motion) cubic-bezier(0.2, 0, 0, 1)';
+        el.style.transform = '';
+      });
+    }
+    lastTops.current = tops;
+  }, [orderKey, dragId]);
+
   // The route profile: consecutive stages grouped into their blocks.
   const profile: Array<{ block: Block; count: number }> = [];
   for (const ex of session.exercises) {
@@ -107,7 +141,7 @@ export function Trailhead({
       </div>
 
       <div className="mt-6">
-        <h1 className="text-4xl font-bold tracking-tight text-ink">{session.title}</h1>
+        <h1 className="text-4xl ridge-title text-ink">{session.title}</h1>
         <p className="mt-1 text-base text-muted">{session.subtitle}</p>
         <p className="mt-3 flex items-center gap-1.5 text-sm text-faint">
           <Clock size={15} />
@@ -150,10 +184,16 @@ export function Trailhead({
             return (
               <li
                 key={ex.id}
+                ref={(el) => {
+                  if (el) rows.current.set(ex.id, el);
+                  else rows.current.delete(ex.id);
+                }}
                 className="relative"
                 style={
                   dragging
-                    ? { transform: `translateY(${dy}px)`, zIndex: 20, position: 'relative' }
+                    ? // `transition: none` so the finger is tracked exactly; the
+                      // FLIP above would otherwise lag the drag by one frame.
+                      { transform: `translateY(${dy}px)`, transition: 'none', zIndex: 20 }
                     : undefined
                 }
               >

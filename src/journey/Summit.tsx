@@ -40,7 +40,7 @@ export function Summit({
   return (
     <div className="ridge-enter flex min-h-dvh flex-col px-5 pb-8 pt-[max(1.5rem,env(safe-area-inset-top))]">
       <span className="text-xs font-semibold uppercase tracking-[0.2em] text-faint">Summit</span>
-      <h1 className="mt-2 text-4xl font-bold tracking-tight text-ink">{session.title} done.</h1>
+      <h1 className="mt-2 text-4xl ridge-title text-ink">{session.title} done.</h1>
 
       <div className="mt-6 grid grid-cols-2 gap-3">
         <Stat value={humanDuration(elapsed)} label="Elapsed" />

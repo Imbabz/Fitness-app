@@ -36,7 +36,7 @@ export function AddSheet({
       <div className="ridge-sheet max-h-[88dvh] overflow-y-auto rounded-t-[1.75rem] border-t border-line bg-surface px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h2 className="text-xl font-bold tracking-tight text-ink">Add an exercise</h2>
+            <h2 className="text-xl ridge-title text-ink">Add an exercise</h2>
             <p className="mt-0.5 text-xs text-faint">
               It joins the end of its block. {session.title} keeps its shape.
             </p>

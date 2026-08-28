@@ -9,6 +9,22 @@ The day/night cycle is the organising metaphor of this app, so the theme is not
 decoration — it is the thing the user is moving between. Two hard rules make it
 work.
 
+## Rule 0: a token nobody reads is a lie
+
+Four tokens sat in this file for months defining a softer night mode —
+`--card-border-opacity`, `--weight-title`, `--tracking-title`, `--stage-gap` —
+and nothing read any of them. The design system said night was calmer; the app
+rendered it identically to day.
+
+Before adding a token, know which rule or class will read it. After adding one,
+grep for `var(--your-token)` and confirm it appears. A token is a promise the
+CSS has to keep.
+
+Text tiers carry a second obligation. `--c-ink`, `--c-muted` and `--c-faint`
+are used at 10-12px, so each must clear **4.5:1** against both `--c-surface`
+and `--c-base` — the 3:1 large-text allowance does not apply at those sizes.
+Check any change to them before shipping it.
+
 ## Rule 1: every token needs both values
 
 A token defined in only one mode silently inherits the other's value. This is

@@ -32,7 +32,7 @@ export function Settings() {
 
   return (
     <div className="ridge-enter space-y-7">
-      <h1 className="text-[2rem] font-bold tracking-tight text-ink">Settings</h1>
+      <h1 className="text-[2rem] ridge-title text-ink">Settings</h1>
 
       <Group title="Mode">
         <div className="grid grid-cols-2 gap-2 p-3">

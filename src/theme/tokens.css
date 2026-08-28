@@ -24,7 +24,7 @@
   --c-line: 62 69 82;
   --c-ink: 238 240 244;
   --c-muted: 158 166 180;
-  --c-faint: 108 116 130;
+  --c-faint: 134 141 153; /* 4.5:1 on surface — this tier carries 10-12px text */
   --c-accent: 242 165 65; /* #f2a541 */
   --c-accent-soft: 120 78 26;
 
@@ -38,7 +38,7 @@
   --t-motion: 150ms; /* snappy */
   --grad-top: 38 33 30;
   --grad-bottom: 22 24 30;
-  --card-border-opacity: 1;
+  --card-border-opacity: 1; /* identity: day keeps each border's own alpha */
   --shadow-card: 0 1px 0 0 rgb(255 255 255 / 0.03);
   --tracking-title: -0.02em;
   --weight-title: 700;
@@ -53,7 +53,7 @@
   --c-line: 55 58 92;
   --c-ink: 218 219 238;
   --c-muted: 148 150 182;
-  --c-faint: 104 107 140;
+  --c-faint: 130 132 160; /* 4.5:1 on surface — this tier carries 10-12px text */
   --c-accent: 165 154 232; /* violet */
   --c-accent-soft: 74 68 122;
 
@@ -67,7 +67,7 @@
   --t-motion: 400ms; /* slow, breathing */
   --grad-top: 30 28 58;
   --grad-bottom: 15 16 30;
-  --card-border-opacity: 0; /* no hard borders at night */
+  --card-border-opacity: 0.3; /* borders recede at night, they do not vanish */
   --shadow-card: 0 2px 24px -8px rgb(0 0 0 / 0.5);
   --tracking-title: 0.01em;
   --weight-title: 500;

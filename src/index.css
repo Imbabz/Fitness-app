@@ -122,9 +122,27 @@
     transform-origin: left center;
   }
 
-  /* Night cards emit less light: softer edges, no hard borders. */
+  /* Night cards emit less light, so their edges recede rather than divide. */
   .mode-night [class*='border-line'] {
-    border-color: rgb(var(--c-line) / 0.35);
+    border-color: rgb(var(--c-line) / var(--card-border-opacity));
+  }
+
+  /*
+   * Headings read differently by mode: day is tight and heavy, night is looser
+   * and lighter. Both come from tokens, so a heading only ever declares its
+   * size — never its weight or tracking.
+   */
+  .ridge-title {
+    font-weight: var(--weight-title);
+    letter-spacing: var(--tracking-title);
+  }
+
+  /* Vertical rhythm inside a stage. Night breathes wider than day. */
+  .ridge-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--stage-gap);
   }
   .mode-night .ridge-hero {
     box-shadow: var(--shadow-card);

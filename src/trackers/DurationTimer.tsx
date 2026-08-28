@@ -62,7 +62,7 @@ export function DurationTimer({ exercise, onSetComplete }: TrackerProps) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-5">
+    <div className="ridge-stack">
       <Dial
         progress={1 - displayMs / totalMs}
         complete={finished}

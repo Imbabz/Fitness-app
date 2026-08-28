@@ -73,7 +73,7 @@ export function RepCounter({
   });
 
   return (
-    <div className="flex flex-col items-center gap-5">
+    <div className="ridge-stack">
       <Dial
         progress={count / target}
         complete={reached}

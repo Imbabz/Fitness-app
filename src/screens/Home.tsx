@@ -31,7 +31,7 @@ export function Home({ onOpen }: { onOpen: (session: Session) => void }) {
   return (
     <div className="ridge-enter space-y-6">
       <header>
-        <h1 className="text-[2rem] font-bold leading-tight tracking-tight text-ink">{greeting}</h1>
+        <h1 className="text-[2rem] ridge-title leading-tight text-ink">{greeting}</h1>
         <p className="mt-0.5 text-sm text-faint">{dateLine}</p>
       </header>
 
@@ -152,7 +152,7 @@ function HeroCard({
           <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent">
             {resuming ? 'Resume' : done ? 'Done today' : session.id === 'daily' ? 'Tonight' : `Session ${session.id}`}
           </span>
-          <h2 className="mt-1.5 text-3xl font-bold tracking-tight text-ink">{session.title}</h2>
+          <h2 className="mt-1.5 text-3xl ridge-title text-ink">{session.title}</h2>
           <p className="mt-1 flex items-center gap-1.5 text-sm text-muted">
             <Clock size={14} />
             {session.durationMin} min · {session.exercises.length} stages

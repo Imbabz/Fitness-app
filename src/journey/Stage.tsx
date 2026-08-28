@@ -132,7 +132,7 @@ export function Stage({
               : {})}
           />
         </span>
-        <h2 className="mt-3 text-center text-2xl font-bold tracking-tight text-ink">
+        <h2 className="mt-3 text-center text-2xl ridge-title text-ink">
           {exercise.name}
         </h2>
         <p className="mt-0.5 text-center text-xs font-medium tracking-wide text-faint">
@@ -273,7 +273,7 @@ function ExitConfirm({
     <div className="fixed inset-0 z-50 flex flex-col justify-end bg-base/70 backdrop-blur-sm">
       <button type="button" aria-label="Cancel" className="flex-1" onClick={onCancel} />
       <div className="ridge-sheet rounded-t-[1.75rem] border-t border-line bg-surface px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5">
-        <h2 className="text-xl font-bold tracking-tight text-ink">Leave this session?</h2>
+        <h2 className="text-xl ridge-title text-ink">Leave this session?</h2>
         <p className="mt-1.5 text-sm leading-relaxed text-muted">
           Pausing keeps every set you have logged. You can pick the session back up from the home
           screen, on the stage you left it.

@@ -54,7 +54,7 @@ export function History() {
   if (sorted.length === 0) {
     return (
       <div className="ridge-enter">
-        <h1 className="text-[2rem] font-bold tracking-tight text-ink">History</h1>
+        <h1 className="text-[2rem] ridge-title text-ink">History</h1>
         <p className="mt-6 rounded-card border border-line/60 bg-surface p-5 text-sm leading-relaxed text-muted">
           Nothing logged yet. Finish a session and it lands here — with the loads, so you have
           something concrete to show a physio rather than a memory of roughly how it went.
@@ -65,7 +65,7 @@ export function History() {
 
   return (
     <div className="ridge-enter space-y-7">
-      <h1 className="text-[2rem] font-bold tracking-tight text-ink">History</h1>
+      <h1 className="text-[2rem] ridge-title text-ink">History</h1>
 
       {tracked.length > 0 && (
         <section>

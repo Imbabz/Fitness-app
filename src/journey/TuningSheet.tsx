@@ -99,7 +99,7 @@ export function TuningSheet({
             <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-faint">
               {BLOCK_LABEL[seed.block]}
             </span>
-            <h2 className="mt-1 text-xl font-bold tracking-tight text-ink">{seed.name}</h2>
+            <h2 className="mt-1 text-xl ridge-title text-ink">{seed.name}</h2>
             <p className="mt-0.5 text-xs text-faint">{preview.prescription}</p>
           </div>
           <button
