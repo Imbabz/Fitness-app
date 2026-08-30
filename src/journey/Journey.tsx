@@ -8,7 +8,7 @@ import { Interstitial } from './Interstitial';
 import { Summit } from './Summit';
 import { MorningWarning } from './MorningWarning';
 import { AmbientButton } from './AmbientButton';
-import { startAmbient, stopAmbient } from '../lib/ambient';
+import { prepareAmbient, startAmbient, stopAmbient } from '../lib/ambient';
 import { haptic, HAPTIC } from '../lib/haptics';
 
 const SWIPE_PX = 60;
@@ -81,6 +81,13 @@ export function Journey({ session, onExit }: { session: Session; onExit: () => v
    * no-op when the requested kind is already playing, so this settles on the
    * first stage and then only reacts to the picker.
    */
+  // Loading the file is what takes time; play() is what needs the gesture. So
+  // the blob is fetched while the trailhead is on screen, and Begin only has to
+  // press play.
+  useEffect(() => {
+    void prepareAmbient(state.settings.ambient);
+  }, [state.settings.ambient]);
+
   const onStage = stageIndex >= 0;
   useEffect(() => {
     if (onStage) startAmbient(state.settings.ambient);

@@ -132,12 +132,14 @@ export function Settings() {
 
       <Group title="Ambience">
         <div className="p-3">
-          <AmbientPicker />
+          <AmbientPicker manage />
         </div>
         <p className="border-t border-line/50 px-4 py-3 text-xs leading-relaxed text-faint">
-          Plays quietly while a session is open, and stops when you leave it. Every bed is
-          generated on the phone as it plays — nothing is downloaded and nothing is streamed, so
-          it works with the aeroplane mode on.
+          Plays quietly while a session is open, and stops when you leave it. The five beds are
+          generated on the phone as they play, so they cost nothing and work with the aeroplane
+          mode on. Your own files are read from this device too — Ridge never streams anything.
+          They live outside the export, so keep the originals; and a browser can evict site data
+          it has not seen in months.
         </p>
       </Group>
 

@@ -71,11 +71,17 @@ These are not preferences. Breaking them breaks the product.
 5. **No network calls.** No analytics, no telemetry, no font CDNs, no error
    reporting. Offline-first is a hard requirement, not an optimisation.
 
-   This is why every sound in the app is synthesised. Ambient beds
-   (`src/lib/ambient.ts`) are noise buffers and oscillators shaped at runtime,
-   not recordings — streaming ambience from YouTube or any other source was
-   asked for and declined on this rule, and on licensing. Do not add audio
-   files or fetch them.
+   This is why **the app ships no audio**. The ambient beds
+   (`src/lib/ambient.ts`) are noise buffers and oscillators shaped at runtime.
+   Streaming ambience from YouTube was asked for twice and declined both times:
+   on this rule, and because that content is copyrighted and extracting it
+   breaks YouTube's terms.
+
+   The user may import their own files (`src/lib/tracks.ts`), which arrive
+   through the phone's file picker and are stored in IndexedDB. That is not a
+   network call and it puts the licensing question where it belongs — with
+   whoever is entitled to play the file. Do not commit audio to the repository
+   and do not fetch any, however permissive the licence looks.
 
 6. **Progression thresholds differ by block.** Two clean sessions for main work,
    four for the spine block. Do not unify these.

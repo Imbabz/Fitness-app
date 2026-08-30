@@ -10,9 +10,22 @@
  * 22:00, and the second case sets the ceiling.
  */
 
-export type AmbientKind = 'off' | 'rain' | 'waves' | 'wind' | 'fire' | 'drone';
+import { getTrack } from './tracks';
 
-export const AMBIENT_KINDS: Array<{ id: AmbientKind; label: string; note: string }> = [
+/** A synthesised bed, silence, or one of the user's own files. */
+export type AmbientKind = 'off' | SynthKind | `track:${string}`;
+
+export type SynthKind = 'rain' | 'waves' | 'wind' | 'fire' | 'drone';
+
+export function isTrack(kind: AmbientKind): kind is `track:${string}` {
+  return kind.startsWith('track:');
+}
+
+export function trackIdOf(kind: AmbientKind): string | null {
+  return isTrack(kind) ? kind.slice('track:'.length) : null;
+}
+
+export const AMBIENT_KINDS: Array<{ id: 'off' | SynthKind; label: string; note: string }> = [
   { id: 'off', label: 'Off', note: 'Silence' },
   { id: 'rain', label: 'Rain', note: 'Steady, close' },
   { id: 'waves', label: 'Waves', note: 'Slow swell' },
@@ -189,6 +202,76 @@ function build(ac: AudioContext, kind: AmbientKind, out: GainNode) {
   }
 }
 
+/*
+ * ── The user's own files ───────────────────────────────────────────────────
+ *
+ * An <audio> element rather than a decoded Web Audio buffer: an hour-long file
+ * decoded to PCM would be hundreds of megabytes in memory, while the element
+ * streams it from the blob and loops natively.
+ *
+ * It is kept alive across selections and prepared ahead of time, because iOS
+ * only honours play() inside a user gesture — awaiting the blob first would
+ * break that chain, so by the time Begin is pressed the source is already set.
+ */
+let el: HTMLAudioElement | null = null;
+let elUrl: string | null = null;
+let elTrackId: string | null = null;
+let fade: number | null = null;
+
+function element(): HTMLAudioElement {
+  if (!el) {
+    el = new Audio();
+    el.loop = true;
+    el.preload = 'auto';
+    el.volume = 0;
+  }
+  return el;
+}
+
+function rampTo(target: number, ms: number, thenPause = false) {
+  const node = element();
+  if (fade !== null) window.clearInterval(fade);
+  const from = node.volume;
+  const started = Date.now();
+  fade = window.setInterval(() => {
+    const t = Math.min(1, (Date.now() - started) / ms);
+    node.volume = Math.max(0, Math.min(1, from + (target - from) * t));
+    if (t >= 1) {
+      if (fade !== null) window.clearInterval(fade);
+      fade = null;
+      if (thenPause) node.pause();
+    }
+  }, 40);
+}
+
+/**
+ * Load a track's blob into the element without playing it. Safe to call from
+ * an effect — it is the play() that needs a gesture, not the loading.
+ */
+export async function prepareAmbient(kind: AmbientKind) {
+  const id = trackIdOf(kind);
+  if (!id || id === elTrackId) return;
+  const track = await getTrack(id);
+  if (!track) return;
+  if (elUrl) URL.revokeObjectURL(elUrl);
+  elUrl = URL.createObjectURL(track.blob);
+  elTrackId = id;
+  const node = element();
+  node.src = elUrl;
+  node.load();
+}
+
+/** Drops the loaded file. Called when that track is deleted. */
+export function forgetTrack(id: string) {
+  if (elTrackId !== id) return;
+  element().pause();
+  element().removeAttribute('src');
+  if (elUrl) URL.revokeObjectURL(elUrl);
+  elUrl = null;
+  elTrackId = null;
+  if (current === `track:${id}`) current = 'off';
+}
+
 export function playing(): AmbientKind {
   return current;
 }
@@ -197,6 +280,8 @@ export function stopAmbient() {
   for (const t of timers) window.clearTimeout(t);
   timers = [];
   current = 'off';
+
+  if (el && !el.paused) rampTo(0, 400, true);
 
   if (master && ctx) {
     // Fade rather than cut: an abrupt stop on a noise bed is a click.
@@ -241,6 +326,24 @@ export function startAmbient(kind: AmbientKind, level = 0.35) {
   if (kind === current) return;
   stopAmbient();
   if (kind === 'off') return;
+
+  const id = trackIdOf(kind);
+  if (id) {
+    current = kind;
+    const run = () => {
+      const node = element();
+      node.volume = 0;
+      void node.play().catch(() => undefined);
+      rampTo(level, 1200);
+    };
+    // Already loaded: play synchronously, so the call stays inside the gesture
+    // that triggered it and iOS allows it. Otherwise load first and start when
+    // it lands — checking that the choice still stands, since a slow load can
+    // outlive the user changing their mind.
+    if (id === elTrackId) run();
+    else void prepareAmbient(kind).then(() => current === kind && run());
+    return;
+  }
 
   const ac = context();
   if (!ac) return;
