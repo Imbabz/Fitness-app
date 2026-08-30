@@ -1,3 +1,5 @@
+import type { AmbientKind } from './lib/ambient';
+
 export type Mode = 'day' | 'night';
 
 export type Block = 'warmup' | 'main' | 'spine' | 'mobility';
@@ -122,6 +124,14 @@ export interface Settings {
   haptics: boolean;
   /** exerciseId → auto-chain preference for the hold timer. */
   autoChain: Record<string, boolean>;
+  /**
+   * exerciseId → beep through the last seconds of that exercise's timers.
+   * Per exercise rather than global: a rest timer you want to hear during
+   * deadlifts is not one you want during the nightly routine.
+   */
+  countdown: Record<string, boolean>;
+  /** Synthesised bed played while a session is open. Off by default. */
+  ambient: AmbientKind;
 }
 
 export interface AppState {

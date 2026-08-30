@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { countdownTick } from '../lib/sound';
 
 /**
  * Countdown driven by a target end-timestamp, never a decrementing counter.
@@ -159,4 +160,31 @@ export function usePrefersReducedMotion(): boolean {
     return () => mq.removeEventListener('change', on);
   }, []);
   return reduced;
+}
+
+/**
+ * Beeps through the closing seconds of a timer, once each. Driven by the
+ * countdown's own `remainingSeconds`, so it stays correct across a backgrounded
+ * tab — the timers track a target timestamp rather than decrementing, and a
+ * phone that slept through the last five seconds should not fire five beeps on
+ * waking. Only the seconds actually observed sound.
+ */
+export function useCountdownBeeps(remainingSeconds: number, enabled: boolean, from = 3) {
+  const spoken = useRef(new Set<number>());
+
+  useEffect(() => {
+    if (!enabled) spoken.current.clear();
+  }, [enabled]);
+
+  useEffect(() => {
+    if (!enabled) return;
+    if (remainingSeconds > from) {
+      // Back above the window means a new timer, or one that was extended.
+      if (spoken.current.size > 0) spoken.current.clear();
+      return;
+    }
+    if (remainingSeconds < 1 || spoken.current.has(remainingSeconds)) return;
+    spoken.current.add(remainingSeconds);
+    countdownTick(remainingSeconds);
+  }, [remainingSeconds, enabled, from]);
 }

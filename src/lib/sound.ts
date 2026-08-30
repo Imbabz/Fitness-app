@@ -39,3 +39,13 @@ export function beep(frequency = 440, seconds = 0.16) {
     /* no-op */
   }
 }
+
+/**
+ * The last few seconds of a timer. Rising in pitch so the final one is
+ * unmistakable without being louder — a gym is noisy and a bedroom is not, so
+ * the cue has to come from pitch rather than volume.
+ */
+export function countdownTick(secondsLeft: number) {
+  if (secondsLeft <= 0) beep(660, 0.22);
+  else beep(secondsLeft === 1 ? 560 : 460, 0.09);
+}

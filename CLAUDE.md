@@ -71,6 +71,12 @@ These are not preferences. Breaking them breaks the product.
 5. **No network calls.** No analytics, no telemetry, no font CDNs, no error
    reporting. Offline-first is a hard requirement, not an optimisation.
 
+   This is why every sound in the app is synthesised. Ambient beds
+   (`src/lib/ambient.ts`) are noise buffers and oscillators shaped at runtime,
+   not recordings — streaming ambience from YouTube or any other source was
+   asked for and declined on this rule, and on licensing. Do not add audio
+   files or fetch them.
+
 6. **Progression thresholds differ by block.** Two clean sessions for main work,
    four for the spine block. Do not unify these.
 

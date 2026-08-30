@@ -1,13 +1,13 @@
 import { Plus, SkipForward } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useCountdown } from './hooks';
+import { useCountdown, useCountdownBeeps } from './hooks';
 import { haptic, HAPTIC } from '../lib/haptics';
 import { beep } from '../lib/sound';
 import { mmss } from '../lib/time';
 import { useApp } from '../state/AppStateContext';
 import type { Exercise } from '../types';
-import { targetFor } from './shared';
+import { CountdownToggle, targetFor } from './shared';
 
 /**
  * Shared across all tracker types. A bottom sheet rather than a full-screen
@@ -35,7 +35,8 @@ export function RestTimer({
     onDone();
   }, [onDone, state.settings.soundOnTimerEnd]);
 
-  const { remainingMs } = useCountdown(endsAt, finish);
+  const { remainingMs, remainingSeconds } = useCountdown(endsAt, finish);
+  useCountdownBeeps(remainingSeconds, state.settings.countdown[exercise.id] === true);
   const total = seconds * 1000;
   const elapsed = Math.min(1, Math.max(0, 1 - remainingMs / total));
 
@@ -75,7 +76,8 @@ export function RestTimer({
             </div>
           </div>
 
-          <div className="flex shrink-0 gap-2">
+          <div className="flex shrink-0 items-center gap-2">
+            <CountdownToggle exerciseId={exercise.id} compact />
             <button
               type="button"
               onClick={() => {

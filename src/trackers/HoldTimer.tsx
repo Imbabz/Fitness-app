@@ -1,7 +1,15 @@
 import { Check, Infinity as InfinityIcon } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Dial, SetPips, SideIndicator, WeightInput, targetFor, type TrackerProps } from './shared';
-import { useCountdown, useWakeLock } from './hooks';
+import {
+  CountdownToggle,
+  Dial,
+  SetPips,
+  SideIndicator,
+  WeightInput,
+  targetFor,
+  type TrackerProps,
+} from './shared';
+import { useCountdown, useCountdownBeeps, useWakeLock } from './hooks';
 import { haptic, HAPTIC } from '../lib/haptics';
 import { beep } from '../lib/sound';
 import { useApp } from '../state/AppStateContext';
@@ -95,6 +103,11 @@ export function HoldTimer({
     }
   }, [phase, remainingSeconds]);
 
+  useCountdownBeeps(
+    remainingSeconds,
+    phase === 'holding' && state.settings.countdown[exercise.id] === true,
+  );
+
   const done = reps >= target;
   const progress =
     phase === 'holding' ? Math.max(0, remainingMs / holdMs) : phase === 'gap' ? 0 : done ? 1 : 0;
@@ -158,24 +171,27 @@ export function HoldTimer({
 
         {exercise.loadTracked && <WeightInput weightKg={weightKg} onChange={onWeightChange} />}
 
-        <button
-          type="button"
-          onClick={() =>
-            updateSettings({
-              autoChain: { ...state.settings.autoChain, [exercise.id]: !autoChain },
-            })
-          }
-          className={[
-            'flex h-11 w-full items-center justify-center gap-2 rounded-card border text-sm font-medium transition-colors',
-            autoChain
-              ? 'border-accent/50 bg-accent/10 text-accent'
-              : 'border-line bg-surface text-muted',
-          ].join(' ')}
-        >
-          <InfinityIcon size={16} />
-          Auto-chain {autoChain ? 'on' : 'off'}
-          <span className="text-faint">· {GAP_SECONDS}s between holds</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() =>
+              updateSettings({
+                autoChain: { ...state.settings.autoChain, [exercise.id]: !autoChain },
+              })
+            }
+            className={[
+              'flex h-11 flex-1 items-center justify-center gap-2 rounded-card border text-sm font-medium transition-colors',
+              autoChain
+                ? 'border-accent/50 bg-accent/10 text-accent'
+                : 'border-line bg-surface text-muted',
+            ].join(' ')}
+          >
+            <InfinityIcon size={16} />
+            Auto-chain {autoChain ? 'on' : 'off'}
+            <span className="text-faint">· {GAP_SECONDS}s between holds</span>
+          </button>
+          <CountdownToggle exerciseId={exercise.id} compact shape="h-11 w-11 rounded-card" />
+        </div>
 
         <button
           type="button"

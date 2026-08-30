@@ -7,6 +7,8 @@ import { Stage } from './Stage';
 import { Interstitial } from './Interstitial';
 import { Summit } from './Summit';
 import { MorningWarning } from './MorningWarning';
+import { AmbientButton } from './AmbientButton';
+import { startAmbient, stopAmbient } from '../lib/ambient';
 import { haptic, HAPTIC } from '../lib/haptics';
 
 const SWIPE_PX = 60;
@@ -73,10 +75,27 @@ export function Journey({ session, onExit }: { session: Session; onExit: () => v
     if (session.id !== 'daily') setShowMorning(false);
   }, [session.id]);
 
+  /*
+   * The bed belongs to the session, not to the app: it starts once you are on a
+   * stage and stops when you leave, whichever way you leave. `startAmbient` is a
+   * no-op when the requested kind is already playing, so this settles on the
+   * first stage and then only reacts to the picker.
+   */
+  const onStage = stageIndex >= 0;
+  useEffect(() => {
+    if (onStage) startAmbient(state.settings.ambient);
+    else stopAmbient();
+  }, [onStage, state.settings.ambient]);
+
+  useEffect(() => stopAmbient, []);
+
   // No active session, or walked back off the first stage — either way the
   // trailhead is what you see, and Begin is a single press.
   if (!active || stageIndex < 0) {
     const begin = () => {
+      // Directly in the handler, not via the effect below: iOS only lets an
+      // AudioContext start from inside a user gesture.
+      startAmbient(state.settings.ambient);
       if (active) {
         go(0);
         return;
@@ -115,8 +134,11 @@ export function Journey({ session, onExit }: { session: Session; onExit: () => v
 
   return (
     <div onPointerDown={onPointerDown} onPointerUp={onPointerUp} className="min-h-dvh">
-      <div className="sticky top-0 z-20 bg-base/90 px-5 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm">
-        <ProgressArc session={session} stageIndex={stageIndex} />
+      <div className="sticky top-0 z-20 flex items-center gap-3 bg-base/90 px-5 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm">
+        <div className="min-w-0 flex-1">
+          <ProgressArc session={session} stageIndex={stageIndex} />
+        </div>
+        <AmbientButton />
       </div>
 
       <div key={stageIndex} className={direction === 'forward' ? 'ridge-slide-in' : 'ridge-slide-back'}>

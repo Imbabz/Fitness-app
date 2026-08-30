@@ -1,14 +1,21 @@
 import { Download, Moon, RotateCcw, Sun, Upload } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useApp } from '../state/AppStateContext';
 import { exportState, flushState, importState } from '../state/store';
 import { todayKey } from '../lib/time';
+import { AmbientPicker } from '../components/AmbientPicker';
+import { stopAmbient } from '../lib/ambient';
 
 export function Settings() {
   const { state, setMode, updateSettings, replaceState, resetAll, resetAllTuning } = useApp();
   const [confirmReset, setConfirmReset] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+
+  // The picker plays each bed as it is selected, which is the only way to
+  // choose one. That preview is for this screen only — the bed proper belongs
+  // to a session, so leaving here silences it again.
+  useEffect(() => stopAmbient, []);
 
   const doExport = () => {
     const blob = new Blob([exportState(state)], { type: 'application/json' });
@@ -108,6 +115,30 @@ export function Settings() {
           value={state.settings.haptics}
           onChange={(v) => updateSettings({ haptics: v })}
         />
+        <Row
+          label="Countdown beeps"
+          hint="Set per exercise, on its card at the trailhead or on the timer itself."
+        >
+          {(() => {
+            const count = Object.values(state.settings.countdown).filter(Boolean).length;
+            return (
+              <span className="text-sm text-faint">
+                {count === 0 ? 'None' : `${count} on`}
+              </span>
+            );
+          })()}
+        </Row>
+      </Group>
+
+      <Group title="Ambience">
+        <div className="p-3">
+          <AmbientPicker />
+        </div>
+        <p className="border-t border-line/50 px-4 py-3 text-xs leading-relaxed text-faint">
+          Plays quietly while a session is open, and stops when you leave it. Every bed is
+          generated on the phone as it plays — nothing is downloaded and nothing is streamed, so
+          it works with the aeroplane mode on.
+        </p>
       </Group>
 
       <Group title="Data">

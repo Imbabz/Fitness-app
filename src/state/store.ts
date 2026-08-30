@@ -3,6 +3,7 @@ import { todayKey } from '../lib/time';
 import { coerceComposition, coerceTuningMap } from './tuning';
 import { SESSIONS } from '../data/sessions';
 import { EXERCISE_BY_ID } from '../data/exercises';
+import { AMBIENT_KINDS } from '../lib/ambient';
 
 /** Versioned so a schema change can migrate rather than corrupt. */
 export const STORAGE_KEY = 'ridge:state:v1';
@@ -30,6 +31,8 @@ export function seedState(): AppState {
       soundOnTimerEnd: false,
       haptics: true,
       autoChain: {},
+      countdown: {},
+      ambient: 'off',
     },
   };
 }
@@ -169,6 +172,10 @@ export function coerceState(raw: unknown): AppState {
       soundOnTimerEnd: settings.soundOnTimerEnd === true,
       haptics: settings.haptics !== false,
       autoChain: boolRec(settings.autoChain),
+      countdown: boolRec(settings.countdown),
+      ambient: AMBIENT_KINDS.some((k) => k.id === settings.ambient)
+        ? (settings.ambient as AppState['settings']['ambient'])
+        : 'off',
     },
   };
 }

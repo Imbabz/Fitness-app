@@ -1,7 +1,7 @@
 import { Check, Pause, Play, RotateCcw } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { Dial, type TrackerProps } from './shared';
-import { useCountdown, useWakeLock } from './hooks';
+import { CountdownToggle, Dial, type TrackerProps } from './shared';
+import { useCountdown, useCountdownBeeps, useWakeLock } from './hooks';
 import { haptic, HAPTIC } from '../lib/haptics';
 import { beep } from '../lib/sound';
 import { mmss } from '../lib/time';
@@ -39,7 +39,10 @@ export function DurationTimer({ exercise, onSetComplete }: TrackerProps) {
     if (state.settings.soundOnTimerEnd) beep(520, 0.35);
   }, [state.settings.soundOnTimerEnd]);
 
-  const { remainingMs } = useCountdown(endsAt, onDone);
+  const { remainingMs, remainingSeconds } = useCountdown(endsAt, onDone);
+  // Only while it is actually running: a paused timer that keeps ticking down
+  // audibly would be lying about what it is doing.
+  useCountdownBeeps(remainingSeconds, running && state.settings.countdown[exercise.id] === true);
   const displayMs = running ? remainingMs : pausedMs;
 
   const start = () => {
@@ -95,11 +98,12 @@ export function DurationTimer({ exercise, onSetComplete }: TrackerProps) {
           {running ? <Pause size={20} /> : <Play size={20} />}
           {running ? 'Pause' : pausedMs === totalMs ? 'Start' : 'Resume'}
         </button>
+        <CountdownToggle exerciseId={exercise.id} compact shape="h-14 w-14 rounded-card" />
         <button
           type="button"
           onClick={reset}
           aria-label="Reset timer"
-          className="grid h-14 w-14 place-items-center rounded-card border border-line bg-surface text-muted active:bg-raised"
+          className="grid h-14 w-14 shrink-0 place-items-center rounded-card border border-line bg-surface text-muted active:bg-raised"
         >
           <RotateCcw size={20} />
         </button>

@@ -1,7 +1,8 @@
-import { Minus, Plus } from 'lucide-react';
+import { Bell, BellOff, Minus, Plus } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import type { Exercise, LoggedSet } from '../types';
 import { haptic, HAPTIC } from '../lib/haptics';
+import { useApp } from '../state/AppStateContext';
 
 /**
  * The contract every tracker shares: it owns the current set, it emits a
@@ -196,5 +197,64 @@ export function SideIndicator({ side }: { side: 'left' | 'right' }) {
       <span className="text-faint">·</span>
       <span className={side === 'right' ? 'text-accent' : 'text-faint'}>Right</span>
     </div>
+  );
+}
+
+/**
+ * Countdown beeps, on or off, for this exercise. The same control appears in
+ * the config sheet and on every timer that exercise runs, all writing the one
+ * per-exercise preference — so switching it off mid-set is remembered next time.
+ *
+ * `compact` drops to the bell alone, for rows that already have a primary
+ * action competing for the width.
+ */
+export function CountdownToggle({
+  exerciseId,
+  compact = false,
+  shape = 'h-12 w-12 rounded-full',
+}: {
+  exerciseId: string;
+  compact?: boolean;
+  /** Compact only. Matches the size and corner of whatever it sits beside. */
+  shape?: string;
+}) {
+  const { state, updateSettings } = useApp();
+  const on = state.settings.countdown[exerciseId] === true;
+
+  const toggle = () => {
+    haptic(HAPTIC.tick);
+    updateSettings({
+      countdown: { ...state.settings.countdown, [exerciseId]: !on },
+    });
+  };
+
+  const tone = on
+    ? 'border-accent/60 bg-accent/10 text-accent'
+    : 'border-line bg-surface text-muted';
+
+  if (compact) {
+    return (
+      <button
+        type="button"
+        onClick={toggle}
+        aria-pressed={on}
+        aria-label={`Countdown beeps ${on ? 'on' : 'off'}`}
+        className={`grid ${shape} shrink-0 place-items-center border transition-colors ${tone}`}
+      >
+        {on ? <Bell size={17} /> : <BellOff size={17} />}
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-pressed={on}
+      className={`flex h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-sm font-medium transition-colors ${tone}`}
+    >
+      {on ? <Bell size={15} /> : <BellOff size={15} />}
+      Countdown {on ? 'on' : 'off'}
+    </button>
   );
 }

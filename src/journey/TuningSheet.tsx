@@ -7,6 +7,7 @@ import { EXERCISE_BY_ID } from '../data/exercises';
 import { ExerciseAnimation } from '../animations/registry';
 import { useApp } from '../state/AppStateContext';
 import { clampTo, substitutesFor, tuneExercise, TUNING_LIMITS } from '../state/tuning';
+import { CountdownToggle } from '../trackers/shared';
 import { haptic, HAPTIC } from '../lib/haptics';
 
 /**
@@ -245,6 +246,21 @@ export function TuningSheet({
             max={TUNING_LIMITS.restSeconds.max}
             onChange={(v) => patch({ restSeconds: v })}
           />
+        </div>
+
+        <div className="mt-7">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <span className="block text-sm font-medium text-ink">Countdown beeps</span>
+              <span className="mt-0.5 block text-xs text-faint">
+                Three rising tones as this exercise{'\u2019'}s timers run out.
+              </span>
+            </div>
+            <CountdownToggle exerciseId={exercise.id} />
+          </div>
+          {/* Deliberately not part of the draft: the same control sits on the
+              timer itself, and a preference you flipped mid-set must not be
+              undone by pressing Original here. */}
         </div>
 
         {canRemove && (
