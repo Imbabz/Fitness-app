@@ -135,11 +135,13 @@ export function Settings() {
           <AmbientPicker manage />
         </div>
         <p className="border-t border-line/50 px-4 py-3 text-xs leading-relaxed text-faint">
-          Plays quietly while a session is open, and stops when you leave it. The five beds are
-          generated on the phone as they play, so they cost nothing and work with the aeroplane
-          mode on. Your own files are read from this device too — Ridge never streams anything.
-          They live outside the export, so keep the originals; and a browser can evict site data
-          it has not seen in months.
+          Plays quietly while a session is open, and stops when you leave it. A soundtrack layers
+          several sounds and follows your progress — sparse at the start, fullest through the
+          middle, quiet again over the spine block — and lands on a final chord when you finish.
+          A bed is one texture that never changes. Both are generated on the phone as they play,
+          so they cost nothing and work with the aeroplane mode on, and your own files are read
+          from this device too. Ridge never streams anything. Your files live outside the export,
+          so keep the originals; and a browser can evict site data it has not seen in months.
         </p>
       </Group>
 

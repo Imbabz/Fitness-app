@@ -1,10 +1,20 @@
-import { Check, CloudRain, Flame, Music, Plus, Trash2, Volume2, VolumeX, Waves, Wind } from 'lucide-react';
+import { Check, Church, CloudRain, Flame, Music, Plus, Trash2, Trees, Volume2, VolumeX, Waves, Wind } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import type { AmbientKind, SynthKind } from '../lib/ambient';
-import { AMBIENT_KINDS, forgetTrack, startAmbient } from '../lib/ambient';
+import { AMBIENT_KINDS, forgetTrack, startAmbient, THEMES } from '../lib/ambient';
 import { addTrack, humanBytes, listTracks, MAX_TRACK_BYTES, removeTrack, TrackTooLarge, type TrackMeta } from '../lib/tracks';
 import { useApp } from '../state/AppStateContext';
 import { haptic, HAPTIC } from '../lib/haptics';
+
+/** Each soundtrack reads as itself in the list; a shared icon made the four
+ *  look like one repeated row. */
+const THEME_ICON: Record<string, typeof Waves> = {
+  rainfall: Trees,
+  shore: Waves,
+  hearth: Flame,
+  cloister: Church,
+};
 
 const ICON: Record<'off' | SynthKind, typeof Waves> = {
   off: VolumeX,
@@ -63,10 +73,42 @@ export function AmbientPicker({ manage = false }: { manage?: boolean }) {
     setTracks(await listTracks());
   };
 
+  const off = AMBIENT_KINDS[0];
+  const beds = AMBIENT_KINDS.slice(1);
+
   return (
     <div className="space-y-2">
+      {off && (
+        <Tile
+          label={off.label}
+          note={off.note}
+          icon={<VolumeX size={18} />}
+          active={chosen === 'off'}
+          onPick={() => choose('off')}
+        />
+      )}
+
+      <Group title="Soundtracks" hint="They follow the session">
+        <div className="space-y-1.5">
+          {THEMES.map((t) => {
+            const Icon = THEME_ICON[t.id] ?? Waves;
+            return (
+              <Tile
+                key={t.id}
+                label={t.label}
+                note={t.note}
+                icon={<Icon size={18} />}
+                active={chosen === t.id}
+                onPick={() => choose(t.id)}
+              />
+            );
+          })}
+        </div>
+      </Group>
+
+      <Group title="Constant beds" hint="One texture, unchanging">
       <div className="grid grid-cols-2 gap-2">
-        {AMBIENT_KINDS.map((kind) => {
+        {beds.map((kind) => {
           const Icon = ICON[kind.id];
           const active = kind.id === chosen;
           return (
@@ -96,6 +138,7 @@ export function AmbientPicker({ manage = false }: { manage?: boolean }) {
           );
         })}
       </div>
+      </Group>
 
       {tracks.length > 0 && (
         <div className="space-y-1.5 pt-1">
@@ -169,5 +212,52 @@ export function AmbientPicker({ manage = false }: { manage?: boolean }) {
         </>
       )}
     </div>
+  );
+}
+
+function Group({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
+  return (
+    <section className="pt-1">
+      <div className="mb-1.5 flex items-baseline justify-between gap-2 px-1">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-faint">{title}</h3>
+        {hint && <span className="truncate text-[11px] text-faint/80">{hint}</span>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Tile({
+  label,
+  note,
+  icon,
+  active,
+  onPick,
+}: {
+  label: string;
+  note: string;
+  icon: ReactNode;
+  active: boolean;
+  onPick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onPick}
+      aria-pressed={active}
+      className={[
+        'flex w-full items-center gap-2.5 rounded-card border px-3 py-3 text-left transition-colors',
+        active ? 'border-accent/60 bg-accent/[0.08]' : 'border-line/60 bg-raised/40 active:bg-raised',
+      ].join(' ')}
+    >
+      <span className={active ? 'text-accent' : 'text-faint'}>{icon}</span>
+      <span className="min-w-0 flex-1">
+        <span className={`block truncate text-sm font-medium ${active ? 'text-ink' : 'text-muted'}`}>
+          {label}
+        </span>
+        <span className="block truncate text-xs text-faint">{note}</span>
+      </span>
+      {active && <Check size={15} className="shrink-0 text-accent" />}
+    </button>
   );
 }

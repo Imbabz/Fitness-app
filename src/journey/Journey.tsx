@@ -8,7 +8,8 @@ import { Interstitial } from './Interstitial';
 import { Summit } from './Summit';
 import { MorningWarning } from './MorningWarning';
 import { AmbientButton } from './AmbientButton';
-import { prepareAmbient, startAmbient, stopAmbient } from '../lib/ambient';
+import { prepareAmbient, resolveAmbient, startAmbient, stopAmbient } from '../lib/ambient';
+import { seek, setProgress } from '../lib/arc';
 import { haptic, HAPTIC } from '../lib/haptics';
 
 const SWIPE_PX = 60;
@@ -96,12 +97,35 @@ export function Journey({ session, onExit }: { session: Session; onExit: () => v
 
   useEffect(() => stopAmbient, []);
 
+  /*
+   * How far through the session the soundtrack thinks we are.
+   *
+   * Sets logged over sets prescribed, not stage position: a stage with four
+   * sets is four times the work of one with a single set, and the music should
+   * move at the rate the work does. That is also what makes it last exactly the
+   * session — linger and it stretches, hurry and it tightens.
+   */
+  const prescribed = session.exercises.reduce((n, e) => n + e.sets, 0);
+  const done = active?.sets.length ?? 0;
+  const ratio = prescribed > 0 ? done / prescribed : last > 0 ? Math.max(0, stageIndex) / last : 0;
+
+  useEffect(() => {
+    setProgress(ratio);
+  }, [ratio]);
+
+  // Reaching the summit is the ending, so the soundtrack gets to land on it
+  // rather than being cut off when the screen changes.
+  useEffect(() => {
+    if (stageIndex >= last) resolveAmbient();
+  }, [stageIndex, last]);
+
   // No active session, or walked back off the first stage — either way the
   // trailhead is what you see, and Begin is a single press.
   if (!active || stageIndex < 0) {
     const begin = () => {
       // Directly in the handler, not via the effect below: iOS only lets an
       // AudioContext start from inside a user gesture.
+      seek(ratio);
       startAmbient(state.settings.ambient);
       if (active) {
         go(0);

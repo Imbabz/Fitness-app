@@ -3,17 +3,19 @@ import { todayKey } from '../lib/time';
 import { coerceComposition, coerceTuningMap } from './tuning';
 import { SESSIONS } from '../data/sessions';
 import { EXERCISE_BY_ID } from '../data/exercises';
-import { AMBIENT_KINDS } from '../lib/ambient';
+import { AMBIENT_KINDS, THEMES } from '../lib/ambient';
 import type { AmbientKind } from '../lib/ambient';
 
 /**
- * A synthesised bed, or a reference to one of the user's own files. The track
- * id is only a key into IndexedDB — a bogus one resolves to nothing and the
- * session simply plays no bed, so the shape is all that needs checking.
+ * A constant bed, a session soundtrack, or a reference to one of the user's own
+ * files. The track id is only a key into IndexedDB — a bogus one resolves to
+ * nothing and the session simply plays nothing, so for those the shape is all
+ * that needs checking.
  */
 function isAmbientKind(v: unknown): v is AmbientKind {
   if (typeof v !== 'string') return false;
   if (AMBIENT_KINDS.some((k) => k.id === v)) return true;
+  if (THEMES.some((t) => t.id === v)) return true;
   return /^track:[a-z0-9]+-[a-z0-9]+$/.test(v);
 }
 
