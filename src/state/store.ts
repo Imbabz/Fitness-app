@@ -16,6 +16,9 @@ function isAmbientKind(v: unknown): v is AmbientKind {
   if (typeof v !== 'string') return false;
   if (AMBIENT_KINDS.some((k) => k.id === v)) return true;
   if (THEMES.some((t) => t.id === v)) return true;
+  // A category is free text the user typed. An empty or absurd one resolves to
+  // no tracks and plays nothing, so length is the only thing worth checking.
+  if (v.startsWith('cat:')) return v.length > 4 && v.length <= 40;
   return /^track:[a-z0-9]+-[a-z0-9]+$/.test(v);
 }
 

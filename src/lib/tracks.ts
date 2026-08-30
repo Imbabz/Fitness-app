@@ -11,6 +11,9 @@
  * hold a blob at all.
  */
 
+import type { TrackAnalysis } from './analyse';
+import { analyse } from './analyse';
+
 const DB_NAME = 'ridge-audio';
 const STORE = 'tracks';
 
@@ -24,13 +27,72 @@ export interface TrackMeta {
   name: string;
   bytes: number;
   addedAt: string;
+  /**
+   * Free text, typed by the user at import. Deliberately not an enum: the
+   * categories worth having are the ones whose music you actually own, and
+   * that is not a list this file can guess.
+   */
+  category?: string;
+  /** Absent when the file could not be decoded; playback then just loops it. */
+  analysis?: TrackAnalysis;
+}
+
+/** Trimmed, lowercased, capped — so "  Medieval " and "medieval" are one thing. */
+export function normaliseCategory(raw: string): string {
+  return raw.trim().replace(/\s+/g, ' ').slice(0, 32);
+}
+
+export const UNCATEGORISED = 'Uncategorised';
+
+export function categoryOf(track: TrackMeta): string {
+  const c = track.category?.trim();
+  return c && c.length > 0 ? c : UNCATEGORISED;
+}
+
+/** Categories that actually have tracks, in the order they were first used. */
+export function categoriesOf(tracks: TrackMeta[]): string[] {
+  const seen = new Map<string, string>();
+  for (const t of tracks) {
+    const label = categoryOf(t);
+    const key = label.toLowerCase();
+    if (!seen.has(key)) seen.set(key, label);
+  }
+  return [...seen.values()];
+}
+
+export function tracksIn(tracks: TrackMeta[], category: string): TrackMeta[] {
+  const key = category.toLowerCase();
+  return (
+    tracks
+      .filter((t) => categoryOf(t).toLowerCase() === key)
+      // Busiest first, calmest last: the quietest music then lands on the spine
+      // block at the end of the session. Ordering by anything else — filename,
+      // import time — would be arbitrary, which is the thing to avoid.
+      .sort((a, b) => (b.analysis?.busyness ?? 0.5) - (a.analysis?.busyness ?? 0.5))
+  );
 }
 
 /**
- * 40MB. Comfortably holds an hour of ambience at a sane bitrate, and refuses a
- * mis-picked video file rather than quietly eating the storage quota.
+ * 80MB. Roughly an hour at 192kbps, so a long mix fits, while a mis-picked
+ * video file is still refused rather than quietly eating the storage quota.
  */
-export const MAX_TRACK_BYTES = 40 * 1024 * 1024;
+export const MAX_TRACK_BYTES = 80 * 1024 * 1024;
+
+/**
+ * Above this, analysis is skipped and the file simply loops.
+ *
+ * Not a storage limit — a memory one. Analysis decodes the file, and even at
+ * mono 8kHz an hour-long track is well over a hundred megabytes of samples
+ * while it runs. A phone will not thank you for that, and the file is perfectly
+ * playable without it. Several shorter tracks in one category beat one long
+ * one anyway: they all get analysed, and the collection can order them.
+ *
+ * 50MB is roughly an hour at 128kbps, which decodes to about 100MB of samples
+ * for the second or two this runs. Past that the transient is not worth it, and
+ * a file that long outlasts any session anyway — its loop points would never be
+ * reached.
+ */
+export const MAX_ANALYSE_BYTES = 50 * 1024 * 1024;
 
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -70,13 +132,19 @@ export class TrackTooLarge extends Error {
   }
 }
 
-export async function addTrack(file: File): Promise<TrackMeta> {
+export async function addTrack(file: File, category?: string): Promise<TrackMeta> {
   if (file.size > MAX_TRACK_BYTES) throw new TrackTooLarge(file.size);
+  // The one and only decode. Failure is not fatal — an unreadable or oversized
+  // file still imports and simply plays start to end.
+  const analysis = file.size <= MAX_ANALYSE_BYTES ? await analyse(file) : null;
+  const label = category ? normaliseCategory(category) : '';
   const meta: TrackMeta = {
     id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
     name: tidy(file.name),
     bytes: file.size,
     addedAt: new Date().toISOString(),
+    ...(label ? { category: label } : {}),
+    ...(analysis ? { analysis } : {}),
   };
   // The File itself is a Blob; storing it directly avoids reading 40MB into a
   // string and back.
@@ -105,12 +173,30 @@ export async function getTrack(id: string): Promise<Track | null> {
   }
 }
 
+export async function setCategory(id: string, category: string): Promise<void> {
+  try {
+    const track = await getTrack(id);
+    if (!track) return;
+    const label = normaliseCategory(category);
+    const { category: _old, ...rest } = track;
+    await run('readwrite', (s) => s.put(label ? { ...rest, category: label } : rest));
+  } catch {
+    /* no-op */
+  }
+}
+
 export async function removeTrack(id: string): Promise<void> {
   try {
     await run('readwrite', (s) => s.delete(id));
   } catch {
     /* no-op */
   }
+}
+
+/** Total stored, so "how much room am I using" is answerable from the phone. */
+export async function totalBytes(): Promise<number> {
+  const all = await listTracks();
+  return all.reduce((n, t) => n + t.bytes, 0);
 }
 
 export function humanBytes(bytes: number): string {

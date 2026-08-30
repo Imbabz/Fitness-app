@@ -4,6 +4,7 @@ import { useApp } from '../state/AppStateContext';
 import { exportState, flushState, importState } from '../state/store';
 import { todayKey } from '../lib/time';
 import { AmbientPicker } from '../components/AmbientPicker';
+import { humanBytes, MAX_TRACK_BYTES, totalBytes } from '../lib/tracks';
 import { stopAmbient } from '../lib/ambient';
 
 export function Settings() {
@@ -16,6 +17,11 @@ export function Settings() {
   // choose one. That preview is for this screen only — the bed proper belongs
   // to a session, so leaving here silences it again.
   useEffect(() => stopAmbient, []);
+
+  const [stored, setStored] = useState(0);
+  useEffect(() => {
+    void totalBytes().then(setStored);
+  });
 
   const doExport = () => {
     const blob = new Blob([exportState(state)], { type: 'application/json' });
@@ -134,6 +140,21 @@ export function Settings() {
         <div className="p-3">
           <AmbientPicker manage />
         </div>
+        <p className="border-t border-line/50 px-4 py-3 text-xs leading-relaxed text-faint">
+          <span className="text-muted">Adding your own:</span> pick files from this device — they
+          never leave it and nothing uploads. Each is analysed on import, which is what lets a
+          collection loop without an audible restart and play its calmest track last. Prefer
+          several tracks of a few minutes over one long mix: they all get analysed, and the
+          collection can then order them. Up to {humanBytes(MAX_TRACK_BYTES)} per file
+          {stored > 0 ? `; ${humanBytes(stored)} stored so far` : ''}.
+        </p>
+        <p className="border-t border-line/50 px-4 py-3 text-xs leading-relaxed text-faint">
+          <span className="text-muted">Where to find music you may use:</span> Alexander Nakarada
+          for medieval and fantasy, Scott Buckley for cinematic — both Creative Commons with
+          attribution — Musopen for classical, and Freesound (filtered to CC0) for nature. One
+          trap worth knowing: a piece written in 1200 is public domain, but a modern recording of
+          it is not. It is the recording that has to be free.
+        </p>
         <p className="border-t border-line/50 px-4 py-3 text-xs leading-relaxed text-faint">
           Plays quietly while a session is open, and stops when you leave it. A soundtrack layers
           several sounds and follows your progress — sparse at the start, fullest through the

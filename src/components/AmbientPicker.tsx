@@ -1,9 +1,21 @@
-import { Check, Church, CloudRain, Flame, Music, Plus, Trash2, Trees, Volume2, VolumeX, Waves, Wind } from 'lucide-react';
+import { Check, Church, CloudRain, Flame, ListMusic, Music, Plus, Trash2, Trees, Volume2, VolumeX, Waves, Wind } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import type { AmbientKind, SynthKind } from '../lib/ambient';
 import { AMBIENT_KINDS, forgetTrack, startAmbient, THEMES } from '../lib/ambient';
-import { addTrack, humanBytes, listTracks, MAX_TRACK_BYTES, removeTrack, TrackTooLarge, type TrackMeta } from '../lib/tracks';
+import {
+  addTrack,
+  categoriesOf,
+  categoryOf,
+  humanBytes,
+  listTracks,
+  MAX_TRACK_BYTES,
+  removeTrack,
+  setCategory,
+  TrackTooLarge,
+  tracksIn,
+  type TrackMeta,
+} from '../lib/tracks';
 import { useApp } from '../state/AppStateContext';
 import { haptic, HAPTIC } from '../lib/haptics';
 
@@ -38,7 +50,13 @@ export function AmbientPicker({ manage = false }: { manage?: boolean }) {
   const chosen = state.settings.ambient;
   const [tracks, setTracks] = useState<TrackMeta[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState<string | null>(null);
+  // A batch, not one file: adding a series and being asked once per track
+  // would be six prompts for six files.
+  const [naming, setNaming] = useState<TrackMeta[] | null>(null);
+  const [draft, setDraft] = useState('');
   const fileInput = useRef<HTMLInputElement>(null);
+  const categories = categoriesOf(tracks);
 
   useEffect(() => {
     void listTracks().then(setTracks);
@@ -52,17 +70,30 @@ export function AmbientPicker({ manage = false }: { manage?: boolean }) {
 
   const onFile = async (file: File) => {
     setError(null);
+    setPending(file.name);
     try {
       const meta = await addTrack(file);
       setTracks(await listTracks());
-      choose(`track:${meta.id}`);
+      // Straight into naming: a file tagged at import is one you never have to
+      // come back and organise.
+      setNaming((batch) => [...(batch ?? []), meta]);
     } catch (e) {
       setError(
         e instanceof TrackTooLarge
-          ? `That file is ${humanBytes(e.bytes)}. The limit is ${humanBytes(MAX_TRACK_BYTES)} — a shorter loop is usually better anyway.`
+          ? `That file is ${humanBytes(e.bytes)}. The limit is ${humanBytes(MAX_TRACK_BYTES)} — several shorter tracks in one category work better than one long one anyway.`
           : 'That file could not be stored. Nothing was changed.',
       );
+    } finally {
+      setPending(null);
     }
+  };
+
+  const assign = async (batch: TrackMeta[], category: string) => {
+    for (const t of batch) await setCategory(t.id, category);
+    setTracks(await listTracks());
+    setNaming(null);
+    setDraft('');
+    if (batch.length > 0) choose(`cat:${category.trim()}`);
   };
 
   const drop = async (meta: TrackMeta) => {
@@ -140,6 +171,29 @@ export function AmbientPicker({ manage = false }: { manage?: boolean }) {
       </div>
       </Group>
 
+      {categories.length > 0 && (
+        <Group title="Collections" hint="Played through, calmest last">
+          <div className="space-y-1.5">
+            {categories.map((name) => {
+              const inIt = tracksIn(tracks, name);
+              const active = chosen === `cat:${name}`;
+              return (
+                <Tile
+                  key={name}
+                  label={name}
+                  note={`${inIt.length} track${inIt.length === 1 ? '' : 's'} · ${humanBytes(
+                    inIt.reduce((n, t) => n + t.bytes, 0),
+                  )}`}
+                  icon={<ListMusic size={18} />}
+                  active={active}
+                  onPick={() => choose(`cat:${name}`)}
+                />
+              );
+            })}
+          </div>
+        </Group>
+      )}
+
       {tracks.length > 0 && (
         <div className="space-y-1.5 pt-1">
           {tracks.map((t) => {
@@ -166,11 +220,25 @@ export function AmbientPicker({ manage = false }: { manage?: boolean }) {
                       {t.name}
                     </span>
                     <span className="block truncate text-xs text-faint">
-                      Your file · {humanBytes(t.bytes)}
+                      {categoryOf(t)} · {humanBytes(t.bytes)}
+                      {t.analysis ? '' : ' · not analysed'}
                     </span>
                   </span>
                   {active && <Check size={15} className="shrink-0 text-accent" />}
                 </button>
+                {manage && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNaming([t]);
+                      setDraft(t.category ?? '');
+                    }}
+                    aria-label={`Set category for ${t.name}`}
+                    className="grid h-12 w-12 shrink-0 place-items-center rounded-full text-faint active:bg-raised"
+                  >
+                    <ListMusic size={16} />
+                  </button>
+                )}
                 {manage && (
                   <button
                     type="button"
@@ -187,25 +255,88 @@ export function AmbientPicker({ manage = false }: { manage?: boolean }) {
         </div>
       )}
 
+      {manage && naming && (
+        <div className="rounded-card border border-accent/50 bg-accent/[0.06] p-3">
+          <p className="text-sm font-medium text-ink">
+            {naming.length === 1
+              ? `Category for “${naming[0]?.name ?? ''}”`
+              : `Category for ${naming.length} tracks`}
+          </p>
+          <p className="mt-0.5 text-xs text-faint">
+            Type a new one or tap an existing. Tracks in a category play through in order, busiest
+            first.
+          </p>
+          {categories.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {categories.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => void assign(naming, c)}
+                  className="h-9 rounded-full bg-raised px-3 text-xs font-semibold text-muted active:opacity-80"
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="mt-2 flex gap-2">
+            <input
+              autoFocus
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && draft.trim()) void assign(naming, draft);
+                if (e.key === 'Escape') setNaming(null);
+              }}
+              placeholder="Medieval, Chillstep, Classical…"
+              className="h-11 min-w-0 flex-1 rounded-lg border border-line bg-surface px-3 text-sm text-ink outline-none placeholder:text-faint/70 focus:border-accent/60"
+            />
+            <button
+              type="button"
+              onClick={() => void assign(naming, draft)}
+              disabled={!draft.trim()}
+              className="h-11 shrink-0 rounded-lg bg-accent px-4 text-sm font-semibold text-base disabled:opacity-40"
+            >
+              Save
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => setNaming(null)}
+            className="mt-1.5 h-9 text-xs font-medium text-faint"
+          >
+            Skip for now
+          </button>
+        </div>
+      )}
+
       {manage && (
         <>
           <button
             type="button"
+            disabled={pending !== null}
             onClick={() => fileInput.current?.click()}
             className="flex h-12 w-full items-center justify-center gap-2 rounded-card border border-dashed border-line text-sm font-medium text-muted active:bg-raised"
           >
             <Plus size={16} />
-            Add your own
+            {pending ? `Reading ${pending}…` : 'Add your own'}
           </button>
           <input
             ref={fileInput}
             type="file"
             accept="audio/*"
             className="hidden"
+            multiple
             onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) void onFile(f);
+              const files = [...(e.target.files ?? [])];
               e.target.value = '';
+              // Sequentially: each import decodes, and running several decodes
+              // at once is what would actually exhaust memory.
+              void files.reduce<Promise<void>>(
+                (chain, f) => chain.then(() => onFile(f)),
+                Promise.resolve(),
+              );
             }}
           />
           {error && <p className="px-1 text-xs leading-relaxed text-danger">{error}</p>}

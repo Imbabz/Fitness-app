@@ -13,12 +13,24 @@
 
 import { context, emptySink, releaseSink, texture, type Sink, type SynthKind } from './audio';
 import { isThemeId, resolveTheme, startTheme, stopTheme, THEMES, type ThemeId } from './soundtrack';
+import { prepareCollection, resolveCollection, startCollection, stopCollection } from './player';
 import { getTrack } from './tracks';
 
 export type { SynthKind, ThemeId };
 
-/** A bed, a soundtrack, silence, or one of the user's own files. */
-export type AmbientKind = 'off' | SynthKind | ThemeId | `track:${string}`;
+/**
+ * A bed, a soundtrack, silence, one of the user's own files, or a whole
+ * category of them played through as a session-length sequence.
+ */
+export type AmbientKind = 'off' | SynthKind | ThemeId | `track:${string}` | `cat:${string}`;
+
+export function isCollection(kind: AmbientKind): kind is `cat:${string}` {
+  return kind.startsWith('cat:');
+}
+
+export function categoryOfKind(kind: AmbientKind): string | null {
+  return isCollection(kind) ? kind.slice('cat:'.length) : null;
+}
 
 export function isTrack(kind: AmbientKind): kind is `track:${string}` {
   return kind.startsWith('track:');
@@ -95,6 +107,11 @@ function rampTo(target: number, ms: number, thenPause = false) {
  * an effect — it is the play() that needs a gesture, not the loading.
  */
 export async function prepareAmbient(kind: AmbientKind) {
+  const category = categoryOfKind(kind);
+  if (category) {
+    await prepareCollection(category);
+    return;
+  }
   const id = trackIdOf(kind);
   if (!id || id === elTrackId) return;
   const track = await getTrack(id);
@@ -125,6 +142,7 @@ export function playing(): AmbientKind {
 export function stopAmbient() {
   current = 'off';
   stopTheme();
+  stopCollection();
   if (el && !el.paused) rampTo(0, 400, true);
 
   const dying = sink;
@@ -158,9 +176,10 @@ export function stopAmbient() {
   releaseSink(dying);
 }
 
-/** The session ended. Soundtracks land on the tonic; beds and files just stop. */
+/** The session ended. Soundtracks land on the tonic; a collection settles. */
 export function resolveAmbient() {
   resolveTheme();
+  resolveCollection();
 }
 
 /**
@@ -187,6 +206,13 @@ export function startAmbient(kind: AmbientKind, level = 0.35) {
     // outlive the user changing their mind.
     if (id === elTrackId) run();
     else void prepareAmbient(kind).then(() => current === kind && run());
+    return;
+  }
+
+  const category = categoryOfKind(kind);
+  if (category) {
+    current = kind;
+    void startCollection(category, level * 0.85);
     return;
   }
 
