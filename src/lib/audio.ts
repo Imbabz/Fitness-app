@@ -260,3 +260,63 @@ export function texture(ac: AudioContext, kind: SynthKind, out: AudioNode, sink:
   };
   sink.timers.push(window.setTimeout(bell, 9000));
 }
+
+/**
+ * A room, synthesised. Noise under an exponential decay, convolved.
+ *
+ * This is most of the difference between "some oscillators are running" and
+ * "there is a space you are sitting in". Four sine partials with no reverb read
+ * as a test tone no matter how carefully they are tuned — the tail is what the
+ * ear uses to decide something is real.
+ */
+export function reverb(ac: AudioContext, seconds = 2.6, decay = 2.2): ConvolverNode | null {
+  try {
+    const length = Math.floor(ac.sampleRate * seconds);
+    const buf = ac.createBuffer(2, length, ac.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const data = buf.getChannelData(ch);
+      for (let i = 0; i < length; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+      }
+    }
+    const node = ac.createConvolver();
+    node.buffer = buf;
+    return node;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A feedback delay. Sparse accents land once and vanish; through this they
+ * bloom and answer themselves, which is what makes a handful of notes sound
+ * like music rather than a handful of notes.
+ */
+export function echo(
+  ac: AudioContext,
+  sink: Sink,
+  out: AudioNode,
+  time = 1.6,
+  feedback = 0.38,
+): GainNode | null {
+  try {
+    const input = ac.createGain();
+    const delay = ac.createDelay(5);
+    delay.delayTime.value = time;
+    const fb = ac.createGain();
+    fb.gain.value = feedback;
+    // Each repeat darker than the last, as distance does.
+    const damp = ac.createBiquadFilter();
+    damp.type = 'lowpass';
+    damp.frequency.value = 1800;
+
+    input.connect(delay);
+    delay.connect(damp).connect(fb).connect(delay);
+    delay.connect(out);
+    input.connect(out);
+    sink.nodes.push(input, delay, fb, damp);
+    return input;
+  } catch {
+    return null;
+  }
+}

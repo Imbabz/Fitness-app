@@ -13,7 +13,7 @@
  * not survive several. The one decode happens at import, in analyse.ts.
  */
 
-import { context, existingContext } from './audio';
+import { context, existingContext, reverb } from './audio';
 import { subscribe } from './arc';
 import { highlightOf } from './analyse';
 import { categoryOf, getTrack, listTracks, tracksIn, type TrackMeta } from './tracks';
@@ -42,29 +42,6 @@ let currentCategory: string | null = null;
 let prepared: string | null = null;
 let level = 0.3;
 let closing = false;
-
-/**
- * A synthesised impulse response — noise under an exponential decay. Two
- * seconds of it puts everything in a room, which is most of the difference
- * between "a track playing" and "something restful in the background".
- */
-function reverb(ac: AudioContext): ConvolverNode | null {
-  try {
-    const length = Math.floor(ac.sampleRate * 2);
-    const buf = ac.createBuffer(2, length, ac.sampleRate);
-    for (let ch = 0; ch < 2; ch++) {
-      const data = buf.getChannelData(ch);
-      for (let i = 0; i < length; i++) {
-        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2.5);
-      }
-    }
-    const node = ac.createConvolver();
-    node.buffer = buf;
-    return node;
-  } catch {
-    return null;
-  }
-}
 
 /**
  * The element half of a deck, which needs no AudioContext. Split out so that

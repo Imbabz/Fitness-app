@@ -26,9 +26,11 @@
 import {
   context,
   drift,
+  echo,
   emptySink,
   existingContext,
   releaseSink,
+  reverb,
   texture,
   type Sink,
   type SynthKind,
@@ -163,30 +165,87 @@ function voice(
   osc.stop(now + attack + release + 0.2);
 }
 
-/** Root, fifth, octave. Sustained, detuned slightly so it is not a test tone. */
-function pad(ac: AudioContext, t: Theme, out: AudioNode) {
-  for (const [steps, gain] of [
-    [0, 0.5],
-    [7, 0.3],
-    [12, 0.16],
-  ] as const) {
+/**
+ * One note of the pad, built to be heard rather than merely to be in tune.
+ *
+ * Three things separate this from the bare sine it replaces, and all three are
+ * doing real work:
+ *
+ * - **Unison.** Three oscillators a few cents apart. Their beating is what
+ *   gives a synthesised note width; one oscillator is unavoidably a test tone,
+ *   however carefully tuned.
+ * - **A sawtooth underneath, filtered hard.** Sine waves have no harmonics at
+ *   all, so a stack of them stays hollow no matter how many you add. A quiet
+ *   saw with the top rolled off supplies the harmonic body an instrument has.
+ * - **Its own slow tremolo.** Each note breathing at a slightly different rate
+ *   keeps the chord from sitting perfectly still, which is what makes a pad
+ *   sound synthetic even when everything else is right.
+ */
+function padVoice(ac: AudioContext, hz: number, level: number, out: AudioNode) {
+  const bus = ac.createGain();
+  bus.gain.value = level;
+  // Rates chosen not to line up, so the shimmer never settles into a pulse.
+  drift(ac, sink, bus.gain, level, level * 0.22, 0.021 + Math.random() * 0.035);
+  bus.connect(out);
+  sink.nodes.push(bus);
+
+  for (const cents of [-7, 0, 7]) {
     const osc = ac.createOscillator();
     osc.type = 'sine';
-    osc.frequency.value = semitone(t.root, steps);
-    drift(ac, sink, osc.detune, 0, 5, 0.03 + Math.random() * 0.03);
+    osc.frequency.value = hz;
+    drift(ac, sink, osc.detune, cents, 4, 0.02 + Math.random() * 0.04);
     const g = ac.createGain();
-    g.gain.value = gain;
-    osc.connect(g).connect(out);
+    g.gain.value = 0.33;
+    osc.connect(g).connect(bus);
     osc.start();
     sink.nodes.push(osc);
   }
 
-  // A third voice moving through the mode, very slowly, so the harmony is not
+  const saw = ac.createOscillator();
+  saw.type = 'sawtooth';
+  saw.frequency.value = hz;
+  drift(ac, sink, saw.detune, 0, 5, 0.017);
+  const tame = ac.createBiquadFilter();
+  tame.type = 'lowpass';
+  // Just above the fourth harmonic: enough body to stop it being hollow,
+  // nothing bright enough to be an edge.
+  tame.frequency.value = Math.min(1400, hz * 4.5);
+  tame.Q.value = 0.5;
+  const sawGain = ac.createGain();
+  sawGain.gain.value = 0.16;
+  saw.connect(tame).connect(sawGain).connect(bus);
+  saw.start();
+  sink.nodes.push(saw);
+}
+
+/** Root, fifth, octave, plus a sub. */
+function pad(ac: AudioContext, t: Theme, out: AudioNode) {
+  // The sub is a plain sine on purpose: harmonics down here only muddy things,
+  // and its whole job is weight.
+  const sub = ac.createOscillator();
+  sub.type = 'sine';
+  sub.frequency.value = semitone(t.root, -12);
+  const subGain = ac.createGain();
+  subGain.gain.value = 0.2;
+  sub.connect(subGain).connect(out);
+  sub.start();
+  sink.nodes.push(sub);
+
+  for (const [steps, level] of [
+    [0, 0.4],
+    [7, 0.24],
+    [12, 0.13],
+  ] as const) {
+    padVoice(ac, semitone(t.root, steps), level, out);
+  }
+
+  // A voice moving through the mode, very slowly, so the harmony is not
   // completely static over a 45-minute session.
   const wander = ac.createOscillator();
   wander.type = 'sine';
   const wanderGain = ac.createGain();
-  wanderGain.gain.value = 0.1;
+  wanderGain.gain.value = 0.08;
+  drift(ac, sink, wanderGain.gain, 0.08, 0.05, 0.009);
   wander.frequency.value = semitone(t.root, (t.mode[2] ?? 3) + 12);
   drift(ac, sink, wander.detune, 0, 14, 0.012);
   wander.connect(wanderGain).connect(out);
@@ -262,15 +321,40 @@ export function startTheme(id: ThemeId, atLevel = 0.28) {
       texture(ac, kind, g, sink);
     }
 
+    /*
+     * A shared room for the harmony and the accents, but not for the textures:
+     * reverberating rain just makes it sound like rain in a bathroom, while
+     * the pad and the accents need the tail to stop reading as oscillators.
+     */
+    const space = reverb(ac, 3.2, 2);
+    const wet = ac.createGain();
+    wet.gain.value = 0.34;
+    if (space) {
+      space.connect(wet).connect(out);
+      sink.nodes.push(space, wet);
+    }
+    const send = (node: AudioNode) => {
+      node.connect(out);
+      if (space) node.connect(space);
+    };
+
     const filter = ac.createBiquadFilter();
     filter.type = 'lowpass';
     filter.Q.value = 0.7;
-    filter.connect(out);
+    send(filter);
     padFilter = filter;
     pad(ac, t, filter);
 
     const accents = ac.createGain();
-    accents.connect(out);
+    // Accents bloom through a delay tuned to the theme's own pace, so a handful
+    // of notes answer each other instead of landing and vanishing.
+    const tail = echo(ac, sink, out, 1.4 + Math.random() * 0.8, 0.34);
+    if (tail) {
+      accents.connect(tail);
+      if (space) accents.connect(space);
+    } else {
+      send(accents);
+    }
     accentGain = accents;
     scheduleAccents(ac, t, accents);
 
