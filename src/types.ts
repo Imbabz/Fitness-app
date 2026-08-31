@@ -151,6 +151,12 @@ export interface Settings {
    * export. See supabase/schema.sql.
    */
   library: LibraryCredentials | null;
+  /**
+   * Play your own music the way a music app does: through the iPhone's silent
+   * switch, and onward when the screen locks. Costs the filter and reverb — see
+   * player.ts. On by default, because hearing it at all beats shaping it.
+   */
+  musicAppMode: boolean;
 }
 
 export interface AppState {

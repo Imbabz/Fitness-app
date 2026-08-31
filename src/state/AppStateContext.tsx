@@ -21,6 +21,7 @@ import { computeStreak, tunedSession } from './selectors';
 import { canSubstitute, coerceTuning, compositionOf } from './tuning';
 import { EXERCISE_BY_ID } from '../data/exercises';
 import { SESSION_BY_ID } from '../data/sessions';
+import { setMusicAppMode } from '../lib/ambient';
 import { setHapticsEnabled } from '../lib/haptics';
 import { todayKey } from '../lib/time';
 
@@ -106,6 +107,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setHapticsEnabled(state.settings.haptics);
   }, [state.settings.haptics]);
+
+  // The player reads this at the moment it wires a track, which is inside the
+  // Begin gesture — so it has to be current before then, not passed at call time.
+  useEffect(() => {
+    setMusicAppMode(state.settings.musicAppMode);
+  }, [state.settings.musicAppMode]);
 
   const setMode = useCallback((mode: Mode) => {
     setState((s) => ({ ...s, mode, modeOverrideDate: todayKey() }));

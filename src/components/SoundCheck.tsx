@@ -15,7 +15,7 @@ import { useApp } from '../state/AppStateContext';
  * a fault. This says which.
  */
 export function SoundCheck() {
-  const { state } = useApp();
+  const { state, updateSettings } = useApp();
   const [result, setResult] = useState<string | null>(null);
 
   const label = (() => {
@@ -59,6 +59,36 @@ export function SoundCheck() {
 
   return (
     <div className="space-y-2 p-3">
+      <div className="flex items-start justify-between gap-3 pb-1">
+        <div className="min-w-0">
+          <span className="block text-sm font-medium text-ink">Play like a music app</span>
+          <span className="mt-0.5 block text-xs leading-relaxed text-faint">
+            Your own music sounds through the iPhone ring/silent switch and keeps playing when the
+            screen locks, with lock-screen controls. Costs the filter and reverb on it. The
+            synthesised soundtracks cannot do this — a browser is only given the choice for real
+            files, not for generated sound.
+          </span>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={state.settings.musicAppMode}
+          aria-label="Play like a music app"
+          onClick={() => updateSettings({ musicAppMode: !state.settings.musicAppMode })}
+          className={[
+            'relative mt-0.5 h-8 w-14 shrink-0 rounded-full transition-colors',
+            state.settings.musicAppMode ? 'bg-accent' : 'bg-raised',
+          ].join(' ')}
+        >
+          <span
+            className={[
+              'absolute top-1 h-6 w-6 rounded-full bg-ink transition-transform duration-200',
+              state.settings.musicAppMode ? 'translate-x-7' : 'translate-x-1',
+            ].join(' ')}
+          />
+        </button>
+      </div>
+
       <button
         type="button"
         onClick={run}

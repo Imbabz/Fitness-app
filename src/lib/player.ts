@@ -71,14 +71,63 @@ function deck(ac: AudioContext, index: number): Deck | null {
   return d;
 }
 
+/*
+ * ── Why there are two ways to play the same file ───────────────────────────
+ *
+ * Spotify and YouTube are native apps. They set an AVAudioSession category that
+ * explicitly ignores the ring/silent switch and permits background audio. A web
+ * page cannot call that API at all — Safari picks the category for it, and it
+ * picks based on *how* the sound is produced:
+ *
+ *   - An <audio> element playing on its own is media playback. On iOS that
+ *     sounds through the silent switch, survives the screen locking, and can
+ *     own the lock-screen controls.
+ *   - Anything routed through an AudioContext is Web Audio. That respects the
+ *     silent switch and stops when the app is backgrounded.
+ *
+ * createMediaElementSource moves a file from the first category into the
+ * second. So the filter and the reverb are not free: they cost exactly the
+ * behaviour that makes a music app feel like one.
+ *
+ * musicAppMode therefore chooses. On, the element plays untouched and the arc
+ * drives el.volume instead of a gain node — less shaping, but you can hear it
+ * with the phone on silent and it keeps going in your pocket. Off, the full
+ * chain applies and it behaves like the rest of Ridge's audio.
+ */
+let direct = true;
+
+export function setMusicAppMode(on: boolean) {
+  direct = on;
+}
+
 function wire(ac: AudioContext, d: Deck) {
-  if (d.wired || !filter || !d.gain) return;
+  if (direct || d.wired || !filter || !d.gain) return;
   try {
     ac.createMediaElementSource(d.el).connect(d.gain).connect(filter);
     d.wired = true;
   } catch {
     /* already wired, or the element is not eligible */
   }
+}
+
+/** Level for a deck, applied wherever this mode puts it. */
+function applyLevel(d: Deck, value: number, ac: AudioContext, seconds: number) {
+  if (direct) {
+    // No Web Audio in the path, so the element's own volume is the only lever.
+    const from = d.el.volume;
+    const started = Date.now();
+    const step = window.setInterval(() => {
+      const t = Math.min(1, (Date.now() - started) / (seconds * 1000));
+      try {
+        d.el.volume = Math.max(0, Math.min(1, from + (value - from) * t));
+      } catch {
+        /* no-op */
+      }
+      if (t >= 1) window.clearInterval(step);
+    }, 60);
+    return;
+  }
+  if (d.gain) ramp(d.gain.gain, value, seconds, ac);
 }
 
 function ramp(param: AudioParam, to: number, seconds: number, ac: AudioContext) {
@@ -131,14 +180,15 @@ async function advance(ac: AudioContext) {
   if (!(await load(nextDeck, meta))) return;
   wire(ac, nextDeck);
 
-  if (!nextDeck.gain) return;
-  nextDeck.gain.gain.value = 0;
+  if (!direct && !nextDeck.gain) return;
+  if (nextDeck.gain) nextDeck.gain.gain.value = 0;
+  nextDeck.el.volume = 0;
   void nextDeck.el.play().catch(() => undefined);
-  ramp(nextDeck.gain.gain, meta.analysis?.gain ?? 1, CROSSFADE, ac);
+  applyLevel(nextDeck, Math.min(1, meta.analysis?.gain ?? 1) * level, ac, CROSSFADE);
 
   const outgoing = decks[active];
-  if (outgoing?.gain) {
-    ramp(outgoing.gain.gain, 0, CROSSFADE, ac);
+  if (outgoing) {
+    applyLevel(outgoing, 0, ac, CROSSFADE);
     const stale = outgoing;
     window.setTimeout(() => {
       // Only pause if it is still the one that faded out — a fast switch could
@@ -224,6 +274,31 @@ function buildGraph(ac: AudioContext) {
   out.connect(ac.destination);
 }
 
+/** Lock-screen title and controls. The visible half of "like a music app". */
+function announce(meta: TrackMeta) {
+  try {
+    const ms = navigator.mediaSession;
+    if (!ms) return;
+    ms.metadata = new MediaMetadata({
+      title: meta.name,
+      artist: currentCategory ?? 'Ridge',
+      album: 'Ridge',
+    });
+    ms.playbackState = 'playing';
+    ms.setActionHandler('pause', () => {
+      for (const d of decks) d?.el.pause();
+      ms.playbackState = 'paused';
+    });
+    ms.setActionHandler('play', () => {
+      const d = decks[active];
+      if (d) void d.el.play().catch(() => undefined);
+      ms.playbackState = 'playing';
+    });
+  } catch {
+    /* no MediaSession here */
+  }
+}
+
 export async function startCollection(category: string, atLevel = 0.3): Promise<boolean> {
   const ac = context();
   if (!ac) return false;
@@ -243,15 +318,27 @@ export async function startCollection(category: string, atLevel = 0.3): Promise<
     // Now that a gesture has run, the deck can have its gain node and be wired.
     const d = deck(ac, active);
     const meta = queue[(position - 1 + queue.length) % queue.length];
-    if (d?.gain && meta) {
+    if (d && meta) {
       wire(ac, d);
-      d.gain.gain.value = 0;
+      if (d.gain) d.gain.gain.value = 0;
+      d.el.volume = 0;
       void d.el.play().catch(() => undefined);
-      ramp(d.gain.gain, meta.analysis?.gain ?? 1, 3, ac);
+      applyLevel(d, Math.min(1, meta.analysis?.gain ?? 1) * level, ac, 3);
+      announce(meta);
     }
     unsubscribe?.();
     unsubscribe = subscribe((s) => {
       try {
+        if (direct) {
+          // The arc still shapes the level; only the tone shaping is lost.
+          const d = decks[active];
+          const meta = queue[(position - 1 + queue.length) % queue.length];
+          if (d && !closing) {
+            const base = Math.min(1, meta?.analysis?.gain ?? 1) * level;
+            d.el.volume = Math.max(0, Math.min(1, base * (0.6 + 0.4 * s.presence)));
+          }
+          return;
+        }
         // Music carries its own detail, so the filter opens wider than it does
         // for a synthesised pad — closing it as far would just sound muffled.
         filter?.frequency.setTargetAtTime(s.brightness * 2.6, ac.currentTime, 4);
@@ -311,6 +398,12 @@ export function stopCollection() {
   if (watchdog !== null) {
     clearInterval(watchdog);
     watchdog = null;
+  }
+
+  try {
+    if (navigator.mediaSession) navigator.mediaSession.playbackState = 'none';
+  } catch {
+    /* no-op */
   }
 
   const ac = existingContext();

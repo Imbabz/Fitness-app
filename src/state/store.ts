@@ -57,6 +57,7 @@ export function seedState(): AppState {
       ambientLayer: 'off',
       ambientByBlock: {},
       library: null,
+      musicAppMode: true,
     },
   };
 }
@@ -202,6 +203,7 @@ export function coerceState(raw: unknown): AppState {
         ? (settings.ambientLayer as AppState['settings']['ambientLayer'])
         : 'off',
       library: credentialsLook(settings.library) ? settings.library : null,
+      musicAppMode: settings.musicAppMode !== false,
       ambientByBlock: (() => {
         const raw = settings.ambientByBlock;
         if (typeof raw !== 'object' || raw === null) return {};

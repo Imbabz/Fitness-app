@@ -104,6 +104,15 @@ These are not preferences. Breaking them breaks the product.
      context when it is created outside a user gesture, and an `<audio>`
      element routed into a suspended context is silent while `play()` still
      resolves successfully — a failure with no symptom.
+   - **Routing a file into the AudioContext changes how iOS treats it.** An
+     `<audio>` element on its own is media playback: it sounds through the
+     ring/silent switch, survives the screen locking, and owns the lock-screen
+     controls. `createMediaElementSource` moves it into Web Audio, which does
+     none of those. Filters and reverb on the user's music therefore cost
+     exactly that behaviour, which is why `settings.musicAppMode` exists and
+     defaults to on. A web page cannot set an AVAudioSession category, so this
+     is the only lever there is — and it does not exist at all for synthesised
+     sound, which is Web Audio by nature.
    - **Only a texture may be layered under music.** Rain, surf, wind and fire
      have no key and no pulse, so they cannot disagree with a recording. A pad
      or a second track can, and there is no way to know in advance that it will

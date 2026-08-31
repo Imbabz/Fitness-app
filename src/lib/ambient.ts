@@ -33,6 +33,7 @@ import {
   duckCollection,
   prepareCollection,
   resolveCollection,
+  setMusicAppMode,
   startCollection,
   stopCollection,
 } from './player';
@@ -75,6 +76,7 @@ export const AMBIENT_KINDS: Array<{ id: 'off' | SynthKind; label: string; note: 
 ];
 
 export { THEMES };
+export { setMusicAppMode };
 
 const SYNTH_IDS: SynthKind[] = ['rain', 'waves', 'wind', 'fire', 'drone'];
 const isBed = (k: AmbientKind): k is SynthKind => (SYNTH_IDS as string[]).includes(k);
