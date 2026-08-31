@@ -1,4 +1,4 @@
-import type { AmbientKind } from './lib/ambient';
+import type { AmbientKind, SynthKind } from './lib/ambient';
 
 export type Mode = 'day' | 'night';
 
@@ -130,8 +130,20 @@ export interface Settings {
    * deadlifts is not one you want during the nightly routine.
    */
   countdown: Record<string, boolean>;
-  /** Synthesised bed played while a session is open. Off by default. */
+  /** What plays while a session is open. Off by default. */
   ambient: AmbientKind;
+  /**
+   * A texture laid under your own music. Only ever a texture, never a pad or a
+   * second track: rain and surf have no key, so they cannot clash with whatever
+   * the music is doing. Two arbitrary recordings would.
+   */
+  ambientLayer: 'off' | SynthKind;
+  /**
+   * Per-block overrides. The main block can carry something with more weight
+   * than the spine block wants, and one choice for a whole session cannot say
+   * that. Absent entries fall back to `ambient`.
+   */
+  ambientByBlock: Partial<Record<Block, AmbientKind>>;
 }
 
 export interface AppState {

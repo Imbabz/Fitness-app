@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { countdownTick } from '../lib/sound';
+import { duck } from '../lib/ambient';
 
 /**
  * Countdown driven by a target end-timestamp, never a decrementing counter.
@@ -185,6 +186,10 @@ export function useCountdownBeeps(remainingSeconds: number, enabled: boolean, fr
     }
     if (remainingSeconds < 1 || spoken.current.has(remainingSeconds)) return;
     spoken.current.add(remainingSeconds);
+    // Dip whatever is playing rather than making the cue loud enough to beat
+    // it. A beep that has to win on volume is the startle the soundtrack exists
+    // to avoid; ducking lets it stay quiet and still carry.
+    duck(1);
     countdownTick(remainingSeconds);
   }, [remainingSeconds, enabled, from]);
 }

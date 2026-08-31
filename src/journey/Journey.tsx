@@ -77,23 +77,35 @@ export function Journey({ session, onExit }: { session: Session; onExit: () => v
   }, [session.id]);
 
   /*
-   * The bed belongs to the session, not to the app: it starts once you are on a
-   * stage and stops when you leave, whichever way you leave. `startAmbient` is a
-   * no-op when the requested kind is already playing, so this settles on the
-   * first stage and then only reacts to the picker.
+   * What should be playing right now.
+   *
+   * One choice for a whole session cannot say that the main block carries more
+   * weight than the spine block wants. A per-block override does; anything
+   * unset falls back to the session-wide choice, so this costs nothing until
+   * it is used.
    */
-  // Loading the file is what takes time; play() is what needs the gesture. So
-  // the blob is fetched while the trailhead is on screen, and Begin only has to
-  // press play.
-  useEffect(() => {
-    void prepareAmbient(state.settings.ambient);
-  }, [state.settings.ambient]);
-
   const onStage = stageIndex >= 0;
+  const block = session.exercises[Math.max(0, stageIndex)]?.block;
+  const wanted =
+    (block ? state.settings.ambientByBlock[block] : undefined) ?? state.settings.ambient;
+  const layer = state.settings.ambientLayer;
+
+  /*
+   * The bed belongs to the session, not to the app: it starts once you are on a
+   * stage and stops when you leave, whichever way you leave.
+   *
+   * Loading a file is what takes time; play() is what needs the gesture. So the
+   * blob is fetched while the trailhead is still on screen, and Begin has
+   * nothing left to wait for.
+   */
   useEffect(() => {
-    if (onStage) startAmbient(state.settings.ambient);
+    void prepareAmbient(wanted);
+  }, [wanted]);
+
+  useEffect(() => {
+    if (onStage) startAmbient(wanted, 0.35, layer);
     else stopAmbient();
-  }, [onStage, state.settings.ambient]);
+  }, [onStage, wanted, layer]);
 
   useEffect(() => stopAmbient, []);
 
@@ -126,7 +138,7 @@ export function Journey({ session, onExit }: { session: Session; onExit: () => v
       // Directly in the handler, not via the effect below: iOS only lets an
       // AudioContext start from inside a user gesture.
       seek(ratio);
-      startAmbient(state.settings.ambient);
+      startAmbient(wanted, 0.35, layer);
       if (active) {
         go(0);
         return;

@@ -83,6 +83,17 @@ These are not preferences. Breaking them breaks the product.
    whoever is entitled to play the file. Do not commit audio to the repository
    and do not fetch any, however permissive the licence looks.
 
+   Two audio rules that are load-bearing and easy to "tidy" away:
+
+   - **Never `decodeAudioData` at playback.** A five-minute stereo track decoded
+     to PCM is ~50MB resident. Decoding happens once, at import, mono at 8kHz
+     (`src/lib/analyse.ts`); playback streams from the blob through `<audio>`.
+   - **Only a texture may be layered under music.** Rain, surf, wind and fire
+     have no key and no pulse, so they cannot disagree with a recording. A pad
+     or a second track can, and there is no way to know in advance that it will
+     not. `settings.ambientLayer` is typed to textures for this reason, and the
+     coercion in `store.ts` refuses anything else.
+
 6. **Progression thresholds differ by block.** Two clean sessions for main work,
    four for the spine block. Do not unify these.
 

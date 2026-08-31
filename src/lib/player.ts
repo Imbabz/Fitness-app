@@ -15,6 +15,7 @@
 
 import { context } from './audio';
 import { subscribe } from './arc';
+import { highlightOf } from './analyse';
 import { categoryOf, getTrack, listTracks, tracksIn, type TrackMeta } from './tracks';
 
 /** Seconds of overlap between one track and the next. */
@@ -108,8 +109,10 @@ async function load(d: Deck, meta: TrackMeta): Promise<boolean> {
   if (d.url) URL.revokeObjectURL(d.url);
   d.url = URL.createObjectURL(track.blob);
   d.el.src = d.url;
-  // Trimmed silence is skipped rather than played as dead air.
-  d.el.currentTime = meta.analysis?.trimStart ?? 0;
+  // Long tracks open on their calmest sustained stretch rather than always on
+  // their first second, which you would otherwise hear every single session and
+  // never get past. Short ones are unaffected — the highlight is the whole loop.
+  d.el.currentTime = meta.analysis ? highlightOf(meta.analysis).start : 0;
   // Looping is handled by the watchdog against the seam-matched points, so the
   // element's own loop is left off — it would restart at sample zero.
   d.el.loop = false;
@@ -120,7 +123,10 @@ async function load(d: Deck, meta: TrackMeta): Promise<boolean> {
 /** Where this track should hand over: its loop end, or the end of the file. */
 function handoverAt(meta: TrackMeta, el: HTMLAudioElement): number {
   const a = meta.analysis;
-  if (a && a.loopEnd > a.loopStart) return a.loopEnd;
+  if (a) {
+    const h = highlightOf(a);
+    if (h.end > h.start) return h.end;
+  }
   const duration = Number.isFinite(el.duration) ? el.duration : 0;
   return duration > 0 ? duration - (a?.trimEnd ?? 0) : 0;
 }
@@ -274,6 +280,22 @@ export function resolveCollection() {
   closing = true;
   try {
     master.gain.setTargetAtTime(level * 0.5, ac.currentTime, 2);
+  } catch {
+    /* no-op */
+  }
+}
+
+/** Dip for a cue. See duck() in ambient.ts for why this exists. */
+export function duckCollection(seconds = 1.2) {
+  const ac = context();
+  if (!ac || !master) return;
+  try {
+    const now = ac.currentTime;
+    const level = master.gain.value;
+    master.gain.cancelScheduledValues(now);
+    master.gain.setValueAtTime(level, now);
+    master.gain.linearRampToValueAtTime(level * 0.35, now + 0.12);
+    master.gain.linearRampToValueAtTime(level, now + seconds);
   } catch {
     /* no-op */
   }

@@ -1,4 +1,7 @@
-import type { AppState, Mode } from '../types';
+import type { AppState, Block, Mode } from '../types';
+
+const BLOCKS: Block[] = ['warmup', 'main', 'spine', 'mobility'];
+const SYNTH_IDS: string[] = ['rain', 'waves', 'wind', 'fire', 'drone'];
 import { todayKey } from '../lib/time';
 import { coerceComposition, coerceTuningMap } from './tuning';
 import { SESSIONS } from '../data/sessions';
@@ -50,6 +53,8 @@ export function seedState(): AppState {
       autoChain: {},
       countdown: {},
       ambient: 'off',
+      ambientLayer: 'off',
+      ambientByBlock: {},
     },
   };
 }
@@ -191,6 +196,19 @@ export function coerceState(raw: unknown): AppState {
       autoChain: boolRec(settings.autoChain),
       countdown: boolRec(settings.countdown),
       ambient: isAmbientKind(settings.ambient) ? settings.ambient : 'off',
+      ambientLayer: SYNTH_IDS.includes(settings.ambientLayer as string)
+        ? (settings.ambientLayer as AppState['settings']['ambientLayer'])
+        : 'off',
+      ambientByBlock: (() => {
+        const raw = settings.ambientByBlock;
+        if (typeof raw !== 'object' || raw === null) return {};
+        const out: AppState['settings']['ambientByBlock'] = {};
+        for (const block of BLOCKS) {
+          const v = (raw as Record<string, unknown>)[block];
+          if (isAmbientKind(v)) out[block] = v;
+        }
+        return out;
+      })(),
     },
   };
 }

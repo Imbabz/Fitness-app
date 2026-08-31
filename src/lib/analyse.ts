@@ -230,3 +230,55 @@ export async function analyse(blob: Blob): Promise<TrackAnalysis | null> {
     return null;
   }
 }
+
+/**
+ * The stretch worth actually playing.
+ *
+ * A 36-minute mix starts from its first second every session and you never hear
+ * past minute thirteen. Rather than always opening on the same material, pick
+ * the calmest sustained window: lowest mean energy, and steady rather than
+ * lurching, since a passage that swings about is not restful however quiet its
+ * average.
+ *
+ * Computed from the stored envelope, so tracks imported before this existed get
+ * it without being decoded again.
+ */
+export function highlightOf(
+  a: TrackAnalysis,
+  maxSeconds = 420,
+): { start: number; end: number } {
+  const from = a.trimStart;
+  const to = a.durationSec - a.trimEnd;
+  const span = to - from;
+  if (!(span > 0) || a.energy.length === 0 || span <= maxSeconds) {
+    return { start: a.loopStart, end: a.loopEnd };
+  }
+
+  const perBucket = span / a.energy.length;
+  /*
+   * Never more than a fraction of the track. A window nearly as long as the
+   * file has almost nowhere to sit, so it lands wherever it fits rather than
+   * where the music is calmest — which defeats the point. Bounded below so a
+   * short-but-eligible track still yields a usable stretch.
+   */
+  const seconds = Math.max(90, Math.min(maxSeconds, span * 0.45));
+  const width = Math.max(2, Math.round(seconds / perBucket));
+  if (width >= a.energy.length) return { start: a.loopStart, end: a.loopEnd };
+  let best = { at: 0, score: Infinity };
+
+  for (let i = 0; i + width <= a.energy.length; i++) {
+    const window = a.energy.slice(i, i + width);
+    const mean = window.reduce((n, v) => n + v, 0) / window.length;
+    const spread =
+      Math.sqrt(window.reduce((n, v) => n + (v - mean) ** 2, 0) / window.length) || 0;
+    // Quiet counts, but steady counts as much: an even passage is restful and a
+    // lurching one is not, whatever its average.
+    const score = mean + spread;
+    if (score < best.score) best = { at: i, score };
+  }
+
+  return {
+    start: from + best.at * perBucket,
+    end: from + (best.at + width) * perBucket,
+  };
+}

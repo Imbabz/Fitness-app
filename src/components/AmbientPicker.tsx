@@ -57,6 +57,9 @@ export function AmbientPicker({ manage = false }: { manage?: boolean }) {
   const [draft, setDraft] = useState('');
   const fileInput = useRef<HTMLInputElement>(null);
   const categories = categoriesOf(tracks);
+  // Only music can take a texture underneath: a soundtrack already
+  // aggregates its own, and a bed is one.
+  const isMusic = chosen.startsWith('track:') || chosen.startsWith('cat:');
 
   useEffect(() => {
     void listTracks().then(setTracks);
@@ -253,6 +256,37 @@ export function AmbientPicker({ manage = false }: { manage?: boolean }) {
             );
           })}
         </div>
+      )}
+
+      {isMusic && (
+        <Group title="Underneath" hint="A texture behind the music">
+          <div className="grid grid-cols-3 gap-2">
+            {(['off', 'rain', 'waves', 'wind', 'fire'] as const).map((k) => {
+              const on = state.settings.ambientLayer === k;
+              const Icon = ICON[k];
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => {
+                    haptic(HAPTIC.tick);
+                    updateSettings({ ambientLayer: k });
+                  }}
+                  aria-pressed={on}
+                  className={[
+                    'flex h-11 items-center justify-center gap-1.5 rounded-card border text-xs font-semibold transition-colors',
+                    on
+                      ? 'border-accent/60 bg-accent/[0.08] text-accent'
+                      : 'border-line/60 bg-raised/40 text-muted active:bg-raised',
+                  ].join(' ')}
+                >
+                  <Icon size={14} />
+                  {k === 'off' ? 'None' : k[0]?.toUpperCase() + k.slice(1)}
+                </button>
+              );
+            })}
+          </div>
+        </Group>
       )}
 
       {manage && naming && (

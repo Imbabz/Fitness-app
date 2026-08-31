@@ -311,6 +311,22 @@ export function resolveTheme() {
   }
 }
 
+/** Dip for a cue. See duck() in ambient.ts for why this exists. */
+export function duckTheme(seconds = 1.2) {
+  const ac = context();
+  if (!ac || !master) return;
+  try {
+    const now = ac.currentTime;
+    const level = master.gain.value;
+    master.gain.cancelScheduledValues(now);
+    master.gain.setValueAtTime(level, now);
+    master.gain.linearRampToValueAtTime(level * 0.35, now + 0.12);
+    master.gain.linearRampToValueAtTime(level, now + seconds);
+  } catch {
+    /* no-op */
+  }
+}
+
 export function stopTheme() {
   unsubscribe?.();
   unsubscribe = null;
