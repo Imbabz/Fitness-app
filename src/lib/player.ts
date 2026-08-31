@@ -13,7 +13,7 @@
  * not survive several. The one decode happens at import, in analyse.ts.
  */
 
-import { context } from './audio';
+import { context, existingContext } from './audio';
 import { subscribe } from './arc';
 import { highlightOf } from './analyse';
 import { categoryOf, getTrack, listTracks, tracksIn, type TrackMeta } from './tracks';
@@ -23,7 +23,8 @@ const CROSSFADE = 8;
 
 interface Deck {
   el: HTMLAudioElement;
-  gain: GainNode;
+  /** Absent until a gesture has let the context exist. */
+  gain: GainNode | null;
   url: string | null;
   /** Set once; a MediaElementSource may not be created twice for one element. */
   wired: boolean;
@@ -65,16 +66,18 @@ function reverb(ac: AudioContext): ConvolverNode | null {
   }
 }
 
-function deck(ac: AudioContext, index: number): Deck | null {
+/**
+ * The element half of a deck, which needs no AudioContext. Split out so that
+ * preparing a collection touches no audio graph at all — see prepareCollection.
+ */
+function element(index: number): Deck | null {
   const existing = decks[index];
   if (existing) return existing;
   try {
     const el = new Audio();
     el.preload = 'auto';
     el.crossOrigin = 'anonymous';
-    const gain = ac.createGain();
-    gain.gain.value = 0;
-    const made: Deck = { el, gain, url: null, wired: false };
+    const made: Deck = { el, gain: null, url: null, wired: false };
     decks[index] = made;
     return made;
   } catch {
@@ -82,8 +85,17 @@ function deck(ac: AudioContext, index: number): Deck | null {
   }
 }
 
+/** The element plus its gain node. Only called once a gesture has run. */
+function deck(ac: AudioContext, index: number): Deck | null {
+  const d = element(index);
+  if (!d) return null;
+  d.gain ??= ac.createGain();
+  d.gain.gain.value = d.gain.gain.value || 0;
+  return d;
+}
+
 function wire(ac: AudioContext, d: Deck) {
-  if (d.wired || !filter) return;
+  if (d.wired || !filter || !d.gain) return;
   try {
     ac.createMediaElementSource(d.el).connect(d.gain).connect(filter);
     d.wired = true;
@@ -142,12 +154,13 @@ async function advance(ac: AudioContext) {
   if (!(await load(nextDeck, meta))) return;
   wire(ac, nextDeck);
 
+  if (!nextDeck.gain) return;
   nextDeck.gain.gain.value = 0;
   void nextDeck.el.play().catch(() => undefined);
   ramp(nextDeck.gain.gain, meta.analysis?.gain ?? 1, CROSSFADE, ac);
 
   const outgoing = decks[active];
-  if (outgoing) {
+  if (outgoing?.gain) {
     ramp(outgoing.gain.gain, 0, CROSSFADE, ac);
     const stale = outgoing;
     window.setTimeout(() => {
@@ -185,19 +198,25 @@ function startWatchdog(ac: AudioContext) {
  * nothing left to wait for.
  */
 export async function prepareCollection(category: string): Promise<boolean> {
-  const ac = context();
-  if (!ac) return false;
   if (prepared === category && queue.length > 0) return true;
 
   const chosen = tracksIn(await listTracks(), category);
   if (chosen.length === 0) return false;
 
-  buildGraph(ac);
+  /*
+   * Deliberately no AudioContext here, and no graph.
+   *
+   * This runs from an effect at the trailhead, not from a tap. Creating the
+   * context outside a user gesture makes iOS hand back a suspended one — and an
+   * <audio> element routed into a suspended context is completely silent while
+   * play() still resolves successfully, so nothing appears to be wrong. All
+   * this does is fetch the blob and queue the order; the graph is built in
+   * startCollection, which is reached from the Begin press.
+   */
   const first = chosen[0];
-  const d = deck(ac, 0);
+  const d = element(0);
   if (!first || !d) return false;
   if (!(await load(d, first))) return false;
-  wire(ac, d);
 
   queue = chosen;
   position = 1 % chosen.length;
@@ -244,9 +263,11 @@ export async function startCollection(category: string, atLevel = 0.3): Promise<
 
   try {
     buildGraph(ac);
-    const d = decks[active];
+    // Now that a gesture has run, the deck can have its gain node and be wired.
+    const d = deck(ac, active);
     const meta = queue[(position - 1 + queue.length) % queue.length];
-    if (d && meta) {
+    if (d?.gain && meta) {
+      wire(ac, d);
       d.gain.gain.value = 0;
       void d.el.play().catch(() => undefined);
       ramp(d.gain.gain, meta.analysis?.gain ?? 1, 3, ac);
@@ -275,7 +296,7 @@ export async function startCollection(category: string, atLevel = 0.3): Promise<
 
 /** The session ended: settle, then let stopCollection fade it out. */
 export function resolveCollection() {
-  const ac = context();
+  const ac = existingContext();
   if (!ac || !master || closing) return;
   closing = true;
   try {
@@ -287,7 +308,7 @@ export function resolveCollection() {
 
 /** Dip for a cue. See duck() in ambient.ts for why this exists. */
 export function duckCollection(seconds = 1.2) {
-  const ac = context();
+  const ac = existingContext();
   if (!ac || !master) return;
   try {
     const now = ac.currentTime;
@@ -315,7 +336,7 @@ export function stopCollection() {
     watchdog = null;
   }
 
-  const ac = context();
+  const ac = existingContext();
   const dying = decks;
   decks = [];
   const g = master;
@@ -335,7 +356,7 @@ export function stopCollection() {
       }
       if (d.url) URL.revokeObjectURL(d.url);
       try {
-        d.gain.disconnect();
+        d.gain?.disconnect();
       } catch {
         /* no-op */
       }

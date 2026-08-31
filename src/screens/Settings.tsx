@@ -6,6 +6,7 @@ import { todayKey } from '../lib/time';
 import { AmbientPicker } from '../components/AmbientPicker';
 import { BlockAmbient } from '../components/BlockAmbient';
 import { Library } from '../components/Library';
+import { SoundCheck } from '../components/SoundCheck';
 import { humanBytes, MAX_TRACK_BYTES, totalBytes } from '../lib/tracks';
 import { stopAmbient } from '../lib/ambient';
 
@@ -143,6 +144,9 @@ export function Settings() {
           <AmbientPicker manage />
         </div>
         <BlockAmbient />
+        <div className="border-t border-line/50">
+          <SoundCheck />
+        </div>
         <p className="border-t border-line/50 px-4 py-3 text-xs leading-relaxed text-faint">
           <span className="text-muted">Adding your own:</span> pick files from this device — they
           never leave it and nothing uploads. Each is analysed on import, which is what lets a

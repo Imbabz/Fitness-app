@@ -4,19 +4,12 @@
  * Off by default — see BUILD_SPEC §5.3.
  */
 
-let ctx: AudioContext | null = null;
-
-function context(): AudioContext | null {
-  try {
-    const Ctor = window.AudioContext ?? (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!Ctor) return null;
-    ctx ??= new Ctor();
-    void ctx.resume();
-    return ctx;
-  } catch {
-    return null;
-  }
-}
+/*
+ * Shares the app's single AudioContext. It used to make its own, which meant
+ * the beeps lived in a context first created during a timer — never inside a
+ * tap — and iOS therefore kept it suspended and silent. See audio.ts.
+ */
+import { context } from './audio';
 
 /** Soft, low, short. A gym is loud and a bedroom at night is quiet — this has
  *  to be tolerable in both, so it errs quiet. */

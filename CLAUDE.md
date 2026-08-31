@@ -97,6 +97,13 @@ These are not preferences. Breaking them breaks the product.
    - **Never `decodeAudioData` at playback.** A five-minute stereo track decoded
      to PCM is ~50MB resident. Decoding happens once, at import, mono at 8kHz
      (`src/lib/analyse.ts`); playback streams from the blob through `<audio>`.
+   - **One AudioContext, and never create it outside a tap.** `context()` in
+     `audio.ts` is the only one; teardown, ducking and resolving use
+     `existingContext()` instead, because anything that merely stops sound has
+     no business starting the audio system. iOS hands back a *suspended*
+     context when it is created outside a user gesture, and an `<audio>`
+     element routed into a suspended context is silent while `play()` still
+     resolves successfully — a failure with no symptom.
    - **Only a texture may be layered under music.** Rain, surf, wind and fire
      have no key and no pulse, so they cannot disagree with a recording. A pad
      or a second track can, and there is no way to know in advance that it will

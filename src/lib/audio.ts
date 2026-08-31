@@ -37,6 +37,16 @@ export function releaseSink(sink: Sink) {
   sink.nodes = [];
 }
 
+/*
+ * One AudioContext for the whole app.
+ *
+ * There used to be two — one here for ambience, one in sound.ts for the beeps —
+ * and that was a real fault rather than mere waste. Each context has to be
+ * resumed inside a user gesture of its own, and the beep context was first
+ * created *when a beep fired*, which is during a timer and never during a tap.
+ * On iOS it was therefore born suspended and stayed silent for the whole
+ * session. Everything that makes a sound now shares this one.
+ */
 let ctx: AudioContext | null = null;
 
 export function context(): AudioContext | null {
@@ -51,6 +61,46 @@ export function context(): AudioContext | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * The context only if one already exists.
+ *
+ * Teardown and ducking must use this rather than context(): they run from
+ * effects and timers, not taps, and creating a context outside a gesture is
+ * exactly what leaves iOS holding a suspended one. Nothing that merely stops
+ * sound has any business starting the audio system.
+ */
+export function existingContext(): AudioContext | null {
+  return ctx;
+}
+
+/** Whether audio can actually be heard right now. For the diagnostic. */
+export function contextState(): 'none' | AudioContextState {
+  return ctx ? ctx.state : 'none';
+}
+
+/*
+ * iOS suspends the context whenever the app is backgrounded, and does not
+ * resume it on return; it also refuses to start one outside a user gesture. A
+ * graph built while suspended is completely silent — and worse, an <audio>
+ * element routed through a suspended context plays "successfully" to nobody.
+ *
+ * So: resume on any interaction, and on coming back to the foreground. Cheap,
+ * idempotent, and it turns "sound stopped after I answered a message" from a
+ * dead session into a non-event.
+ */
+function resume() {
+  if (ctx && ctx.state !== 'running') void ctx.resume();
+}
+
+if (typeof document !== 'undefined') {
+  for (const event of ['pointerdown', 'touchend', 'click', 'keydown']) {
+    document.addEventListener(event, resume, { capture: true, passive: true });
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') resume();
+  });
 }
 
 /** Two seconds of brown-ish noise, looped. Generated once, reused by every graph. */

@@ -11,7 +11,15 @@
  * rule 5.
  */
 
-import { context, emptySink, releaseSink, texture, type Sink, type SynthKind } from './audio';
+import {
+  context,
+  emptySink,
+  existingContext,
+  releaseSink,
+  texture,
+  type Sink,
+  type SynthKind,
+} from './audio';
 import {
   duckTheme,
   isThemeId,
@@ -109,7 +117,7 @@ function stopLayer() {
   layerSink = emptySink();
   const g = layerGain;
   layerGain = null;
-  const ac = context();
+  const ac = existingContext();
   if (g && ac) {
     try {
       g.gain.cancelScheduledValues(ac.currentTime);
@@ -139,7 +147,7 @@ function stopLayer() {
  * whole soundtrack is built to avoid.
  */
 export function duck(seconds = 1.2) {
-  const ac = context();
+  const ac = existingContext();
   if (!ac) return;
   for (const g of [master, layerGain]) {
     if (!g) continue;
@@ -280,7 +288,7 @@ export function stopAmbient() {
 
   const dying = sink;
   sink = emptySink();
-  const ac = context();
+  const ac = existingContext();
 
   if (master && ac) {
     // Fade rather than cut: an abrupt stop on a noise bed is a click.

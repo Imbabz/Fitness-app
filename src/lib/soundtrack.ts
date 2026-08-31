@@ -23,7 +23,16 @@
  * No percussion and no rhythm grid. Accents land at irregular intervals.
  */
 
-import { context, drift, emptySink, releaseSink, texture, type Sink, type SynthKind } from './audio';
+import {
+  context,
+  drift,
+  emptySink,
+  existingContext,
+  releaseSink,
+  texture,
+  type Sink,
+  type SynthKind,
+} from './audio';
 import { currentShape, subscribe } from './arc';
 
 export type ThemeId = 'rainfall' | 'shore' | 'hearth' | 'cloister';
@@ -289,7 +298,7 @@ export function startTheme(id: ThemeId, atLevel = 0.28) {
  * sounds like an ending rather than someone pulling the plug.
  */
 export function resolveTheme() {
-  const ac = context();
+  const ac = existingContext();
   if (!ac || !theme || !master || closing) return;
   closing = true;
 
@@ -313,7 +322,7 @@ export function resolveTheme() {
 
 /** Dip for a cue. See duck() in ambient.ts for why this exists. */
 export function duckTheme(seconds = 1.2) {
-  const ac = context();
+  const ac = existingContext();
   if (!ac || !master) return;
   try {
     const now = ac.currentTime;
@@ -337,7 +346,7 @@ export function stopTheme() {
 
   const dying = sink;
   sink = emptySink();
-  const ac = context();
+  const ac = existingContext();
 
   if (master && ac) {
     const g = master;
