@@ -5,6 +5,7 @@ import { exportState, flushState, importState } from '../state/store';
 import { todayKey } from '../lib/time';
 import { AmbientPicker } from '../components/AmbientPicker';
 import { BlockAmbient } from '../components/BlockAmbient';
+import { Library } from '../components/Library';
 import { humanBytes, MAX_TRACK_BYTES, totalBytes } from '../lib/tracks';
 import { stopAmbient } from '../lib/ambient';
 
@@ -166,6 +167,10 @@ export function Settings() {
           from this device too. Ridge never streams anything. Your files live outside the export,
           so keep the originals; and a browser can evict site data it has not seen in months.
         </p>
+      </Group>
+
+      <Group title="Library">
+        <Library />
       </Group>
 
       <Group title="Data">

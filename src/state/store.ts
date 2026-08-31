@@ -7,6 +7,7 @@ import { coerceComposition, coerceTuningMap } from './tuning';
 import { SESSIONS } from '../data/sessions';
 import { EXERCISE_BY_ID } from '../data/exercises';
 import { AMBIENT_KINDS, THEMES } from '../lib/ambient';
+import { credentialsLook } from '../lib/library';
 import type { AmbientKind } from '../lib/ambient';
 
 /**
@@ -55,6 +56,7 @@ export function seedState(): AppState {
       ambient: 'off',
       ambientLayer: 'off',
       ambientByBlock: {},
+      library: null,
     },
   };
 }
@@ -199,6 +201,7 @@ export function coerceState(raw: unknown): AppState {
       ambientLayer: SYNTH_IDS.includes(settings.ambientLayer as string)
         ? (settings.ambientLayer as AppState['settings']['ambientLayer'])
         : 'off',
+      library: credentialsLook(settings.library) ? settings.library : null,
       ambientByBlock: (() => {
         const raw = settings.ambientByBlock;
         if (typeof raw !== 'object' || raw === null) return {};
@@ -267,8 +270,17 @@ export function clearState() {
   }
 }
 
+/**
+ * A backup, minus anything that is a credential.
+ *
+ * The export is a file people mail themselves and drop in cloud storage. The
+ * library key is a password for the audio bucket, so it must not travel in one
+ * — and an export carrying a key that is later rotated would be worse than
+ * useless. Reconnecting is two fields; leaking a key is not undoable.
+ */
 export function exportState(state: AppState): string {
-  return JSON.stringify(state, null, 2);
+  const { library: _redacted, ...settings } = state.settings;
+  return JSON.stringify({ ...state, settings: { ...settings, library: null } }, null, 2);
 }
 
 export function importState(json: string): AppState {

@@ -9,6 +9,7 @@ import {
   categoryOf,
   humanBytes,
   listTracks,
+  onTracksChanged,
   MAX_TRACK_BYTES,
   removeTrack,
   setCategory,
@@ -62,7 +63,9 @@ export function AmbientPicker({ manage = false }: { manage?: boolean }) {
   const isMusic = chosen.startsWith('track:') || chosen.startsWith('cat:');
 
   useEffect(() => {
-    void listTracks().then(setTracks);
+    const refresh = () => void listTracks().then(setTracks);
+    refresh();
+    return onTracksChanged(refresh);
   }, []);
 
   const choose = (kind: AmbientKind) => {

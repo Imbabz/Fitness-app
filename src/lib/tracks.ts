@@ -35,6 +35,12 @@ export interface TrackMeta {
   category?: string;
   /** Absent when the file could not be decoded; playback then just loops it. */
   analysis?: TrackAnalysis;
+  /**
+   * The catalogue row this came from, when it was downloaded rather than
+   * picked off the device. Lets the Library show what is already here and stops
+   * a second tap producing a duplicate.
+   */
+  remoteId?: string;
 }
 
 /** Trimmed, lowercased, capped — so "  Medieval " and "medieval" are one thing. */
@@ -94,6 +100,33 @@ export const MAX_TRACK_BYTES = 80 * 1024 * 1024;
  */
 export const MAX_ANALYSE_BYTES = 50 * 1024 * 1024;
 
+/*
+ * Anything holding a list of tracks needs to know when the set changes.
+ *
+ * Two screens read it — the picker and the library — and a download made in one
+ * has to appear in the other without leaving and coming back. Each reads on
+ * mount and then on notification; a store this small does not need anything
+ * more than that.
+ */
+const listeners = new Set<() => void>();
+
+export function onTracksChanged(fn: () => void): () => void {
+  listeners.add(fn);
+  return () => {
+    listeners.delete(fn);
+  };
+}
+
+function notifyChanged() {
+  for (const fn of [...listeners]) {
+    try {
+      fn();
+    } catch {
+      /* a listener throwing must not stop the others */
+    }
+  }
+}
+
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, 1);
@@ -149,7 +182,37 @@ export async function addTrack(file: File, category?: string): Promise<TrackMeta
   // The File itself is a Blob; storing it directly avoids reading 40MB into a
   // string and back.
   await run('readwrite', (s) => s.put({ ...meta, blob: file } satisfies Track));
+  notifyChanged();
   return meta;
+}
+
+/**
+ * Store bytes that did not come from the file picker — today, a library
+ * download. Shares the id, the size guard, the decode and the write with
+ * addTrack(); only the origin of the bytes differs.
+ */
+export async function addBlob(
+  blob: Blob,
+  meta: { title: string; category?: string; remoteId?: string; analysis?: TrackAnalysis },
+): Promise<TrackMeta> {
+  if (blob.size > MAX_TRACK_BYTES) throw new TrackTooLarge(blob.size);
+  // A catalogue that already carries the analysis saves this device the decode
+  // entirely — that is the whole reason the column exists.
+  const analysis =
+    meta.analysis ?? (blob.size <= MAX_ANALYSE_BYTES ? await analyse(blob) : null);
+  const label = meta.category ? normaliseCategory(meta.category) : '';
+  const record: TrackMeta = {
+    id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    name: meta.title.slice(0, 60) || 'Untitled',
+    bytes: blob.size,
+    addedAt: new Date().toISOString(),
+    ...(label ? { category: label } : {}),
+    ...(analysis ? { analysis } : {}),
+    ...(meta.remoteId ? { remoteId: meta.remoteId } : {}),
+  };
+  await run('readwrite', (s) => s.put({ ...record, blob } satisfies Track));
+  notifyChanged();
+  return record;
 }
 
 export async function listTracks(): Promise<TrackMeta[]> {
@@ -180,6 +243,7 @@ export async function setCategory(id: string, category: string): Promise<void> {
     const label = normaliseCategory(category);
     const { category: _old, ...rest } = track;
     await run('readwrite', (s) => s.put(label ? { ...rest, category: label } : rest));
+    notifyChanged();
   } catch {
     /* no-op */
   }
@@ -188,6 +252,7 @@ export async function setCategory(id: string, category: string): Promise<void> {
 export async function removeTrack(id: string): Promise<void> {
   try {
     await run('readwrite', (s) => s.delete(id));
+    notifyChanged();
   } catch {
     /* no-op */
   }

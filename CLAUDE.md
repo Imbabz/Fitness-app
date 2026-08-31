@@ -68,8 +68,17 @@ These are not preferences. Breaking them breaks the product.
    progression readiness — and it stops there. Every weight decision belongs to
    the user and their physio.
 
-5. **No network calls.** No analytics, no telemetry, no font CDNs, no error
-   reporting. Offline-first is a hard requirement, not an optimisation.
+5. **No network calls during use.** No analytics, no telemetry, no font CDNs,
+   no error reporting. The app must work entirely offline, and **no session ever
+   touches the network** — a browser test asserts `fetch` is not called between
+   Begin and Summit, because that is the part of this rule which is easy to
+   erode without noticing.
+
+   Acquiring library content (`src/lib/library.ts`) is the single exception:
+   explicit, initiated by the user on the Library screen, one request per track,
+   and everything acquired is stored in IndexedDB and works offline thereafter.
+   The credential for it is a password — kept on the device, stripped from
+   exports, never committed.
 
    This is why **the app ships no audio**. The ambient beds
    (`src/lib/ambient.ts`) are noise buffers and oscillators shaped at runtime.

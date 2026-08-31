@@ -1,4 +1,5 @@
 import type { AmbientKind, SynthKind } from './lib/ambient';
+import type { LibraryCredentials } from './lib/library';
 
 export type Mode = 'day' | 'night';
 
@@ -144,6 +145,12 @@ export interface Settings {
    * that. Absent entries fall back to `ambient`.
    */
   ambientByBlock: Partial<Record<Block, AmbientKind>>;
+  /**
+   * The remote catalogue, when one is configured. The key is a credential:
+   * it is stored on this device only, never committed, and stripped from any
+   * export. See supabase/schema.sql.
+   */
+  library: LibraryCredentials | null;
 }
 
 export interface AppState {
