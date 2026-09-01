@@ -126,14 +126,12 @@ export function Settings() {
         />
         <Row
           label="Countdown beeps"
-          hint="Set per exercise, on its card at the trailhead or on the timer itself."
+          hint="On everywhere by default. Switch one off on its card at the trailhead, or on the timer."
         >
           {(() => {
-            const count = Object.values(state.settings.countdown).filter(Boolean).length;
+            const off = Object.values(state.settings.countdown).filter((v) => v === false).length;
             return (
-              <span className="text-sm text-faint">
-                {count === 0 ? 'None' : `${count} on`}
-              </span>
+              <span className="text-sm text-faint">{off === 0 ? 'All on' : `${off} off`}</span>
             );
           })()}
         </Row>

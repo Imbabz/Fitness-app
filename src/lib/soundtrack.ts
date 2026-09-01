@@ -36,21 +36,17 @@ import {
   type SynthKind,
 } from './audio';
 import { currentShape, subscribe } from './arc';
+import {
+  MODES,
+  MOTIFS,
+  phrase,
+  scaleTone,
+  voiceLead,
+  type Motif,
+} from './compose';
 
 export type ThemeId = 'rainfall' | 'shore' | 'hearth' | 'cloister';
 
-/*
- * Semitone offsets. Aeolian and Dorian differ by one degree — the sixth.
- * Mixolydian is the one major-flavoured mode here, and it is major-flavoured
- * without a leading tone, which is exactly why it is the one used.
- *
- * A theme's accent scale must be a subset of its own mode. Pairing the major
- * pentatonic with Dorian puts a major third against the pad's minor third,
- * which is sour — the logic tests assert the subset relation for that reason.
- */
-const AEOLIAN = [0, 2, 3, 5, 7, 8, 10];
-const DORIAN = [0, 2, 3, 5, 7, 9, 10];
-const MIXOLYDIAN = [0, 2, 4, 5, 7, 9, 10];
 /** The safe subsets: no semitone anywhere, so random order cannot go wrong. */
 const PENT_MINOR = [0, 3, 5, 7, 10];
 const PENT_MAJOR = [0, 2, 4, 7, 9];
@@ -63,10 +59,20 @@ interface Theme {
   textures: Array<[SynthKind, number]>;
   /** Pad fundamental, Hz. */
   root: number;
-  mode: number[];
+  mode: readonly number[];
+  /**
+   * The progression, each chord a set of semitone offsets from the tonic.
+   *
+   * Deliberately short and deliberately unresolved — modal pairs and stepwise
+   * motion, never a dominant. A cadence would keep announcing an arrival every
+   * two minutes, which is the opposite of what this is for.
+   */
+  progression: number[][];
+  /** Seconds a chord is held before the next. */
+  chordSeconds: number;
   scale: number[];
   accent: 'pluck' | 'bell' | 'none';
-  /** Multiplier on how often an accent lands. */
+  /** Multiplier on how often a phrase lands. */
   accentRate: number;
 }
 
@@ -74,13 +80,22 @@ export const THEMES: Theme[] = [
   {
     id: 'rainfall',
     label: 'Averse',
-    note: 'Rain, low wind, soft accents',
+    note: 'Rain, low wind, a slow four-chord turn',
     textures: [
       ['rain', 0.5],
       ['wind', 0.18],
     ],
     root: 110,
-    mode: AEOLIAN,
+    mode: MODES.aeolian,
+    // i – VI – iv – VII. The commonest resting progression in modal music, and
+    // it never resolves: VII falls back to i without ever pulling there.
+    progression: [
+      [0, 3, 7],
+      [8, 12, 15],
+      [5, 8, 12],
+      [10, 14, 17],
+    ],
+    chordSeconds: 34,
     scale: PENT_MINOR,
     accent: 'pluck',
     accentRate: 1,
@@ -88,27 +103,43 @@ export const THEMES: Theme[] = [
   {
     id: 'shore',
     label: 'Rivage',
-    note: 'Swell and open air',
+    note: 'Swell, open air, a major turn without a leading tone',
     textures: [
       ['waves', 0.55],
       ['wind', 0.2],
     ],
     root: 98,
-    mode: MIXOLYDIAN,
+    mode: MODES.mixolydian,
+    // I – VII – IV – I. Major-flavoured and still weightless, because the flat
+    // seventh removes the only note that would demand a resolution.
+    progression: [
+      [0, 4, 7],
+      [10, 14, 17],
+      [5, 9, 12],
+      [0, 4, 7],
+    ],
+    chordSeconds: 40,
     scale: PENT_MAJOR,
     accent: 'bell',
-    accentRate: 0.8,
+    accentRate: 0.85,
   },
   {
     id: 'hearth',
     label: 'Âtre',
-    note: 'Fire, close and warm',
+    note: 'Fire, close and warm, two chords rocking',
     textures: [['fire', 0.45]],
     root: 87.31,
-    mode: AEOLIAN,
+    mode: MODES.aeolian,
+    // i – iv, and nothing else. Two chords is enough when they are held this
+    // long; more would ask for attention the room does not want.
+    progression: [
+      [0, 3, 7],
+      [5, 8, 12],
+    ],
+    chordSeconds: 48,
     scale: PENT_MINOR,
     accent: 'bell',
-    accentRate: 0.5,
+    accentRate: 0.55,
   },
   {
     id: 'cloister',
@@ -116,7 +147,16 @@ export const THEMES: Theme[] = [
     note: 'Bourdon, dorian, a distant bell',
     textures: [],
     root: 73.42,
-    mode: DORIAN,
+    mode: MODES.dorian,
+    // i – VII – i – IV. The dorian fourth is the mode's whole character, so it
+    // arrives last and is what the ear remembers.
+    progression: [
+      [0, 3, 7],
+      [10, 14, 17],
+      [0, 3, 7],
+      [5, 9, 12],
+    ],
+    chordSeconds: 44,
     scale: PENT_MINOR,
     accent: 'bell',
     accentRate: 0.7,
@@ -142,52 +182,31 @@ let unsubscribe: (() => void) | null = null;
 let level = 0.28;
 let closing = false;
 
-/** Long attack, long release. Everything audible in this file goes through here. */
-function voice(
-  ac: AudioContext,
-  out: AudioNode,
-  hz: number,
-  peak: number,
-  attack: number,
-  release: number,
-  type: OscillatorType = 'sine',
-) {
-  const osc = ac.createOscillator();
-  osc.type = type;
-  osc.frequency.value = hz;
-  const env = ac.createGain();
-  const now = ac.currentTime;
-  env.gain.setValueAtTime(0.0001, now);
-  env.gain.exponentialRampToValueAtTime(peak, now + attack);
-  env.gain.exponentialRampToValueAtTime(0.0001, now + attack + release);
-  osc.connect(env).connect(out);
-  osc.start();
-  osc.stop(now + attack + release + 0.2);
-}
-
 /**
  * One note of the pad, built to be heard rather than merely to be in tune.
  *
- * Three things separate this from the bare sine it replaces, and all three are
- * doing real work:
- *
- * - **Unison.** Three oscillators a few cents apart. Their beating is what
- *   gives a synthesised note width; one oscillator is unavoidably a test tone,
- *   however carefully tuned.
+ * - **Unison.** Three oscillators a few cents apart. Their beating gives a
+ *   synthesised note width; one oscillator is unavoidably a test tone.
  * - **A sawtooth underneath, filtered hard.** Sine waves have no harmonics at
- *   all, so a stack of them stays hollow no matter how many you add. A quiet
- *   saw with the top rolled off supplies the harmonic body an instrument has.
- * - **Its own slow tremolo.** Each note breathing at a slightly different rate
- *   keeps the chord from sitting perfectly still, which is what makes a pad
- *   sound synthetic even when everything else is right.
+ *   all, so a stack of them stays hollow however many you add.
+ * - **Its own slow tremolo**, at a rate that lines up with nothing else.
+ *
+ * Returns handles so a chord change can glide this voice to a new pitch rather
+ * than stopping it and starting another — which is the difference between a
+ * progression and a slideshow.
  */
-function padVoice(ac: AudioContext, hz: number, level: number, out: AudioNode) {
+interface PadVoice {
+  setPitch(hz: number, seconds: number): void;
+}
+
+function padVoice(ac: AudioContext, hz: number, level: number, out: AudioNode): PadVoice {
   const bus = ac.createGain();
   bus.gain.value = level;
-  // Rates chosen not to line up, so the shimmer never settles into a pulse.
   drift(ac, sink, bus.gain, level, level * 0.22, 0.021 + Math.random() * 0.035);
   bus.connect(out);
   sink.nodes.push(bus);
+
+  const tuned: OscillatorNode[] = [];
 
   for (const cents of [-7, 0, 7]) {
     const osc = ac.createOscillator();
@@ -199,6 +218,7 @@ function padVoice(ac: AudioContext, hz: number, level: number, out: AudioNode) {
     osc.connect(g).connect(bus);
     osc.start();
     sink.nodes.push(osc);
+    tuned.push(osc);
   }
 
   const saw = ac.createOscillator();
@@ -207,8 +227,6 @@ function padVoice(ac: AudioContext, hz: number, level: number, out: AudioNode) {
   drift(ac, sink, saw.detune, 0, 5, 0.017);
   const tame = ac.createBiquadFilter();
   tame.type = 'lowpass';
-  // Just above the fourth harmonic: enough body to stop it being hollow,
-  // nothing bright enough to be an edge.
   tame.frequency.value = Math.min(1400, hz * 4.5);
   tame.Q.value = 0.5;
   const sawGain = ac.createGain();
@@ -216,83 +234,195 @@ function padVoice(ac: AudioContext, hz: number, level: number, out: AudioNode) {
   saw.connect(tame).connect(sawGain).connect(bus);
   saw.start();
   sink.nodes.push(saw);
+  tuned.push(saw);
+
+  return {
+    setPitch(next, seconds) {
+      const now = ac.currentTime;
+      for (const osc of tuned) {
+        try {
+          osc.frequency.cancelScheduledValues(now);
+          osc.frequency.setValueAtTime(osc.frequency.value, now);
+          // A glide, not a jump. Over several seconds this reads as one voice
+          // moving rather than as a note being replaced.
+          osc.frequency.linearRampToValueAtTime(next, now + seconds);
+        } catch {
+          /* no-op */
+        }
+      }
+      try {
+        tame.frequency.linearRampToValueAtTime(Math.min(1400, next * 4.5), now + seconds);
+      } catch {
+        /* no-op */
+      }
+    },
+  };
 }
 
-/** Root, fifth, octave, plus a sub. */
-function pad(ac: AudioContext, t: Theme, out: AudioNode) {
-  // The sub is a plain sine on purpose: harmonics down here only muddy things,
-  // and its whole job is weight.
-  const sub = ac.createOscillator();
-  sub.type = 'sine';
-  sub.frequency.value = semitone(t.root, -12);
-  const subGain = ac.createGain();
-  subGain.gain.value = 0.2;
-  sub.connect(subGain).connect(out);
-  sub.start();
-  sink.nodes.push(sub);
+/** The bass. A plain sine: harmonics down here only muddy things. */
+function bass(ac: AudioContext, hz: number, out: AudioNode): PadVoice {
+  const osc = ac.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.value = hz;
+  const g = ac.createGain();
+  g.gain.value = 0.22;
+  osc.connect(g).connect(out);
+  osc.start();
+  sink.nodes.push(osc);
+  return {
+    setPitch(next, seconds) {
+      try {
+        const now = ac.currentTime;
+        osc.frequency.cancelScheduledValues(now);
+        osc.frequency.setValueAtTime(osc.frequency.value, now);
+        osc.frequency.linearRampToValueAtTime(next, now + seconds);
+      } catch {
+        /* no-op */
+      }
+    },
+  };
+}
 
-  for (const [steps, level] of [
-    [0, 0.4],
-    [7, 0.24],
-    [12, 0.13],
-  ] as const) {
-    padVoice(ac, semitone(t.root, steps), level, out);
+/**
+ * A melodic note. Long attack so it emerges rather than starts, long release so
+ * it overlaps whatever comes next — which is what lets three notes sound like a
+ * line instead of three notes.
+ */
+function sing(
+  ac: AudioContext,
+  out: AudioNode,
+  hz: number,
+  peak: number,
+  seconds: number,
+  kind: 'bell' | 'pluck',
+) {
+  const partials: Array<[number, number]> =
+    kind === 'bell'
+      ? [
+          [1, 1],
+          [2, 0.24],
+          [2.76, 0.08],
+        ]
+      : [
+          [1, 1],
+          [2, 0.14],
+        ];
+
+  for (const [ratio, share] of partials) {
+    const osc = ac.createOscillator();
+    osc.type = kind === 'bell' ? 'sine' : 'triangle';
+    osc.frequency.value = hz * ratio;
+    const env = ac.createGain();
+    const now = ac.currentTime;
+    const attack = kind === 'bell' ? 0.06 : 0.5;
+    const release = seconds + (kind === 'bell' ? 3.5 : 2.5);
+    env.gain.setValueAtTime(0.0001, now);
+    env.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak * share), now + attack);
+    env.gain.exponentialRampToValueAtTime(0.0001, now + attack + release);
+    osc.connect(env).connect(out);
+    osc.start();
+    osc.stop(now + attack + release + 0.2);
   }
-
-  // A voice moving through the mode, very slowly, so the harmony is not
-  // completely static over a 45-minute session.
-  const wander = ac.createOscillator();
-  wander.type = 'sine';
-  const wanderGain = ac.createGain();
-  wanderGain.gain.value = 0.08;
-  drift(ac, sink, wanderGain.gain, 0.08, 0.05, 0.009);
-  wander.frequency.value = semitone(t.root, (t.mode[2] ?? 3) + 12);
-  drift(ac, sink, wander.detune, 0, 14, 0.012);
-  wander.connect(wanderGain).connect(out);
-  wander.start();
-  sink.nodes.push(wander);
 }
 
-function accent(ac: AudioContext, t: Theme, out: AudioNode) {
-  const degree = t.scale[Math.floor(Math.random() * t.scale.length)] ?? 0;
-  // Two or three octaves above the pad: the accent should sit clear of the
-  // fundamental rather than muddy it.
-  const octave = 24 + 12 * Math.floor(Math.random() * 2);
-  const hz = semitone(t.root, degree + octave);
+/*
+ * ── The conductor ──────────────────────────────────────────────────────────
+ *
+ * Two clocks, deliberately unrelated. Harmony turns slowly on its own; phrases
+ * arrive on theirs. Because the periods do not divide into each other, a given
+ * phrase lands over a different chord each time round, and the same handful of
+ * material keeps producing combinations it has not produced before. That is
+ * where the sense of it going somewhere comes from, and it costs nothing.
+ */
+let chordIndex = 0;
+let voices: PadVoice[] = [];
+let bassVoice: PadVoice | null = null;
+let pitches: number[] = [];
+let variation = 0;
+let motif: Motif = MOTIFS[0] as Motif;
 
-  if (t.accent === 'bell') {
-    voice(ac, out, hz, 0.16, 0.02, 5.5);
-    // A fifth above, quieter and later — a bell is never one frequency.
-    window.setTimeout(() => {
-      const ctx2 = context();
-      if (ctx2 && !closing) voice(ctx2, out, semitone(hz, 7), 0.05, 0.02, 3.5);
-    }, 90);
-    return;
+/** Scale indices of the current chord, for phrases to start from. */
+function chordDegrees(t: Theme): number[] {
+  const chord = t.progression[chordIndex % t.progression.length] ?? [0];
+  const out: number[] = [];
+  for (const semi of chord) {
+    // Nearest scale index to this chord tone, so a phrase starting "on the
+    // chord" is expressible in the same degree terms the motif uses.
+    let best = 0;
+    let bestDistance = Infinity;
+    for (let i = -7; i <= 14; i++) {
+      const d = Math.abs(scaleTone(t.mode, i) - semi);
+      if (d < bestDistance) {
+        bestDistance = d;
+        best = i;
+      }
+    }
+    out.push(best);
   }
-  // Pluck: still a 0.3s attack. "Pluck" here means shape, not a transient.
-  voice(ac, out, hz, 0.13, 0.35, 4.5, 'triangle');
+  return out;
 }
 
-/** Interval to the next accent. Irregular on purpose; a grid reads as a machine. */
-function nextGap(t: Theme, presence: number): number {
-  const base = 8000 + Math.random() * 16000;
-  return base / Math.max(0.35, presence * t.accentRate);
+function moveHarmony(t: Theme) {
+  chordIndex += 1;
+  const chord = t.progression[chordIndex % t.progression.length] ?? [0, 3, 7];
+  const next = voiceLead(pitches, chord);
+  pitches = next;
+
+  // A quarter of the chord's life spent moving: slow enough to be a glide
+  // rather than a slide, fast enough to have arrived before the next change.
+  const glide = Math.min(9, t.chordSeconds * 0.25);
+  for (const [i, v] of voices.entries()) {
+    const semi = next[i];
+    if (semi !== undefined) v.setPitch(semitone(t.root, semi), glide);
+  }
+  const root = chord[0] ?? 0;
+  bassVoice?.setPitch(semitone(t.root, root - 12), glide);
 }
 
-function scheduleAccents(ac: AudioContext, t: Theme, out: AudioNode) {
-  let due = Date.now() + nextGap(t, currentShape().presence);
+function scheduleHarmony(t: Theme) {
+  const tick = () => {
+    if (closing) return;
+    moveHarmony(t);
+    sink.timers.push(window.setTimeout(tick, t.chordSeconds * 1000));
+  };
+  sink.timers.push(window.setTimeout(tick, t.chordSeconds * 1000));
+}
 
-  const fire = () => {
-    const late = Date.now() - due;
-    // A backgrounded tab throttles setTimeout, so on waking, a naive scheduler
-    // would fire every accent it owes at once. Overshooting badly means the
-    // phone was asleep: skip that accent rather than emit a burst.
-    if (late < 4000 && !closing) accent(ac, t, out);
-    due = Date.now() + nextGap(t, currentShape().presence);
-    sink.timers.push(window.setTimeout(fire, due - Date.now()));
+function schedulePhrases(ac: AudioContext, t: Theme, out: AudioNode) {
+  if (t.accent === 'none') return;
+
+  const next = () => {
+    if (closing) return;
+    const shape = currentShape();
+    const p = phrase(motif, {
+      chordDegrees: chordDegrees(t),
+      variation,
+      presence: shape.presence,
+    });
+    variation += 1;
+    // A new motif every few phrases: enough return to feel deliberate, enough
+    // change that it is not a loop.
+    if (variation % 5 === 0) {
+      motif = (MOTIFS[Math.floor(Math.random() * MOTIFS.length)] ?? MOTIFS[0]) as Motif;
+    }
+
+    for (const note of p.notes) {
+      sink.timers.push(
+        window.setTimeout(() => {
+          if (closing) return;
+          // Two octaves above the pad: clear of the fundamental rather than
+          // muddying it.
+          const hz = semitone(t.root, scaleTone(t.mode, note.degree) + 24);
+          sing(ac, out, hz, 0.13 * note.level, note.seconds, t.accent === 'bell' ? 'bell' : 'pluck');
+        }, note.at * 1000),
+      );
+    }
+
+    const wait = (p.seconds * 1000) / Math.max(0.4, t.accentRate);
+    sink.timers.push(window.setTimeout(next, wait));
   };
 
-  sink.timers.push(window.setTimeout(fire, due - Date.now()));
+  sink.timers.push(window.setTimeout(next, 4000 + Math.random() * 6000));
 }
 
 export function startTheme(id: ThemeId, atLevel = 0.28) {
@@ -304,6 +434,9 @@ export function startTheme(id: ThemeId, atLevel = 0.28) {
   theme = t;
   level = atLevel;
   closing = false;
+  chordIndex = 0;
+  variation = 0;
+  motif = (MOTIFS[Math.floor(Math.random() * MOTIFS.length)] ?? MOTIFS[0]) as Motif;
 
   try {
     const out = ac.createGain();
@@ -311,8 +444,8 @@ export function startTheme(id: ThemeId, atLevel = 0.28) {
     out.connect(ac.destination);
     master = out;
 
-    // Textures bypass the pad filter: filtering rain along with the harmony
-    // makes the whole thing sound muffled rather than distant.
+    // Textures bypass the pad filter and the reverb: reverberating rain only
+    // makes it sound like rain in a bathroom.
     for (const [kind, gain] of t.textures) {
       const g = ac.createGain();
       g.gain.value = gain;
@@ -321,11 +454,6 @@ export function startTheme(id: ThemeId, atLevel = 0.28) {
       texture(ac, kind, g, sink);
     }
 
-    /*
-     * A shared room for the harmony and the accents, but not for the textures:
-     * reverberating rain just makes it sound like rain in a bathroom, while
-     * the pad and the accents need the tail to stop reading as oscillators.
-     */
     const space = reverb(ac, 3.2, 2);
     const wet = ac.createGain();
     wet.gain.value = 0.34;
@@ -333,33 +461,35 @@ export function startTheme(id: ThemeId, atLevel = 0.28) {
       space.connect(wet).connect(out);
       sink.nodes.push(space, wet);
     }
-    const send = (node: AudioNode) => {
-      node.connect(out);
-      if (space) node.connect(space);
-    };
 
     const filter = ac.createBiquadFilter();
     filter.type = 'lowpass';
     filter.Q.value = 0.7;
-    send(filter);
+    filter.connect(out);
+    if (space) filter.connect(space);
     padFilter = filter;
-    pad(ac, t, filter);
+
+    const chord = t.progression[0] ?? [0, 3, 7];
+    pitches = [...chord];
+    voices = pitches.map((semi, i) =>
+      padVoice(ac, semitone(t.root, semi), [0.4, 0.24, 0.13][i] ?? 0.13, filter),
+    );
+    bassVoice = bass(ac, semitone(t.root, (chord[0] ?? 0) - 12), out);
 
     const accents = ac.createGain();
-    // Accents bloom through a delay tuned to the theme's own pace, so a handful
-    // of notes answer each other instead of landing and vanishing.
     const tail = echo(ac, sink, out, 1.4 + Math.random() * 0.8, 0.34);
     if (tail) {
       accents.connect(tail);
       if (space) accents.connect(space);
     } else {
-      send(accents);
+      accents.connect(out);
+      if (space) accents.connect(space);
     }
     accentGain = accents;
-    scheduleAccents(ac, t, accents);
 
-    // The arc drives distance and level; the fade-in below is separate, so
-    // starting mid-session opens at the right point rather than climbing.
+    scheduleHarmony(t);
+    schedulePhrases(ac, t, accents);
+
     unsubscribe = subscribe((s) => {
       const now = ac.currentTime;
       try {
@@ -378,8 +508,8 @@ export function startTheme(id: ThemeId, atLevel = 0.28) {
 }
 
 /**
- * The session is over. Stop adding material and land on the tonic, so finishing
- * sounds like an ending rather than someone pulling the plug.
+ * The session is over. Land on the tonic, so finishing sounds like an ending
+ * rather than someone pulling the plug.
  */
 export function resolveTheme() {
   const ac = existingContext();
@@ -389,14 +519,21 @@ export function resolveTheme() {
   for (const t of sink.timers) window.clearTimeout(t);
   sink.timers = [];
 
-  const chord = master;
-  for (const [steps, gain] of [
-    [12, 0.13],
-    [19, 0.08],
-    [24, 0.05],
-  ] as const) {
-    voice(ac, chord, semitone(theme.root, steps), gain, 0.6, 6);
+  // Every voice home to the tonic chord, over six seconds. This is the one
+  // moment the music is allowed to resolve, and it is why it never does
+  // earlier.
+  const home = theme.progression[0] ?? [0, 3, 7];
+  const landed = voiceLead(pitches, home);
+  for (const [i, v] of voices.entries()) {
+    const semi = landed[i];
+    if (semi !== undefined) v.setPitch(semitone(theme.root, semi), 6);
   }
+  bassVoice?.setPitch(semitone(theme.root, (home[0] ?? 0) - 12), 6);
+
+  if (accentGain) {
+    sing(ac, accentGain, semitone(theme.root, (home[0] ?? 0) + 24), 0.1, 2, 'bell');
+  }
+
   try {
     master.gain.setTargetAtTime(level * 0.85, ac.currentTime, 1.5);
   } catch {
@@ -427,6 +564,9 @@ export function stopTheme() {
   theme = null;
   padFilter = null;
   accentGain = null;
+  voices = [];
+  bassVoice = null;
+  pitches = [];
 
   const dying = sink;
   sink = emptySink();

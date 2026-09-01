@@ -219,7 +219,7 @@ export function CountdownToggle({
   shape?: string;
 }) {
   const { state, updateSettings } = useApp();
-  const on = state.settings.countdown[exerciseId] === true;
+  const on = state.settings.countdown[exerciseId] !== false;
 
   const toggle = () => {
     haptic(HAPTIC.tick);

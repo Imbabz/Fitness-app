@@ -42,7 +42,7 @@ export function DurationTimer({ exercise, onSetComplete }: TrackerProps) {
   const { remainingMs, remainingSeconds } = useCountdown(endsAt, onDone);
   // Only while it is actually running: a paused timer that keeps ticking down
   // audibly would be lying about what it is doing.
-  useCountdownBeeps(remainingSeconds, running && state.settings.countdown[exercise.id] === true);
+  useCountdownBeeps(remainingSeconds, running && state.settings.countdown[exercise.id] !== false);
   const displayMs = running ? remainingMs : pausedMs;
 
   const start = () => {

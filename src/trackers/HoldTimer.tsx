@@ -105,7 +105,7 @@ export function HoldTimer({
 
   useCountdownBeeps(
     remainingSeconds,
-    phase === 'holding' && state.settings.countdown[exercise.id] === true,
+    phase === 'holding' && state.settings.countdown[exercise.id] !== false,
   );
 
   const done = reps >= target;

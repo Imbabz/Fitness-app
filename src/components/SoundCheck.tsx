@@ -30,7 +30,8 @@ export function SoundCheck() {
     );
   })();
 
-  const countdowns = Object.values(state.settings.countdown).filter(Boolean).length;
+  // Absent means on, so what is worth counting is how many were switched off.
+  const muted = Object.values(state.settings.countdown).filter((v) => v === false).length;
 
   const run = () => {
     // Inside the tap on purpose: it is the only moment iOS will let an
@@ -113,11 +114,11 @@ export function SoundCheck() {
           </>
         )}
         {'. '}
-        Countdown beeps on{' '}
+        Countdown beeps{' '}
         <span className="text-muted">
-          {countdowns === 0 ? 'no exercises' : `${countdowns} exercise${countdowns === 1 ? '' : 's'}`}
+          {muted === 0 ? 'on everywhere' : `off on ${muted} exercise${muted === 1 ? '' : 's'}`}
         </span>
-        {countdowns === 0 ? ' — set them per exercise at the trailhead' : ''}. Timer end tone{' '}
+        . Timer end tone{' '}
         <span className="text-muted">{state.settings.soundOnTimerEnd ? 'on' : 'off'}</span>.
       </p>
     </div>

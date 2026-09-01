@@ -36,7 +36,7 @@ export function RestTimer({
   }, [onDone, state.settings.soundOnTimerEnd]);
 
   const { remainingMs, remainingSeconds } = useCountdown(endsAt, finish);
-  useCountdownBeeps(remainingSeconds, state.settings.countdown[exercise.id] === true);
+  useCountdownBeeps(remainingSeconds, state.settings.countdown[exercise.id] !== false);
   const total = seconds * 1000;
   const elapsed = Math.min(1, Math.max(0, 1 - remainingMs / total));
 

@@ -49,11 +49,19 @@ export function seedState(): AppState {
     streak: { current: 0, longest: 0, lastDailyDate: null },
     settings: {
       restDefaultSeconds: 90,
-      soundOnTimerEnd: false,
+      soundOnTimerEnd: true,
       haptics: true,
       autoChain: {},
+      /*
+       * Empty means "on everywhere". Every read site tests `!== false`, so an
+       * absent entry is on and only an explicit switch-off is stored.
+       *
+       * It shipped the other way round and that was a mistake: an app whose
+       * every sound defaults to off looks broken on first open, and the first
+       * report was exactly that. Silence should be something you choose.
+       */
       countdown: {},
-      ambient: 'off',
+      ambient: 'rainfall',
       ambientLayer: 'off',
       ambientByBlock: {},
       library: null,
@@ -194,7 +202,7 @@ export function coerceState(raw: unknown): AppState {
     settings: {
       restDefaultSeconds:
         typeof settings.restDefaultSeconds === 'number' ? settings.restDefaultSeconds : 90,
-      soundOnTimerEnd: settings.soundOnTimerEnd === true,
+      soundOnTimerEnd: settings.soundOnTimerEnd !== false,
       haptics: settings.haptics !== false,
       autoChain: boolRec(settings.autoChain),
       countdown: boolRec(settings.countdown),

@@ -113,6 +113,12 @@ These are not preferences. Breaking them breaks the product.
      defaults to on. A web page cannot set an AVAudioSession category, so this
      is the only lever there is — and it does not exist at all for synthesised
      sound, which is Web Audio by nature.
+   - **The music lives in `compose.ts`, not in the audio graph.** Harmony that
+     moves, voice leading, motif variation and rests are the difference between
+     ambient music and a drone with sprinkles; they are kept apart from Web
+     Audio so they can be tested without ears, and they are. Do not "simplify"
+     the progression to a single chord or the phrases to random notes — that is
+     what was there before, and it was the actual complaint.
    - **Only a texture may be layered under music.** Rain, surf, wind and fire
      have no key and no pulse, so they cannot disagree with a recording. A pad
      or a second track can, and there is no way to know in advance that it will
