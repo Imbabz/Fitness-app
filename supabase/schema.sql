@@ -55,6 +55,61 @@ create policy "anon downloads music"
   using (bucket_id = 'Musics');
 
 -- ---------------------------------------------------------------------------
+-- Columns the streaming library needs.
+-- Separate ALTERs so this file stays safe to re-run over an existing table.
+-- ---------------------------------------------------------------------------
+alter table public.tracks add column if not exists source_url text;
+alter table public.tracks add column if not exists pinned boolean not null default false;
+
+-- ---------------------------------------------------------------------------
+-- Auto-catalogue: anything landing in the bucket becomes a row.
+--
+-- Without this, adding a sound means uploading the file AND writing an insert,
+-- and the insert is the step people forget — leaving audio in storage that the
+-- app cannot see. The title is derived from the filename and can be edited
+-- afterwards; category defaults to Uncategorised so it is obvious what still
+-- needs sorting.
+-- ---------------------------------------------------------------------------
+create or replace function public.catalogue_new_object()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.bucket_id <> 'Musics' then
+    return new;
+  end if;
+
+  insert into public.tracks (title, storage_path, bytes)
+  values (
+    -- Filename without its extension, underscores and dashes opened out.
+    regexp_replace(
+      regexp_replace(split_part(new.name, '/', -1), '\.[A-Za-z0-9]+$', ''),
+      '[_-]+', ' ', 'g'
+    ),
+    new.bucket_id || '/' || new.name,
+    coalesce((new.metadata->>'size')::bigint, 0)
+  )
+  on conflict (storage_path) do nothing;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists catalogue_new_object on storage.objects;
+create trigger catalogue_new_object
+  after insert on storage.objects
+  for each row execute function public.catalogue_new_object();
+
+-- The function is SECURITY DEFINER, which makes it callable at
+-- /rest/v1/rpc/catalogue_new_object by anyone holding the anon key. Postgres
+-- does not check EXECUTE when firing a trigger, so revoking closes that
+-- endpoint without affecting the trigger at all. Supabase's security linter
+-- flags this if it is missing.
+revoke execute on function public.catalogue_new_object() from anon, authenticated, public;
+
+-- ---------------------------------------------------------------------------
 -- Seed the three files already in the bucket. Adjust the category and licence
 -- to whatever is true; `on conflict do nothing` makes re-running harmless.
 -- ---------------------------------------------------------------------------
@@ -68,8 +123,13 @@ insert into public.tracks (title, category, licence, storage_path, bytes) values
 on conflict (storage_path) do nothing;
 
 -- ---------------------------------------------------------------------------
--- Adding more later: upload to the bucket, then one insert.
+-- Adding more later: paste a link into Ridge (Settings -> Library -> Add by
+-- link). The `ingest` Edge Function fetches it server-side, stores it, and the
+-- trigger above catalogues it. Nothing needs writing by hand.
 --
---   insert into public.tracks (title, category, licence, storage_path, bytes)
---   values ('Forest Rain', 'Nature', 'CC0 — Freesound', 'Musics/forest-rain.mp3', 4200000);
+-- Deploy the function once with:
+--   supabase functions deploy ingest --project-ref snmpnpuwtojwvsqpdwap
+--
+-- Uploading through the dashboard still works and is still catalogued; only
+-- the title and category are then worth editing afterwards.
 -- ---------------------------------------------------------------------------
