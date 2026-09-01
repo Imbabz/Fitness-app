@@ -119,6 +119,19 @@ These are not preferences. Breaking them breaks the product.
      Audio so they can be tested without ears, and they are. Do not "simplify"
      the progression to a single chord or the phrases to random notes — that is
      what was there before, and it was the actual complaint.
+   - **Ambiences are built for calm, not for realism, and the two disagree.**
+     The realistic version of these scenes was frightening: indistinct voices,
+     isolated low thumps, a bell tolling in a long reverb, thunder, a lone bird
+     call, sparse events over a quiet bed. That is the standard kit of horror
+     sound design, and it is what accuracy produces. The rules that replaced it
+     are in `scenes.ts`: density rather than sparsity, no voices, no isolated
+     low transients, nothing distant, soft onsets. `thump`, `babble`, `call`
+     and `far` in `scene.ts` are deliberately used by nothing.
+
+     **Crest factor is the measurable form of it** — loudest moment over
+     average. The frightening version measured 18.8; the limit is 6.5, checked
+     by rendering and running the crest script. If an ambience is ever reported
+     as unsettling again, measure that first.
    - **Only a texture may be layered under music.** Rain, surf, wind and fire
      have no key and no pulse, so they cannot disagree with a recording. A pad
      or a second track can, and there is no way to know in advance that it will

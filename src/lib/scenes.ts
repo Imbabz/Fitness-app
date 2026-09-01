@@ -1,18 +1,39 @@
 /*
- * Four places.
+ * Four places, built for calm rather than for realism.
  *
- * Each is a recipe over the generators in scene.ts, and each is written to a
- * specific image rather than to a mood word — because "calm" produces a pad and
- * "a tent at night while it rains" produces a scene. The comments name what
- * each layer is meant to be, so a later reader can tell whether it still is.
+ * The first version of this file was frightening, and not by accident. It
+ * reached for realism and surprise, and the vocabulary it arrived at —
+ * indistinct voices, isolated low thumps, a bell tolling in six seconds of
+ * stone, distant thunder, bird calls at night, sparse events over a quiet bed —
+ * is item for item the standard kit of horror sound design. A rare loud event
+ * in a quiet field is what a threat sounds like. The brain is built to flag it,
+ * and no amount of tuning the frequencies fixes that.
  *
- * The bands are the load-bearing part. Nothing here is arbitrary: each layer
- * sits where that source actually lives, and moving one an octave is enough to
- * turn a place back into generic noise.
+ * ── The rules, which are the opposite of the realistic ones ────────────────
+ *
+ *   1. **Density, not sparsity.** Many tiny events per second read as texture;
+ *      a few large ones read as incidents. Everything here is texture.
+ *   2. **No voices.** Indistinct speech is inherently uncanny — the ear tries
+ *      to resolve it, fails, and stays alert. This was the worst offender.
+ *   3. **No isolated low transients.** Those are footsteps, doors, something
+ *      moving in the dark. Low frequencies belong in the continuous bed only.
+ *   4. **Nothing distant.** Far away plus reverberant plus rare is dread.
+ *      Close and continuous is safe.
+ *   5. **Crest factor at or under about 6.** This is the measurable form of
+ *      all of the above: it is the ratio of the loudest moment to the average,
+ *      so a low crest means nothing ever jumps out. The frightening version
+ *      measured 18.8.
+ *   6. **Soft onsets.** Nothing with a sharp attack except grains, which are
+ *      too small and too many to startle anyone.
+ *
+ * The bands still matter and are still load-bearing — each layer sits where
+ * that source actually lives, and moving one an octave turns a place back into
+ * generic noise. But band accuracy is what makes it convincing; the rules above
+ * are what make it bearable, and they win where the two disagree.
  */
 
 import { reverb, type Sink } from './audio';
-import { babble, bed, call, far, grains, occasionally, struck, thump } from './scene';
+import { bed, grains, occasionally, struck } from './scene';
 
 export type SceneId = 'market' | 'tent' | 'campfire' | 'abbey';
 
@@ -27,173 +48,113 @@ export interface Scene {
 export const SCENES: Scene[] = [
   {
     id: 'market',
-    label: 'Marché',
-    note: 'A market square, late morning',
+    label: 'Village',
+    note: 'A warm room above a busy street',
     build(ac, sink, out) {
-      const space = reverb(ac, 2.4, 2.6);
-      const wet = ac.createGain();
-      wet.gain.value = 0.22;
-      if (space) {
-        space.connect(wet).connect(out);
-        sink.nodes.push(space, wet);
-      }
+      /*
+       * This began as a market square with a crowd in it, and the crowd was the
+       * single most frightening thing in the set. Murmuring voices cannot be
+       * made calm — so there are none. What is left is the warmth of a busy
+       * place heard through a wall: the hum, the movement, none of the words.
+       */
+      bed(ac, sink, out, { low: 120, high: 900, level: 0.16, swell: 0.03, swellHz: 0.021 });
+      bed(ac, sink, out, { low: 500, high: 2600, level: 0.05, swell: 0.018, swellHz: 0.037 });
 
-      // The crowd. Six voices at different syllable rates: any fewer and you
-      // hear individuals, any more and it smooths back into hiss.
-      babble(ac, sink, out, { level: 0.34, voices: 6 });
-      // The low body of a covered square full of people.
-      bed(ac, sink, out, { low: 140, high: 700, level: 0.05, swell: 0.02, swellHz: 0.03 });
+      // Activity as texture: fast enough that no single event is an event.
+      grains(ac, sink, out, { rate: 26, low: 700, high: 2600, level: 0.05, decay: 0.07 });
+      grains(ac, sink, out, { rate: 9, low: 250, high: 900, level: 0.045, decay: 0.13 });
 
-      // Footfall and cartwheels on stone, irregular and constant.
-      thump(ac, sink, out, { mean: 0.9, hz: 95, level: 0.1, decay: 0.28 });
-      thump(ac, sink, out, { mean: 3.4, hz: 62, level: 0.11, decay: 0.5 });
-
-      // Crates, hooves, wooden clatter — the mid-high events that make a market
-      // busy rather than merely populated.
-      grains(ac, sink, out, { rate: 3.2, low: 900, high: 3800, level: 0.22, decay: 0.09 });
-
-      // A smith, a few streets away. Rare, and behind everything.
-      const distance = far(ac, sink, space ?? out, { cutoff: 2200, level: 0.5 });
-      occasionally(sink, 11, () => {
-        const hits = 2 + Math.floor(Math.random() * 3);
-        for (let i = 0; i < hits; i++) {
-          window.setTimeout(
-            () => struck(ac, distance, { hz: 620 + Math.random() * 160, level: 0.16, decay: 0.5, partials: [1, 2.4, 4.1] }),
-            i * (240 + Math.random() * 90),
-          );
-        }
-      });
-
-      // The church, on the hour. The only pitched thing here, and it is far off.
-      occasionally(sink, 46, () =>
-        struck(ac, distance, { hz: 196, level: 0.3, decay: 7 }),
-      );
+      // A loom, a mill wheel, something turning steadily downstairs. Regular on
+      // purpose: predictability is the whole point here.
+      grains(ac, sink, out, { rate: 3.4, low: 160, high: 520, level: 0.05, decay: 0.2 });
     },
   },
 
   {
     id: 'tent',
     label: 'Tente',
-    note: 'Under canvas, raining, night',
+    note: 'Under canvas, steady rain',
     build(ac, sink, out) {
       /*
-       * Rain on fabric is not rain in the open, and the difference is entirely
-       * in the top end: canvas damps everything above about 3kHz, so the hiss
-       * that makes open rain sound bright is simply absent. What is left is the
-       * drumming — thousands of small damped impacts in the 800-3000Hz band.
+       * Rain on fabric, not rain in the open: canvas damps everything above
+       * about 3kHz, so the brightness that defines open rain is absent and what
+       * remains is drumming at 800-3000Hz.
+       *
+       * The thunder and the guy-line thumps are gone. Both were startles, and a
+       * startle is the one thing a session done face-down on the floor cannot
+       * afford.
        */
-      grains(ac, sink, out, { rate: 70, low: 900, high: 3000, level: 0.19, decay: 0.03 });
-      // The muffled wash of everything falling further away, off the fly sheet.
-      bed(ac, sink, out, { low: 400, high: 2200, level: 0.13, swell: 0.05, swellHz: 0.04 });
-      // The canvas itself has a body. Without this it sounds like rain with no
-      // tent around it.
-      bed(ac, sink, out, { low: 70, high: 220, level: 0.05, swell: 0.025, swellHz: 0.021 });
-
-      // Gusts pushing the fly: a slow low swell, and the fabric answering it.
-      bed(ac, sink, out, { low: 45, high: 150, level: 0.03, swell: 0.026, swellHz: 0.013 });
-      grains(ac, sink, out, { rate: 0.7, low: 200, high: 1100, level: 0.16, decay: 0.22 });
-
-      // A pole or guy line taking the wind.
-      thump(ac, sink, out, { mean: 13, hz: 70, level: 0.1, decay: 0.6 });
-
-      // Thunder, far enough away to be weather rather than an event.
-      const distance = far(ac, sink, out, { cutoff: 260, level: 0.85 });
-      occasionally(sink, 52, () => {
-        struck(ac, distance, { hz: 44, level: 0.34, decay: 5.5, partials: [1, 1.4, 2.1] });
-      });
+      grains(ac, sink, out, { rate: 150, low: 900, high: 3000, level: 0.075, decay: 0.028 });
+      grains(ac, sink, out, { rate: 60, low: 1800, high: 4200, level: 0.03, decay: 0.02 });
+      // The wash of everything falling further off, over the whole fly.
+      bed(ac, sink, out, { low: 400, high: 2400, level: 0.15, swell: 0.03, swellHz: 0.035 });
+      // The canvas has a body. Without it this is rain with no tent around it.
+      bed(ac, sink, out, { low: 80, high: 260, level: 0.07, swell: 0.02, swellHz: 0.019 });
+      // Wind, as a slow breathing of the whole bed rather than as gusts.
+      bed(ac, sink, out, { low: 180, high: 1000, level: 0.05, swell: 0.03, swellHz: 0.012 });
     },
   },
 
   {
     id: 'campfire',
     label: 'Feu de camp',
-    note: 'A fire outside, wind in the leaves',
+    note: 'A fire close by, leaves overhead',
     build(ac, sink, out) {
-      // The fire's roar. Low and narrow — the part you feel more than hear.
-      bed(ac, sink, out, { low: 60, high: 300, level: 0.055, swell: 0.022, swellHz: 0.07 });
-      // Crackles: sharp, bright, and wildly irregular. Regular spacing here is
-      // the fastest way to sound like a machine.
-      grains(ac, sink, out, { rate: 7, low: 1100, high: 4600, level: 0.3, decay: 0.05 });
-      // The occasional pop as something gives.
-      occasionally(sink, 7, () =>
-        struck(ac, out, { hz: 300 + Math.random() * 500, level: 0.2, decay: 0.18, partials: [1, 3.2] }),
-      );
-
+      // The roar you feel more than hear.
+      bed(ac, sink, out, { low: 70, high: 340, level: 0.085, swell: 0.025, swellHz: 0.06 });
       /*
-       * Leaves. This is the layer that makes it outdoors, and it is granular,
-       * not smooth: a rustle is thousands of tiny separate collisions at
-       * 2-8kHz. Filtering white noise into that band gives a hiss; only the
-       * grain rate gives leaves.
+       * Crackle, but as a continuous bed of small events rather than as
+       * occasional pops. The old version fired sharp isolated cracks over near
+       * silence and measured a crest of 18.8 — which is to say it kept making
+       * you flinch.
        */
-      grains(ac, sink, out, { rate: 130, low: 2400, high: 8000, level: 0.12, decay: 0.02 });
-      // Gusts moving through the canopy, well below the leaves themselves.
-      bed(ac, sink, out, { low: 200, high: 1100, level: 0.05, swell: 0.04, swellHz: 0.016 });
+      grains(ac, sink, out, { rate: 30, low: 900, high: 3600, level: 0.075, decay: 0.045 });
+      grains(ac, sink, out, { rate: 8, low: 400, high: 1400, level: 0.05, decay: 0.1 });
 
-      // Night birds and insects, far off and rare. Two different characters so
-      // it does not become one repeating call.
-      const distance = far(ac, sink, out, { cutoff: 4000, level: 0.45 });
-      occasionally(sink, 26, () =>
-        call(ac, distance, { hz: 420 + Math.random() * 90, level: 0.2, seconds: 0.5, vibrato: 18, sweep: 0.86 }),
-      );
-      occasionally(sink, 17, () => {
-        const n = 2 + Math.floor(Math.random() * 3);
-        for (let i = 0; i < n; i++) {
-          window.setTimeout(
-            () => call(ac, distance, { hz: 3600 + Math.random() * 900, level: 0.07, seconds: 0.06 }),
-            i * (110 + Math.random() * 70),
-          );
-        }
-      });
+      // Leaves: granular by nature, thousands of separate tiny collisions at
+      // 2-8kHz. Filtering noise into that band gives hiss; only the rate gives
+      // leaves.
+      grains(ac, sink, out, { rate: 220, low: 2400, high: 7500, level: 0.03, decay: 0.018 });
+      // The canopy moving, well below the leaves themselves.
+      bed(ac, sink, out, { low: 200, high: 1200, level: 0.06, swell: 0.03, swellHz: 0.015 });
+
+      // No owls, no night birds. A lone call in the dark is a horror cue, and
+      // it was one here too.
     },
   },
 
   {
-    // Not 'cloister': that id belongs to the composed theme, and a scene
-    // taking it would make the theme unreachable.
     id: 'abbey',
     label: 'Abbaye',
-    note: 'Stone, a bell, a long way from anyone',
+    note: 'Warm stone, a soft bell',
     build(ac, sink, out) {
       /*
-       * The one place where pitch belongs — but as architecture, not melody.
-       * A cloister is defined by its reverb: six seconds of stone, and
-       * everything in it arrives already decayed.
+       * Two and a half seconds of stone, not six. A cavernous tail with rare
+       * events in it is dread; a short warm one is a room. The footsteps are
+       * gone entirely — somebody walking towards you out of sight is the oldest
+       * cue there is.
        */
-      const space = reverb(ac, 6, 1.6);
+      const space = reverb(ac, 2.6, 2.2);
       const wet = ac.createGain();
-      wet.gain.value = 0.55;
+      wet.gain.value = 0.4;
       if (space) {
         space.connect(wet).connect(out);
         sink.nodes.push(space, wet);
       }
       const room = space ?? out;
 
-      // Air moving through an arcade. Almost nothing, but silence would be wrong.
-      bed(ac, sink, out, { low: 110, high: 700, level: 0.045, swell: 0.025, swellHz: 0.02 });
-      bed(ac, sink, room, { low: 500, high: 2800, level: 0.03, swell: 0.02, swellHz: 0.033 });
+      bed(ac, sink, out, { low: 110, high: 700, level: 0.09, swell: 0.025, swellHz: 0.018 });
+      bed(ac, sink, room, { low: 500, high: 2600, level: 0.05, swell: 0.02, swellHz: 0.03 });
+      // Air moving through an arcade, as texture.
+      grains(ac, sink, out, { rate: 40, low: 1200, high: 4000, level: 0.014, decay: 0.03 });
 
-      // The bell. Rare enough that it is an event when it comes.
-      occasionally(sink, 38, () => {
-        struck(ac, room, { hz: 146.8, level: 0.42, decay: 9, partials: [1, 2, 2.76, 5.4, 8.2] });
-      });
-
-      // A second bell, higher and further, answering the first now and then.
-      const distance = far(ac, sink, room, { cutoff: 1800, level: 0.4 });
-      occasionally(sink, 71, () => {
-        window.setTimeout(
-          () => struck(ac, distance, { hz: 220, level: 0.32, decay: 7 }),
-          1800 + Math.random() * 2400,
-        );
-      });
-
-      // Footsteps on flagstones, somewhere out of sight.
-      occasionally(sink, 34, () => {
-        const steps = 3 + Math.floor(Math.random() * 5);
-        for (let i = 0; i < steps; i++) {
-          window.setTimeout(() => {
-            struck(ac, room, { hz: 900 + Math.random() * 400, level: 0.07, decay: 0.1, partials: [1, 2.7] });
-          }, i * (620 + Math.random() * 140));
-        }
+      /*
+       * The bell, made gentle: fewer partials and a softer set of them, a
+       * fraction of the old level, and often enough to be expected rather than
+       * rare enough to be an omen. Tolling is the frightening version of this.
+       */
+      occasionally(sink, 15, () => {
+        struck(ac, room, { hz: 293.66, level: 0.07, decay: 3.4, partials: [1, 2, 3] });
       });
     },
   },

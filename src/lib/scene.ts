@@ -99,6 +99,20 @@ export function grains(
   recur(sink, 1 / o.rate, 0.95, burst);
 }
 
+/*
+ * ── Kept, but used by nothing ──────────────────────────────────────────────
+ *
+ * `thump`, `babble`, `call` and `far` are the four generators that made the
+ * first version of these scenes frightening, and no scene uses them now. They
+ * are accurate — that was the problem. An isolated low impact is a footstep,
+ * indistinct voices are uncanny however warm the room, a lone call in the dark
+ * is a horror cue, and distance plus rarity is dread.
+ *
+ * They stay because they are correct and might serve something that is not
+ * trying to be calming. Reaching for one in an ambience is almost certainly a
+ * mistake; if you do, check the crest factor afterwards.
+ */
+
 /** A low thump: a footfall, a cart, a tent pole taking a gust. */
 export function thump(
   ac: AudioContext,
