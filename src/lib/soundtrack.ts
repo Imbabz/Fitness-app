@@ -36,6 +36,7 @@ import {
   type SynthKind,
 } from './audio';
 import { currentShape, subscribe } from './arc';
+import { SCENE_BY_ID, SCENES, isSceneId } from './scenes';
 import {
   MODES,
   MOTIFS,
@@ -175,6 +176,7 @@ const semitone = (root: number, steps: number) => root * Math.pow(2, steps / 12)
 
 let sink: Sink = emptySink();
 let theme: Theme | null = null;
+let sceneId: string | null = null;
 let master: GainNode | null = null;
 let padFilter: BiquadFilterNode | null = null;
 let accentGain: GainNode | null = null;
@@ -425,6 +427,46 @@ function schedulePhrases(ac: AudioContext, t: Theme, out: AudioNode) {
   sink.timers.push(window.setTimeout(next, 4000 + Math.random() * 6000));
 }
 
+/**
+ * Start a place rather than a piece. Shares the sink, the master gain and the
+ * arc with the composed themes, so everything above this layer is unchanged.
+ */
+export function startScene(id: string, atLevel = 0.3) {
+  const scene = SCENE_BY_ID[id];
+  const ac = context();
+  if (!scene || !ac) return;
+
+  stopTheme();
+  theme = null;
+  sceneId = id;
+  level = atLevel;
+  closing = false;
+
+  try {
+    const out = ac.createGain();
+    out.gain.setValueAtTime(0.0001, ac.currentTime);
+    out.connect(ac.destination);
+    master = out;
+
+    scene.build(ac, sink, out);
+
+    unsubscribe = subscribe((s) => {
+      try {
+        // A place has no melody to thin out, so the arc works on level and
+        // nothing else. Shutting a filter over a whole environment would just
+        // sound like a blanket over it.
+        if (!closing) master?.gain.setTargetAtTime(level * (0.6 + 0.4 * s.presence), ac.currentTime, 4);
+      } catch {
+        /* being torn down */
+      }
+    });
+
+    out.gain.linearRampToValueAtTime(level * 1.5, ac.currentTime + 4);
+  } catch {
+    stopTheme();
+  }
+}
+
 export function startTheme(id: ThemeId, atLevel = 0.28) {
   const t = THEME_BY_ID[id];
   const ac = context();
@@ -562,6 +604,7 @@ export function stopTheme() {
   unsubscribe = null;
   closing = false;
   theme = null;
+  sceneId = null;
   padFilter = null;
   accentGain = null;
   voices = [];
@@ -601,3 +644,9 @@ export function stopTheme() {
 export function playingTheme(): ThemeId | null {
   return theme?.id ?? null;
 }
+
+export function playingScene(): string | null {
+  return sceneId;
+}
+
+export { SCENES, isSceneId };

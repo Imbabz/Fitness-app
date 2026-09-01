@@ -32,7 +32,10 @@ export function AmbientButton() {
         createPortal(
           <div className="fixed inset-0 z-50 flex flex-col justify-end bg-base/70 backdrop-blur-sm">
             <button type="button" aria-label="Close" className="flex-1" onClick={() => setOpen(false)} />
-            <div className="ridge-sheet rounded-t-[1.75rem] border-t border-line bg-surface px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4">
+            {/* Capped and scrollable: the picker grew a Places group and then a
+                Collections one, and without this the sheet simply ran off the
+                top of the screen taking Off with it. */}
+            <div className="ridge-sheet max-h-[85dvh] overflow-y-auto rounded-t-[1.75rem] border-t border-line bg-surface px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h2 className="text-xl ridge-title text-ink">Ambience</h2>

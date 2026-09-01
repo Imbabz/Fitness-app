@@ -6,7 +6,7 @@ import { todayKey } from '../lib/time';
 import { coerceComposition, coerceTuningMap } from './tuning';
 import { SESSIONS } from '../data/sessions';
 import { EXERCISE_BY_ID } from '../data/exercises';
-import { AMBIENT_KINDS, THEMES } from '../lib/ambient';
+import { AMBIENT_KINDS, SCENES, THEMES } from '../lib/ambient';
 import { credentialsLook } from '../lib/library';
 import type { AmbientKind } from '../lib/ambient';
 
@@ -20,6 +20,7 @@ function isAmbientKind(v: unknown): v is AmbientKind {
   if (typeof v !== 'string') return false;
   if (AMBIENT_KINDS.some((k) => k.id === v)) return true;
   if (THEMES.some((t) => t.id === v)) return true;
+  if (SCENES.some((t) => t.id === v)) return true;
   // A category is free text the user typed. An empty or absurd one resolves to
   // no tracks and plays nothing, so length is the only thing worth checking.
   if (v.startsWith('cat:')) return v.length > 4 && v.length <= 40;

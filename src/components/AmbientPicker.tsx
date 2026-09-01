@@ -1,8 +1,8 @@
-import { Check, Church, CloudRain, Flame, ListMusic, Music, Plus, Trash2, Trees, Volume2, VolumeX, Waves, Wind } from 'lucide-react';
+import { Check, Church, CloudRain, Flame, ListMusic, Music, Plus, Store, Tent, Trash2, Trees, Volume2, VolumeX, Waves, Wind } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import type { AmbientKind, SynthKind } from '../lib/ambient';
-import { AMBIENT_KINDS, forgetTrack, startAmbient, THEMES } from '../lib/ambient';
+import { AMBIENT_KINDS, forgetTrack, SCENES, startAmbient, THEMES } from '../lib/ambient';
 import {
   addTrack,
   categoriesOf,
@@ -22,6 +22,13 @@ import { haptic, HAPTIC } from '../lib/haptics';
 
 /** Each soundtrack reads as itself in the list; a shared icon made the four
  *  look like one repeated row. */
+const SCENE_ICON: Record<string, typeof Waves> = {
+  market: Store,
+  tent: Tent,
+  campfire: Flame,
+  abbey: Church,
+};
+
 const THEME_ICON: Record<string, typeof Waves> = {
   rainfall: Trees,
   shore: Waves,
@@ -124,6 +131,24 @@ export function AmbientPicker({ manage = false }: { manage?: boolean }) {
           onPick={() => choose('off')}
         />
       )}
+
+      <Group title="Places" hint="Somewhere to be, not a piece of music">
+        <div className="space-y-1.5">
+          {SCENES.map((sc) => {
+            const Icon = SCENE_ICON[sc.id] ?? Trees;
+            return (
+              <Tile
+                key={sc.id}
+                label={sc.label}
+                note={sc.note}
+                icon={<Icon size={18} />}
+                active={chosen === sc.id}
+                onPick={() => choose(sc.id)}
+              />
+            );
+          })}
+        </div>
+      </Group>
 
       <Group title="Soundtracks" hint="They follow the session">
         <div className="space-y-1.5">

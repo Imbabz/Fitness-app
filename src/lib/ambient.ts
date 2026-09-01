@@ -22,8 +22,11 @@ import {
 } from './audio';
 import {
   duckTheme,
+  isSceneId,
   isThemeId,
   resolveTheme,
+  SCENES,
+  startScene,
   startTheme,
   stopTheme,
   THEMES,
@@ -37,6 +40,7 @@ import {
   startCollection,
   stopCollection,
 } from './player';
+import type { SceneId } from './scenes';
 import { highlightOf } from './analyse';
 import { getTrack } from './tracks';
 
@@ -46,7 +50,13 @@ export type { SynthKind, ThemeId };
  * A bed, a soundtrack, silence, one of the user's own files, or a whole
  * category of them played through as a session-length sequence.
  */
-export type AmbientKind = 'off' | SynthKind | ThemeId | `track:${string}` | `cat:${string}`;
+export type AmbientKind =
+  | 'off'
+  | SynthKind
+  | ThemeId
+  | SceneId
+  | `track:${string}`
+  | `cat:${string}`;
 
 export function isCollection(kind: AmbientKind): kind is `cat:${string}` {
   return kind.startsWith('cat:');
@@ -75,8 +85,9 @@ export const AMBIENT_KINDS: Array<{ id: 'off' | SynthKind; label: string; note: 
   { id: 'drone', label: 'Drone', note: 'Low fifth, a bell' },
 ];
 
-export { THEMES };
+export { THEMES, SCENES };
 export { setMusicAppMode };
+export type { SceneId };
 
 const SYNTH_IDS: SynthKind[] = ['rain', 'waves', 'wind', 'fire', 'drone'];
 const isBed = (k: AmbientKind): k is SynthKind => (SYNTH_IDS as string[]).includes(k);
@@ -360,6 +371,12 @@ export function startAmbient(kind: AmbientKind, level = 0.35, layer: 'off' | Syn
   if (category) {
     current = kind;
     void startCollection(category, level * 0.85);
+    return;
+  }
+
+  if (isSceneId(kind)) {
+    current = kind;
+    startScene(kind, level * 0.9);
     return;
   }
 
