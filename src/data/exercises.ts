@@ -735,16 +735,20 @@ export const EXERCISES: Exercise[] = [
     repScheme: [10, 10],
     restSeconds: 30,
     execution:
-      'Sitting, slightly slumped, one leg hanging. Straighten that knee and look up at the same ' +
-      'time; then bend the knee back down as you tuck the chin. The two ends move in opposite ' +
-      'directions on purpose. Ten each side, continuous and gentle — never push into the symptom, ' +
-      'and never hold at the end of the range.',
-    cue: 'Oscillate. Never hold at the end.',
+      'Sit slightly slumped and stay slumped throughout — letting the back straighten as you go ' +
+      'takes the slack out and turns this into a stretch. One leg hanging. Then two halves, ' +
+      'continuous: straighten that knee AND pull the toes up AND look up, all together; then bend ' +
+      'the knee, point the toes and tuck the chin, all together. Ten each side, slow and gentle. ' +
+      'Never push into the symptom, and never hold at either end.',
+    cue: 'Toes up as you look up. Never hold.',
     why:
       'A protruding disc can leave the sciatic nerve sensitised and tethered to the tissue around it. ' +
-      'Moving the two ends in opposite directions slides the nerve within its sheath while the total ' +
-      'tension on it stays roughly constant — that is what settles referred symptoms. Lengthening ' +
-      'both ends at once would stretch an already irritated nerve, which reliably makes it worse.',
+      'The nerve runs from the neck to the foot, so each end can be loaded separately: straightening ' +
+      'the knee and lifting the toes pulls from below, while looking up releases from above. Moving ' +
+      'them in opposite directions slides the nerve inside its sheath with the total tension roughly ' +
+      'constant — that is what settles referred symptoms, and ultrasound studies of nerve excursion ' +
+      'are what the coupling is taken from. Lengthening both ends at once is the tensioner version: ' +
+      'it stretches an already irritated nerve and reliably makes it worse.',
     animation: 'nerveglide',
     loadTracked: false,
   },

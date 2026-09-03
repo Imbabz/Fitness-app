@@ -35,6 +35,12 @@ These are not preferences. Breaking them breaks the product.
    transcribed from a physiotherapist's printed programme (UCL, Pré-EDD). The
    McGill curl-up was proposed and **declined**.
 
+   A request for a new exercise is sometimes a request for one that already
+   exists. The seated sciatic slider was asked for and was already in the
+   library as `d-nerve-glide`; adding a second copy would have split its logged
+   history for nothing. Search the library before writing an entry, and say so
+   rather than adding a duplicate.
+
    That exceptions were granted does not make the rule softer — ask again. The
    `p-` items in particular are somebody else's prescription: do not edit their
    sets, reps or holds to match this app's conventions, and do not "correct"
