@@ -1,11 +1,12 @@
 import type { AmbientKind, SynthKind } from './lib/ambient';
+import type { HiitConfig } from './data/hiit';
 import type { LibraryCredentials } from './lib/library';
 
 export type Mode = 'day' | 'night';
 
 export type Block = 'warmup' | 'main' | 'spine' | 'mobility';
 
-export type TrackingMode = 'reps' | 'hold' | 'distance' | 'duration';
+export type TrackingMode = 'reps' | 'hold' | 'distance' | 'duration' | 'interval';
 
 export type View = 'home' | 'session' | 'routine' | 'history' | 'settings';
 
@@ -55,6 +56,8 @@ export interface Exercise {
    */
   alternates?: string[];
 }
+
+export type { HiitConfig };
 
 export interface Session {
   id: 'A' | 'B' | 'C' | 'daily';
@@ -180,6 +183,14 @@ export interface AppState {
    * or corrupted — can lift spine work off the end. See CLAUDE.md rule 2.
    */
   composition: Record<string, string[]>;
+  /**
+   * sessionId → interval settings. Absent means the session runs as straight
+   * sets, which is the default and the only thing the night routine can do.
+   *
+   * Only the main block is converted; see `hiitSession()` and the note in
+   * data/hiit.ts for why the spine block and the warm-up are never touched.
+   */
+  hiit: Record<string, HiitConfig>;
   streak: { current: number; longest: number; lastDailyDate: string | null };
   settings: Settings;
 }

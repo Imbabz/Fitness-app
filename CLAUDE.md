@@ -144,7 +144,21 @@ These are not preferences. Breaking them breaks the product.
      not. `settings.ambientLayer` is typed to textures for this reason, and the
      coercion in `store.ts` refuses anything else.
 
-6. **Progression thresholds differ by block.** Two clean sessions for main work,
+6. **Circuit mode converts the main block and nothing else.** `hiitSession()`
+   in `state/tuning.ts` filters on `block === 'main'`, and that filter is the
+   medical part. The spine block must never become timed intervals: the Big 3
+   are judged on position, and against a clock while fatigued the position
+   degrades into flexion, which is the mechanism this whole programme exists to
+   avoid. The warm-up is excluded too — intervals need more warm-up, not less.
+   Like rule 2, this lives in code rather than in the view, and is tested.
+
+   The timings (5 rounds; 35/25, 40/20, 45/15) come from a LitoBox card. Its
+   *movements* — burpees, mountain climbers, spiderman planks, jump lunges —
+   are not here and need sign-off under rule 1: five of the six are repeated
+   lumbar flexion, loaded rotation or landing impact, which is the exclusion
+   table almost item for item.
+
+7. **Progression thresholds differ by block.** Two clean sessions for main work,
    four for the spine block. Do not unify these.
 
 ---

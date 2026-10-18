@@ -32,8 +32,51 @@ export function Journey({ session, onExit }: { session: Session; onExit: () => v
     () => session.id === 'daily' && new Date().getHours() < 8,
   );
 
+  /*
+   * ── The circuit loop ──────────────────────────────────────────────────────
+   *
+   * In interval mode the main block is a circuit, not straight sets: you do one
+   * work bout of each exercise, then come back round. So advancing past the
+   * last interval exercise jumps back to the first one until every round is
+   * banked, and only then falls through to whatever follows — the mobility and
+   * spine work, which are never intervals and so are reached exactly once.
+   *
+   * The round is derived from what is logged rather than held in state: the
+   * fewest bouts banked by any exercise in the circuit is the round you are on.
+   * That survives a reload, a walk back, and redoing a bout, none of which a
+   * counter would.
+   */
+  const circuit = session.exercises
+    .map((ex, i) => ({ ex, i }))
+    .filter(({ ex }) => ex.tracking === 'interval');
+  const circuitFirst = circuit[0]?.i ?? -1;
+  const circuitLast = circuit.at(-1)?.i ?? -1;
+  const rounds = circuit[0]?.ex.sets ?? 0;
+
+  const bankedFor = useCallback(
+    (id: string) => (active?.sets ?? []).filter((s) => s.exerciseId === id).length,
+    [active?.sets],
+  );
+  const roundsDone = circuit.length
+    ? Math.min(...circuit.map(({ ex }) => bankedFor(ex.id)))
+    : 0;
+
   const go = useCallback(
     (next: number) => {
+      // Past the end of the circuit with rounds still owed: back to the top.
+      if (
+        circuit.length > 0 &&
+        stageIndex === circuitLast &&
+        next > circuitLast &&
+        roundsDone < rounds
+      ) {
+        setDirection('forward');
+        haptic(HAPTIC.transition);
+        setStageIndex(circuitFirst);
+        window.scrollTo({ top: 0 });
+        return;
+      }
+
       const clamped = Math.max(-1, Math.min(last, next));
       if (clamped === stageIndex) return;
       setDirection(clamped > stageIndex ? 'forward' : 'back');
@@ -47,7 +90,7 @@ export function Journey({ session, onExit }: { session: Session; onExit: () => v
       setStageIndex(clamped);
       window.scrollTo({ top: 0 });
     },
-    [last, session.exercises, setStageIndex, stageIndex],
+    [last, session.exercises, setStageIndex, stageIndex, circuit.length, circuitFirst, circuitLast, rounds, roundsDone],
   );
 
   // ── Swipe navigation. Ignores gestures that start on an interactive

@@ -1,6 +1,7 @@
 import type { Exercise, ExerciseTuning, Session } from '../types';
 import { EXERCISES, EXERCISE_BY_ID } from '../data/exercises';
 import { BLOCK_ORDER } from '../data/sessions';
+import { levelOf, MAX_ROUNDS, MIN_ROUNDS, type HiitConfig } from '../data/hiit';
 
 /*
  * User adjustments to the prescribed numbers, layered over the seed data at
@@ -291,6 +292,61 @@ export function resolveSession(session: Session, custom: Customisation): Session
     exercises.some((ex, i) => ex.id !== session.exercises[i]?.id);
 
   return tuneSession(changed ? { ...session, exercises } : session, custom.tuning);
+}
+
+/**
+ * Rewrite a session's main block as intervals.
+ *
+ * Each exercise becomes `rounds` work bouts of `work` seconds with `rest`
+ * between, which maps onto the existing set machinery exactly: one set per
+ * round, so SetPips counts rounds and logging is unchanged.
+ *
+ * The block filter is the medical part and it lives here rather than in the UI,
+ * for the same reason the spine block sorts last in code: a guard that only
+ * exists in a view is one refactor away from being gone.
+ *
+ *   - **Spine work is never converted.** The Big 3 are judged on position, and
+ *     against a clock while fatigued the position degrades into flexion — the
+ *     one mechanism this programme exists to avoid.
+ *   - **The warm-up is never converted.** Intervals need more warm-up, not a
+ *     compressed one.
+ */
+export function hiitSession(session: Session, config: HiitConfig | undefined): Session {
+  if (!config) return session;
+  const level = levelOf(config);
+  const rounds = Math.max(MIN_ROUNDS, Math.min(MAX_ROUNDS, Math.round(config.rounds)));
+
+  let converted = 0;
+  const exercises = session.exercises.map((ex) => {
+    if (ex.block !== 'main') return ex;
+    converted += 1;
+    return {
+      ...ex,
+      tracking: 'interval' as const,
+      sets: rounds,
+      // One work bout per round. The array stays an array — see CLAUDE.md
+      // rule 3 — even though every entry is the same here.
+      repScheme: Array.from({ length: rounds }, () => 1),
+      holdSeconds: level.work,
+      restSeconds: level.rest,
+      prescription: `${rounds} × ${level.work}s · ${level.rest}s rest`,
+    };
+  });
+
+  // Nothing in the main block means nothing to convert, and a session of only
+  // spine and mobility work must not claim to be a circuit.
+  if (converted === 0) return session;
+
+  return {
+    ...session,
+    exercises,
+    durationMin: Math.max(1, Math.round((rounds * converted * (level.work + level.rest)) / 60)),
+  };
+}
+
+/** How many exercises a circuit actually contains, for the round counter. */
+export function circuitLength(session: Session): number {
+  return session.exercises.filter((ex) => ex.tracking === 'interval').length;
 }
 
 /** The list a session edit starts from — stored if there is one, else the seed. */

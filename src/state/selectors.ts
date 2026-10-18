@@ -2,7 +2,7 @@ import type { AppState, CompletedSession, Exercise, LoggedSet, Session } from '.
 import { ROTATION, SESSION_BY_ID } from '../data/sessions';
 import { EXERCISE_BY_ID } from '../data/exercises';
 import { addDays, daysBetween, todayKey } from '../lib/time';
-import { resolveSession } from './tuning';
+import { hiitSession, resolveSession } from './tuning';
 
 /** Progression thresholds differ by block and must not be unified. */
 export const PROGRESSION_THRESHOLD = { main: 2, spine: 4 } as const;
@@ -30,7 +30,10 @@ export function nextSession(state: AppState): Session {
  */
 export function tunedSession(state: AppState, sessionId: string): Session | null {
   const session = SESSION_BY_ID[sessionId];
-  return session ? resolveSession(session, state) : null;
+  if (!session) return null;
+  // Interval mode applies after composition and tuning, so a swapped-in
+  // exercise becomes part of the circuit like any other.
+  return hiitSession(resolveSession(session, state), state.hiit[sessionId]);
 }
 
 export function dailyDoneOn(state: AppState, date: string): boolean {

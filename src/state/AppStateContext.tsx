@@ -12,6 +12,7 @@ import type {
   AppState,
   CompletedSession,
   ExerciseTuning,
+  HiitConfig,
   LoggedSet,
   Mode,
   Settings,
@@ -41,6 +42,7 @@ interface Api {
   /** Move an exercise within its block. Blocks themselves never move. */
   moveExercise: (sessionId: string, exerciseId: string, direction: -1 | 1) => void;
   resetComposition: (sessionId: string) => void;
+  setHiit: (sessionId: string, config: HiitConfig | null) => void;
 
   beginSession: (sessionId: string) => void;
   setStageIndex: (i: number) => void;
@@ -258,6 +260,16 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  /** Interval mode for one session. `null` puts it back to straight sets. */
+  const setHiit = useCallback((sessionId: string, config: HiitConfig | null) => {
+    setState((s) => {
+      const next = { ...s.hiit };
+      if (config === null) delete next[sessionId];
+      else next[sessionId] = config;
+      return { ...s, hiit: next };
+    });
+  }, []);
+
   const resetComposition = useCallback((sessionId: string) => {
     setState((s) => {
       const composition = { ...s.composition };
@@ -361,6 +373,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       removeExercise,
       moveExercise,
       resetComposition,
+      setHiit,
       beginSession,
       setStageIndex,
       logSet,

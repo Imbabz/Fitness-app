@@ -8,6 +8,7 @@ import { RepCounter } from '../trackers/RepCounter';
 import { HoldTimer } from '../trackers/HoldTimer';
 import { DurationTimer } from '../trackers/DurationTimer';
 import { DistanceLogger } from '../trackers/DistanceLogger';
+import { IntervalTimer } from '../trackers/IntervalTimer';
 import { RestTimer } from '../trackers/RestTimer';
 import type { TrackerProps } from '../trackers/shared';
 import { useApp } from '../state/AppStateContext';
@@ -18,6 +19,7 @@ const TRACKERS: Record<Exercise['tracking'], (p: TrackerProps) => JSX.Element> =
   hold: HoldTimer,
   duration: DurationTimer,
   distance: DistanceLogger,
+  interval: IntervalTimer,
 };
 
 export function Stage({
@@ -56,15 +58,26 @@ export function Stage({
     () => state.lastWeights[exercise.id] ?? null,
   );
   const [resting, setResting] = useState(false);
+  const [advanceAfterRest, setAdvanceAfterRest] = useState(false);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     setWeightKg(state.lastWeights[exercise.id] ?? null);
     setResting(false);
+    setAdvanceAfterRest(false);
     setOpen(false);
     // Weight is pre-filled per exercise, so it must re-read on stage change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exercise.id]);
+
+  /*
+   * A circuit visits each exercise once per round; straight sets stay on one
+   * exercise until its sets are done. That difference lives here, because
+   * otherwise "circuit mode" silently produces straight sets with a stopwatch:
+   * doing every round of the pulldown before touching the row is not a circuit,
+   * and that is exactly what this did before the distinction was drawn.
+   */
+  const isInterval = exercise.tracking === 'interval';
 
   const handleSetComplete = useCallback(
     (reps: number) => {
@@ -75,11 +88,20 @@ export function Stage({
         weightKg: exercise.loadTracked ? weightKg : null,
         completedAt: new Date().toISOString(),
       });
+
+      if (isInterval) {
+        // Rest, then move on to the next exercise in the circuit. Journey sends
+        // us back round to the top when rounds are still owed.
+        setResting(true);
+        setAdvanceAfterRest(true);
+        return;
+      }
+
       // Rest is suppressed after the final set — that flows straight into the
       // next-stage prompt instead.
       if (setIndex + 1 < exercise.sets) setResting(true);
     },
-    [exercise.id, exercise.loadTracked, exercise.sets, logSet, setIndex, weightKg],
+    [exercise.id, exercise.loadTracked, exercise.sets, isInterval, logSet, setIndex, weightKg],
   );
 
   const Tracker = TRACKERS[exercise.tracking];
@@ -248,7 +270,13 @@ export function Stage({
           exercise={exercise}
           nextSetIndex={setIndex}
           seconds={exercise.restSeconds || state.settings.restDefaultSeconds}
-          onDone={() => setResting(false)}
+          onDone={() => {
+            setResting(false);
+            if (advanceAfterRest) {
+              setAdvanceAfterRest(false);
+              onNext();
+            }
+          }}
         />
       )}
     </div>

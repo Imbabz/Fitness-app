@@ -1,4 +1,5 @@
-import type { AppState, Block, Mode } from '../types';
+import type { AppState, Block, HiitConfig, Mode } from '../types';
+import { HIIT_LEVELS, MAX_ROUNDS, MIN_ROUNDS } from '../data/hiit';
 
 const BLOCKS: Block[] = ['warmup', 'main', 'spine', 'mobility'];
 const SYNTH_IDS: string[] = ['rain', 'waves', 'wind', 'fire', 'drone'];
@@ -47,6 +48,7 @@ export function seedState(): AppState {
     lastWeights: {},
     tuning: {},
     composition: {},
+    hiit: {},
     streak: { current: 0, longest: 0, lastDailyDate: null },
     settings: {
       restDefaultSeconds: 90,
@@ -101,6 +103,25 @@ export function coerceState(raw: unknown): AppState {
 
   const settings = (o.settings ?? {}) as Partial<AppState['settings']>;
   const streak = (o.streak ?? {}) as Partial<AppState['streak']>;
+
+  /**
+   * sessionId → interval settings. A malformed entry is dropped rather than
+   * repaired: the session then runs as straight sets, which is the safe
+   * default in every sense.
+   */
+  function coerceHiit(v: unknown): Record<string, HiitConfig> {
+    if (typeof v !== 'object' || v === null) return {};
+    const out: Record<string, HiitConfig> = {};
+    for (const [id, raw] of Object.entries(v)) {
+      if (typeof raw !== 'object' || raw === null) continue;
+      const c = raw as Partial<HiitConfig>;
+      if (!HIIT_LEVELS.some((l) => l.id === c.level)) continue;
+      const rounds = typeof c.rounds === 'number' ? Math.round(c.rounds) : NaN;
+      if (!Number.isFinite(rounds) || rounds < MIN_ROUNDS || rounds > MAX_ROUNDS) continue;
+      out[id] = { level: c.level as HiitConfig['level'], rounds };
+    }
+    return out;
+  }
 
   /** exerciseId → repScheme, keeping only entries that are usable rep arrays. */
   function coerceTargets(v: unknown): Record<string, number[]> | null {
@@ -195,6 +216,7 @@ export function coerceState(raw: unknown): AppState {
     lastWeights: rec(o.lastWeights),
     tuning: coerceTuningMap(o.tuning),
     composition: readComposition(o),
+    hiit: coerceHiit(o.hiit),
     streak: {
       current: typeof streak.current === 'number' ? streak.current : 0,
       longest: typeof streak.longest === 'number' ? streak.longest : 0,

@@ -9,6 +9,7 @@ import { haptic, HAPTIC } from '../lib/haptics';
 import { painFlagFollowUp } from '../state/selectors';
 import { TuningSheet } from './TuningSheet';
 import { AddSheet } from './AddSheet';
+import { HiitPanel } from './HiitPanel';
 
 const BLOCK_DOT: Record<Block, string> = {
   warmup: 'bg-warmup',
@@ -150,6 +151,8 @@ export function Trailhead({
       </div>
 
       {flagged && <PainFlagBanner flaggedOn={flagged.date} />}
+
+      <HiitPanel session={session} />
 
       <div className="mt-7">
         <div className="mb-3 flex gap-[3px]">
