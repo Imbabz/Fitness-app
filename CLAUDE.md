@@ -285,6 +285,14 @@ Things that have already gone wrong once here:
 - **Counter-rotating SVG groups with different keyframe timings.** The Jefferson
   curl's arms cancel the spine rotation only if all three groups share identical
   percentages and easing.
+- **A base rule out-specifying the rules it is a base for.** `.ridge-anim
+  [class^='ra-']` is (0,2,0) and every per-animation `.ra-*` rule is (0,1,0), so
+  for a long time *every* `transform-origin` in `animations.css` was dead and
+  every figure rotated about the viewBox centre instead of its joint. It looked
+  like thirty slightly-wrong animations rather than one wrong line. The base
+  selector is now wrapped in `:where()` so it contributes no specificity —
+  **keep it that way**, and measure a joint's computed `transform-origin` in the
+  browser rather than trusting that the rule applies.
 - **`toISOString()` for a date key.** It is UTC, and it silently shifts the date
   for an evening session west of GMT. Use `todayKey()` from `lib/time.ts`.
 - **`text-base` is a colour, not a size.** `--c-base` is the page background.

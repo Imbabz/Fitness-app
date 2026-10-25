@@ -1,4 +1,5 @@
 import type { Exercise } from '../types';
+import { CIRCUIT_EXERCISES } from './circuit';
 
 /*
  * ─────────────────────────────────────────────────────────────────────────────
@@ -752,6 +753,35 @@ export const EXERCISES: Exercise[] = [
     animation: 'nerveglide',
     loadTracked: false,
   },
+  {
+    id: 'd-cat-cow',
+    name: 'Cat-cow',
+    block: 'mobility',
+    prescription: '2 × 8 cycles · 3s each way',
+    tracking: 'reps',
+    sets: 2,
+    repScheme: [8, 8],
+    tempo: { down: 3, up: 3 },
+    restSeconds: 30,
+    execution:
+      'On hands and knees, hands under the shoulders. Round the back towards the ceiling as you ' +
+      'breathe out, dropping the head; then reverse into a gentle arch as you breathe in, lifting ' +
+      'the chest and the tailbone. Move through the middle of the range, not to either end — this ' +
+      'is motion, not a stretch, and you should never be pulling at anything. Eight cycles, then ' +
+      'stop: more than that stops adding anything.',
+    cue: 'Through the range, never to the end of it.',
+    why:
+      'McGill prescribes the cat-camel as a motion exercise rather than a stretch, and explicitly ' +
+      'as the thing done first — a few cycles reduce spinal friction so the Big 3 that follow are ' +
+      'performed on a spine that moves freely. Quadruped is the point: on hands and knees the ' +
+      'discs carry almost none of your weight, so this is the one place rounding the back is ' +
+      'genuinely unloaded, which is exactly why crunches are excluded and this is not. Going to ' +
+      'end range turns it back into the flexion being avoided, hence the cue and the cap at eight.',
+    animation: 'catcow',
+    loadTracked: false,
+    alternates: ['d-cobra', 'd-down-dog'],
+  },
+  jeffersonCurl('d-jefferson'),
 
   // ── Gym · shared alternates ───────────────────────────────────────────────
   //
@@ -1128,6 +1158,14 @@ export const EXERCISES: Exercise[] = [
   },
 ];
 
+/*
+ * Every exercise resolvable by id — the gym library plus the circuit pool.
+ *
+ * `EXERCISES` stays the near-frozen programme and is what the pickers offer;
+ * the circuit pool is only offered where a circuit is being built. But a logged
+ * set, a tuning entry and a stored composition are all just ids, so the lookup
+ * has to cover both or a finished circuit would not render its own history.
+ */
 export const EXERCISE_BY_ID: Record<string, Exercise> = Object.fromEntries(
-  EXERCISES.map((e) => [e.id, e]),
+  [...EXERCISES, ...CIRCUIT_EXERCISES].map((e) => [e.id, e]),
 );

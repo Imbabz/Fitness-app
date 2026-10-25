@@ -366,6 +366,33 @@ const birddog = ({ size, className }: AnimProps) => (
   </Figure>
 );
 
+/*
+ * Cat-cow. Hands and knees are planted, so the shoulders and hips are fixed and
+ * the only genuinely free ends are the head and the tailbone — which is also
+ * where the movement actually reads. Both rotate about their own joint, so
+ * nothing detaches, and they share keyframe percentages so the round and the
+ * arch arrive together rather than chasing each other.
+ *
+ * The loop rests on the rounded pose and passes through flat to the arch at
+ * 50%, which is both the pose worth freezing on for reduced motion and the half
+ * of the movement that is harder to recognise from a still.
+ */
+const catCow = ({ size, className }: AnimProps) => (
+  <Figure size={size} loop={3} className={className}>
+    <Ground />
+    <line x1={22} y1={38} x2={44} y2={38} />
+    <line x1={22} y1={38} x2={22} y2={54} />
+    <line x1={44} y1={38} x2={44} y2={54} />
+    <g className="ra-catcow-neck">
+      <line x1={22} y1={38} x2={14} y2={34} />
+      <Head cx={10.5} cy={32} r={4.5} />
+    </g>
+    <g className="ra-catcow-tail">
+      <line x1={44} y1={38} x2={52} y2={36} />
+    </g>
+  </Figure>
+);
+
 const wallslide = ({ size, className }: AnimProps) => (
   <Figure size={size} loop={3} className={className}>
     <Ground />
@@ -549,6 +576,7 @@ export const ANIMATIONS: Record<string, (p: AnimProps) => ReactNode> = {
   deadbug,
   plank,
   birddog,
+  catcow: catCow,
   wallslide,
   standext: standExt,
   downdog: downDog,

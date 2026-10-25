@@ -95,6 +95,29 @@ commit** — a mismatch shows up as a limb pivoting around empty space.
 `infinite` are all applied by the `[class^='ra-']` base rule. Your class only
 needs an origin and an `animation-name`.
 
+### Check the origin actually applied
+
+The base rule is `.ridge-anim :where([class^='ra-'])`. The `:where()` is
+load-bearing: without it the base selector is (0,2,0), your `.ra-my-limb` rule
+is (0,1,0), and **the base wins** — your origin is silently discarded and the
+figure rotates about the viewBox centre. That shipped once, across every
+animation in the app, and it reads as thirty subtly-wrong figures rather than
+one wrong line, which is why it survived so long.
+
+A rotation about the wrong centre still looks like *a* movement, so eyeballing
+it does not catch this. Measure instead:
+
+```js
+getComputedStyle(document.querySelector('.ra-my-limb')).transformOrigin
+// → "22px 38px", not "32px 32px"
+```
+
+The stronger check is that the joint does not move. Take the group's proximal
+point through `getCTM()` at several phases of the loop and confirm it lands on
+the same spot as the static bone it attaches to; a non-zero drift is the origin
+being wrong, and the drift is `2 · d · sin(θ/2)` where `d` is how far off the
+origin is.
+
 Positive rotation is **clockwise** in SVG. Sketch the endpoint arithmetic before
 committing to an angle — it is quicker than three rounds of screenshots.
 
@@ -159,7 +182,8 @@ to skip step 2.
 
 - [ ] Legible at 28px, not just 140px
 - [ ] Every animated group is rigid; no endpoint detaches at any point in the loop
-- [ ] `transform-origin` matches the drawn joint coordinate
+- [ ] `transform-origin` matches the drawn joint coordinate — and actually
+      applies; see below
 - [ ] Counter-rotating groups share keyframe percentages exactly
 - [ ] Loop duration in range for the mode (day 1.8–2.4s, night 2.8–3.2s)
 - [ ] `Ground` present for floor-based movements

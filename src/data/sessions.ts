@@ -96,13 +96,23 @@ export const SESSIONS: Session[] = [
     mode: 'night',
     title: 'Restore',
     subtitle: 'McGill Big 3 · every day',
-    durationMin: 13,
+    durationMin: 20,
+    // Cat-cow first: McGill's cat-camel is a motion exercise done BEFORE the
+    // Big 3, to get the spine moving freely rather than to stretch it.
+    //
+    // The Jefferson curl is in the spine block, so `pick()` sorts it last here
+    // exactly as it does in the gym sessions — and the evening is the right
+    // time for it. Discs rehydrate overnight and are at their most pressurised
+    // in the morning (see MorningWarning); by the end of the day they are least
+    // vulnerable to flexion, which is when graded loaded flexion belongs.
     exercises: pick([
+      'd-cat-cow',
       'd-cobra',
       'd-deadbug',
       'd-side-plank',
       'd-bird-dog',
       'd-wall-glides',
+      'd-jefferson',
     ]),
   },
 ];

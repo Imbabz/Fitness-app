@@ -7,7 +7,17 @@
  * origin here in the same commit — a mismatch shows up as a limb detaching.
  */
 
-.ridge-anim [class^='ra-'] {
+/*
+ * Zero specificity on purpose. `.ridge-anim [class^='ra-']` is (0,2,0), which
+ * silently beat every per-animation `.ra-*` rule below — all of them are
+ * (0,1,0) — so every stated transform-origin in this file was dead and every
+ * figure rotated about the viewBox centre instead of its joint. `:where()`
+ * contributes nothing to specificity, so the joint origins now win.
+ *
+ * Keep the `:where()`. Without it the defaults here override the specifics,
+ * which is the opposite of what a base rule is for.
+ */
+:where(.ridge-anim) :where([class^='ra-']) {
   transform-box: view-box;
   transform-origin: 32px 32px;
   animation-duration: var(--loop, 2.2s);
@@ -784,5 +794,35 @@
   45%,
   60% {
     transform: translateY(7px) rotate(-34deg);
+  }
+}
+
+/* Cat-cow. Opposite signs because the neck points left-and-up and the tail
+   right-and-up, so the same visual direction is the other way round in SVG's
+   clockwise-positive rotation. Percentages are identical on purpose. */
+.ra-catcow-neck {
+  transform-origin: 22px 38px;
+  animation-name: ra-catcow-neck;
+}
+.ra-catcow-tail {
+  transform-origin: 44px 38px;
+  animation-name: ra-catcow-tail;
+}
+@keyframes ra-catcow-neck {
+  0%,
+  100% {
+    transform: rotate(-55deg);
+  }
+  50% {
+    transform: rotate(22deg);
+  }
+}
+@keyframes ra-catcow-tail {
+  0%,
+  100% {
+    transform: rotate(50deg);
+  }
+  50% {
+    transform: rotate(-45deg);
   }
 }
