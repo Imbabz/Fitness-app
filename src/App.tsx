@@ -1,11 +1,20 @@
 import { Component, useMemo, useState, type ReactNode } from 'react';
-import { History as HistoryIcon, House, Moon, Settings as SettingsIcon, Sun } from 'lucide-react';
-import type { Session, View } from './types';
+import {
+  History as HistoryIcon,
+  House,
+  Moon,
+  Repeat,
+  Settings as SettingsIcon,
+  Sun,
+} from 'lucide-react';
+import type { Session, View, Workout } from './types';
 import { AppStateProvider, useApp } from './state/AppStateContext';
 import { tunedSession } from './state/selectors';
 import { Home } from './screens/Home';
 import { History } from './screens/History';
 import { Settings } from './screens/Settings';
+import { Circuits } from './screens/Circuits';
+import { Builder } from './screens/Builder';
 import { Journey } from './journey/Journey';
 import { haptic, HAPTIC } from './lib/haptics';
 import { clearState } from './state/store';
@@ -28,6 +37,10 @@ function Shell() {
   const [sessionId, setSessionId] = useState<string | null>(
     () => state.activeSession?.sessionId ?? null,
   );
+  // `undefined` is "not building"; a Workout or null is "building", the Workout
+  // being the one under edit. Two states in one value, so the builder cannot be
+  // open and editing nothing by accident.
+  const [building, setBuilding] = useState<Workout | null | undefined>(undefined);
   const session = useMemo(
     () => (sessionId ? tunedSession(state, sessionId) : null),
     [state, sessionId],
@@ -47,6 +60,12 @@ function Shell() {
       </main>
     );
   }
+
+  // Building owns the screen the way a session does. Its save bar is pinned to
+  // the bottom, and the nav bar is pinned there too and sits above it — so with
+  // the nav up you tap Circuits when you meant Save. The builder has its own
+  // way out, so the nav goes rather than the save bar moving.
+  const focused = view === 'builder' && building !== undefined;
 
   const open = (s: Session) => {
     haptic(HAPTIC.transition);
@@ -72,16 +91,34 @@ function Shell() {
       </header>
 
       <main className="flex-1 px-5 pb-28 pt-3">
-        {view === 'home' && <Home onOpen={open} />}
+        {view === 'home' && <Home onOpen={open} onCircuits={() => setView('builder')} />}
         {view === 'history' && <History />}
         {view === 'settings' && <Settings />}
+        {view === 'builder' &&
+          (building !== undefined ? (
+            <Builder
+              editing={building ?? undefined}
+              onCancel={() => setBuilding(undefined)}
+              onDone={() => setBuilding(undefined)}
+            />
+          ) : (
+            <Circuits
+              onOpen={open}
+              onBuild={(w) => setBuilding(w ?? null)}
+              onBack={() => setView('home')}
+            />
+          ))}
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-md border-t border-line/50 bg-base/90 px-5 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-md">
+      <nav
+        hidden={focused}
+        className="fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-md border-t border-line/50 bg-base/90 px-5 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-md"
+      >
         <div className="flex justify-around">
           {(
             [
               ['home', House, 'Home'],
+              ['builder', Repeat, 'Circuits'],
               ['history', HistoryIcon, 'History'],
               ['settings', SettingsIcon, 'Settings'],
             ] as const

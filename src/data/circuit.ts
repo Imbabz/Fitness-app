@@ -76,6 +76,38 @@ export const PATTERN_ORDER: Pattern[] = [
 ];
 
 export const CIRCUIT_EXERCISES: CircuitExercise[] = [
+  // ── Warm-up ───────────────────────────────────────────────────────────────
+  //
+  // Prepended to every circuit by `workoutSession()` and not offered in the
+  // picker, which is deliberate. Interval work needs MORE warm-up than straight
+  // sets, not less — the first round is the one performed on the coldest tissue
+  // and it is also the one you go hardest at. Making it structural rather than
+  // optional is the same choice as sorting the spine block last in code.
+  {
+    id: 'x-warmup',
+    name: 'Easy march and arm swings',
+    block: 'warmup',
+    prescription: '4 min easy',
+    tracking: 'duration',
+    sets: 1,
+    repScheme: [1],
+    durationSeconds: 240,
+    restSeconds: 0,
+    execution:
+      'March on the spot at a conversational pace, swinging the arms forward and back and then ' +
+      'across the body. Add a few slow squats to depth and a few gentle hip circles as you go. ' +
+      'Nothing held, nothing forced, nothing near end range.',
+    cue: 'Easy. This is not the workout.',
+    why:
+      'Four minutes of circulation raises tissue temperature before anything is done at speed. ' +
+      'It matters more in a circuit than in straight sets: the first round is performed on the ' +
+      'coldest tissue and is also the one you go hardest at, which is the wrong way round.',
+    animation: 'walk',
+    loadTracked: false,
+    equipment: ['bodyweight'],
+    pattern: 'conditioning',
+  },
+
   // ── Legs ──────────────────────────────────────────────────────────────────
   {
     id: 'x-squat',
@@ -743,16 +775,27 @@ export const CIRCUIT_BY_ID: Record<string, CircuitExercise> = Object.fromEntries
   CIRCUIT_EXERCISES.map((e) => [e.id, e]),
 );
 
+/** The warm-up is structural, not a choice, so it is never offered as one. */
+export const CIRCUIT_WARMUP = 'x-warmup';
+
+/** The stations you can actually pick between. */
+export const CIRCUIT_STATIONS: CircuitExercise[] = CIRCUIT_EXERCISES.filter(
+  (e) => e.block === 'main',
+);
+
 /** Grouped for the builder's picker, in pattern order. */
-export function circuitByPattern(): Array<{ pattern: Pattern; exercises: CircuitExercise[] }> {
+export function circuitByPattern(
+  available?: Equipment[],
+): Array<{ pattern: Pattern; exercises: CircuitExercise[] }> {
+  const pool = available ? circuitFor(available) : CIRCUIT_STATIONS;
   return PATTERN_ORDER.map((pattern) => ({
     pattern,
-    exercises: CIRCUIT_EXERCISES.filter((e) => e.pattern === pattern),
+    exercises: pool.filter((e) => e.pattern === pattern),
   })).filter((g) => g.exercises.length > 0);
 }
 
 /** Everything doable with the kit to hand. `bodyweight` is always available. */
 export function circuitFor(available: Equipment[]): CircuitExercise[] {
   const kit = new Set<Equipment>([...available, 'bodyweight']);
-  return CIRCUIT_EXERCISES.filter((e) => e.equipment.some((need) => kit.has(need)));
+  return CIRCUIT_STATIONS.filter((e) => e.equipment.some((need) => kit.has(need)));
 }

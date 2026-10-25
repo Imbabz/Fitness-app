@@ -1,5 +1,7 @@
-import type { Block, Exercise, Session } from '../types';
+import type { Block, Exercise, Session, Workout } from '../types';
 import { EXERCISE_BY_ID } from './exercises';
+import { CIRCUIT_WARMUP } from './circuit';
+import { formatOf, specOf } from './hiit';
 
 /*
  * Session composition. The exercise content itself lives in exercises.ts —
@@ -134,4 +136,40 @@ export function blocksOf(session: Session): Block[] {
     if (!seen.includes(ex.block)) seen.push(ex.block);
   }
   return seen;
+}
+
+
+/**
+ * A circuit, as a Session.
+ *
+ * Everything downstream — the journey, the trailhead, tuning, history — works
+ * on Sessions, so a workout becomes one here rather than growing a parallel
+ * code path. `pick()` does the block sort, which means a station that is
+ * somehow not main-block work still cannot jump ahead of the spine block.
+ *
+ * The warm-up is prepended and is not one of the stored ids: it is structural,
+ * for the reason given in circuit.ts. Unknown ids are dropped rather than
+ * thrown on, because a stored circuit must survive the library changing under
+ * it.
+ */
+export function workoutSession(workout: Workout): Session | null {
+  const stations = workout.exerciseIds.filter((id) => EXERCISE_BY_ID[id]);
+  if (stations.length === 0) return null;
+
+  const spec = specOf(workout.config);
+  const format = formatOf(workout.config);
+  const detail = spec.timed
+    ? `${spec.rounds} × ${spec.work}s · ${spec.rest}s rest`
+    : `${spec.rounds} rounds · ${spec.rest}s rest`;
+
+  return {
+    id: workout.id,
+    mode: 'day',
+    title: workout.name,
+    subtitle: `${format.label} · ${detail}`,
+    // Replaced by hiitSession() once the config is applied; this is only what
+    // shows before the circuit is resolved.
+    durationMin: Math.max(1, Math.round((spec.rounds * stations.length * (spec.work + spec.rest)) / 60)),
+    exercises: pick([CIRCUIT_WARMUP, ...stations]),
+  };
 }

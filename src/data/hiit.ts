@@ -34,10 +34,15 @@ export interface HiitLevelSpec {
   rest: number;
 }
 
+/*
+ * The labels describe the setting, not the person using it. "Beginner" on a
+ * rehab app reads as a verdict on you, and the only thing actually changing
+ * here is how long the rest is.
+ */
 export const HIIT_LEVELS: HiitLevelSpec[] = [
-  { id: 'beginner', label: 'Débutant', work: 35, rest: 25 },
-  { id: 'intermediate', label: 'Intermédiaire', work: 40, rest: 20 },
-  { id: 'advanced', label: 'Avancé', work: 45, rest: 15 },
+  { id: 'beginner', label: 'Easier', work: 35, rest: 25 },
+  { id: 'intermediate', label: 'Standard', work: 40, rest: 20 },
+  { id: 'advanced', label: 'Harder', work: 45, rest: 15 },
 ];
 
 export const HIIT_LEVEL_BY_ID: Record<string, HiitLevelSpec> = Object.fromEntries(

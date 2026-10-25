@@ -1,5 +1,6 @@
-import type { AppState, CompletedSession, Exercise, LoggedSet, Session } from '../types';
-import { ROTATION, SESSION_BY_ID } from '../data/sessions';
+import type { AppState, CompletedSession, Exercise, LoggedSet, Session, Workout } from '../types';
+import { ROTATION, SESSION_BY_ID, workoutSession } from '../data/sessions';
+import { PRESETS, PRESET_BY_ID } from '../data/presets';
 import { EXERCISE_BY_ID } from '../data/exercises';
 import { addDays, daysBetween, todayKey } from '../lib/time';
 import { hiitSession, resolveSession } from './tuning';
@@ -28,7 +29,25 @@ export function nextSession(state: AppState): Session {
  * The single way to read a session. Everything user-facing goes through here so
  * an adjustment shows up in the preview, the stages and the trackers alike.
  */
+export function workoutById(state: AppState, id: string): Workout | undefined {
+  return PRESET_BY_ID[id] ?? state.workouts.find((w) => w.id === id);
+}
+
+/** Presets first, then what the user built, newest last. */
+export function allWorkouts(state: AppState): Workout[] {
+  return [...PRESETS, ...state.workouts];
+}
+
 export function tunedSession(state: AppState, sessionId: string): Session | null {
+  const workout = workoutById(state, sessionId);
+  if (workout) {
+    const built = workoutSession(workout);
+    if (!built) return null;
+    // A circuit carries its own format, and the panel's edits override it —
+    // so tuning one does not have to mutate the workout to take effect.
+    return hiitSession(resolveSession(built, state), state.hiit[sessionId] ?? workout.config);
+  }
+
   const session = SESSION_BY_ID[sessionId];
   if (!session) return null;
   // Interval mode applies after composition and tuning, so a swapped-in

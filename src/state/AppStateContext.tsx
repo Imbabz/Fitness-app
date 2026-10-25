@@ -16,6 +16,7 @@ import type {
   LoggedSet,
   Mode,
   Settings,
+  Workout,
 } from '../types';
 import { applyModeExpiry, flushState, loadState, saveState, seedState } from './store';
 import { computeStreak, tunedSession } from './selectors';
@@ -43,6 +44,10 @@ interface Api {
   moveExercise: (sessionId: string, exerciseId: string, direction: -1 | 1) => void;
   resetComposition: (sessionId: string) => void;
   setHiit: (sessionId: string, config: HiitConfig | null) => void;
+
+  /** Create or replace a circuit. Returns its id. */
+  saveWorkout: (draft: Omit<Workout, 'id' | 'createdAt'> & { id?: string }) => string;
+  deleteWorkout: (id: string) => void;
 
   beginSession: (sessionId: string) => void;
   setStageIndex: (i: number) => void;
@@ -260,6 +265,50 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  /*
+   * Circuits.
+   *
+   * Presets are seed data and never land here — `saveWorkout` refuses a
+   * preset id rather than letting a stored copy shadow one permanently. An
+   * edit to a preset is therefore a new circuit of your own, which is the
+   * behaviour you want anyway.
+   */
+  const saveWorkout = useCallback(
+    (draft: Omit<Workout, 'id' | 'createdAt'> & { id?: string }) => {
+      const id =
+        draft.id && !draft.id.startsWith('preset-')
+          ? draft.id
+          : `w-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+      setState((s) => {
+        const workout: Workout = {
+          ...draft,
+          id,
+          builtIn: undefined,
+          createdAt: s.workouts.find((w) => w.id === id)?.createdAt ?? new Date().toISOString(),
+        };
+        const exists = s.workouts.some((w) => w.id === id);
+        return {
+          ...s,
+          workouts: exists ? s.workouts.map((w) => (w.id === id ? workout : w)) : [...s.workouts, workout],
+        };
+      });
+      return id;
+    },
+    [],
+  );
+
+  const deleteWorkout = useCallback((id: string) => {
+    setState((s) => {
+      // Its tuning and composition go with it, or they would sit in the store
+      // for ever keyed to something that no longer exists.
+      const hiit = { ...s.hiit };
+      const composition = { ...s.composition };
+      delete hiit[id];
+      delete composition[id];
+      return { ...s, workouts: s.workouts.filter((w) => w.id !== id), hiit, composition };
+    });
+  }, []);
+
   /** Interval mode for one session. `null` puts it back to straight sets. */
   const setHiit = useCallback((sessionId: string, config: HiitConfig | null) => {
     setState((s) => {
@@ -374,6 +423,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       moveExercise,
       resetComposition,
       setHiit,
+      saveWorkout,
+      deleteWorkout,
       beginSession,
       setStageIndex,
       logSet,

@@ -8,7 +8,7 @@ export type Block = 'warmup' | 'main' | 'spine' | 'mobility';
 
 export type TrackingMode = 'reps' | 'hold' | 'distance' | 'duration' | 'interval';
 
-export type View = 'home' | 'session' | 'routine' | 'history' | 'settings';
+export type View = 'home' | 'session' | 'routine' | 'history' | 'settings' | 'builder';
 
 export interface Exercise {
   id: string;
@@ -68,8 +68,36 @@ export interface Exercise {
 
 export type { HiitConfig };
 
+/**
+ * A circuit: an ordered list of stations and the format to run them in.
+ *
+ * Stored rather than seeded, because the whole point is building your own. The
+ * built-in presets use the same shape but live in data/presets.ts and are never
+ * written to state, so they cannot be edited away by accident.
+ *
+ * Only ids are stored. The exercises themselves resolve through
+ * EXERCISE_BY_ID at render time, so an entry that stops existing disappears
+ * from the circuit rather than corrupting it.
+ */
+export interface Workout {
+  id: string;
+  name: string;
+  /** One line under the name in the list. */
+  note?: string;
+  exerciseIds: string[];
+  config: HiitConfig;
+  /** A preset. Not stored, not editable, not deletable. */
+  builtIn?: boolean;
+  createdAt?: string;
+}
+
 export interface Session {
-  id: 'A' | 'B' | 'C' | 'daily';
+  /**
+   * 'A' | 'B' | 'C' | 'daily' for the seeded programme, or a workout's id for a
+   * circuit. Kept wide so a circuit is a Session like any other and the whole
+   * journey, history and tuning pipeline works on it unchanged.
+   */
+  id: string;
   mode: Mode;
   title: string;
   subtitle: string;
@@ -200,6 +228,11 @@ export interface AppState {
    * data/hiit.ts for why the spine block and the warm-up are never touched.
    */
   hiit: Record<string, HiitConfig>;
+  /**
+   * Circuits built in the app. The presets are not in here — they are seed
+   * data — so this list is exactly what the user made and nothing else.
+   */
+  workouts: Workout[];
   streak: { current: number; longest: number; lastDailyDate: string | null };
   settings: Settings;
 }

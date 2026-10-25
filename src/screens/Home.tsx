@@ -1,4 +1,4 @@
-import { ArrowRight, Check, Clock, Flame, Moon, TriangleAlert } from 'lucide-react';
+import { ArrowRight, Check, Clock, Flame, Moon, Repeat, TriangleAlert } from 'lucide-react';
 import type { Session } from '../types';
 import { useApp } from '../state/AppStateContext';
 import { GYM_SESSIONS } from '../data/sessions';
@@ -11,7 +11,13 @@ import { ExerciseAnimation } from '../animations/registry';
  * the routine is a chip; at night that inverts. The structure is shared so the
  * mode transition is genuinely a change of light, not a different screen.
  */
-export function Home({ onOpen }: { onOpen: (session: Session) => void }) {
+export function Home({
+  onOpen,
+  onCircuits,
+}: {
+  onOpen: (session: Session) => void;
+  onCircuits: () => void;
+}) {
   const { state, setMode } = useApp();
   const night = state.mode === 'night';
   const upNext = nextSession(state);
@@ -113,6 +119,23 @@ export function Home({ onOpen }: { onOpen: (session: Session) => void }) {
           </p>
         </div>
       )}
+
+      <button
+        type="button"
+        onClick={onCircuits}
+        className="flex w-full items-center gap-3 rounded-card border border-line/60 bg-surface p-3.5 text-left active:bg-raised"
+      >
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-raised text-muted">
+          <Repeat size={15} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-medium text-ink">Circuits</span>
+          <span className="block text-xs text-faint">
+            Rounds instead of straight sets — bodyweight, bands, the bars
+          </span>
+        </span>
+        <ArrowRight size={17} className="shrink-0 text-faint" />
+      </button>
 
       <section>
         <h2 className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-faint">

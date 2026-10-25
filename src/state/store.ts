@@ -49,6 +49,7 @@ export function seedState(): AppState {
     tuning: {},
     composition: {},
     hiit: {},
+    workouts: [],
     streak: { current: 0, longest: 0, lastDailyDate: null },
     settings: {
       restDefaultSeconds: 90,
@@ -126,6 +127,46 @@ export function coerceState(raw: unknown): AppState {
         ? (c.format as HiitConfig['format'])
         : 'intervals';
       out[id] = { format, level: c.level as HiitConfig['level'], rounds };
+    }
+    return out;
+  }
+
+  /**
+   * Circuits the user built. An entry is kept only if it still names at least
+   * one exercise that exists — a circuit of nothing is not recoverable, and
+   * leaving it in the list would make a row that cannot be opened.
+   *
+   * Preset ids are rejected outright: presets are seed data, and a stored copy
+   * under the same id would shadow the real one for good.
+   */
+  function coerceWorkouts(v: unknown): AppState['workouts'] {
+    if (!Array.isArray(v)) return [];
+    const out: AppState['workouts'] = [];
+    const taken = new Set<string>();
+    for (const raw of v) {
+      if (typeof raw !== 'object' || raw === null) continue;
+      const w = raw as Record<string, unknown>;
+      const id = typeof w.id === 'string' ? w.id : '';
+      if (!id || id.startsWith('preset-') || taken.has(id)) continue;
+      const name = typeof w.name === 'string' && w.name.trim() ? w.name.trim().slice(0, 60) : '';
+      if (!name) continue;
+      const ids = Array.isArray(w.exerciseIds)
+        ? w.exerciseIds.filter(
+            (x): x is string => typeof x === 'string' && Boolean(EXERCISE_BY_ID[x]),
+          )
+        : [];
+      if (ids.length === 0) continue;
+      const config = coerceHiit({ one: w.config }).one;
+      if (!config) continue;
+      taken.add(id);
+      out.push({
+        id,
+        name,
+        note: typeof w.note === 'string' ? w.note.slice(0, 80) : undefined,
+        exerciseIds: [...new Set(ids)],
+        config,
+        createdAt: typeof w.createdAt === 'string' ? w.createdAt : undefined,
+      });
     }
     return out;
   }
@@ -224,6 +265,7 @@ export function coerceState(raw: unknown): AppState {
     tuning: coerceTuningMap(o.tuning),
     composition: readComposition(o),
     hiit: coerceHiit(o.hiit),
+    workouts: coerceWorkouts(o.workouts),
     streak: {
       current: typeof streak.current === 'number' ? streak.current : 0,
       longest: typeof streak.longest === 'number' ? streak.longest : 0,
