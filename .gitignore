@@ -5,3 +5,7 @@ dist-ssr
 .DS_Store
 .vite
 *.tsbuildinfo
+
+# Screenshots are review material, not part of the app.
+*.png
+!public/**/*.png
