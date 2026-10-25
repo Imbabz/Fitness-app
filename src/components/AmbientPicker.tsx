@@ -412,7 +412,7 @@ function Group({ title, hint, children }: { title: string; hint?: string; childr
   return (
     <section className="pt-1">
       <div className="mb-1.5 flex items-baseline justify-between gap-2 px-1">
-        <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-faint">{title}</h3>
+        <h3 className="text-[11px] font-semibold uppercase ridge-label text-faint">{title}</h3>
         {hint && <span className="truncate text-[11px] text-faint/80">{hint}</span>}
       </div>
       {children}

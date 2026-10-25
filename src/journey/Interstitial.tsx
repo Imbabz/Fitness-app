@@ -54,7 +54,7 @@ export function Interstitial({ block, onDismiss }: { block: Block; onDismiss: ()
     >
       <span
         className={[
-          'text-xs font-semibold uppercase tracking-[0.25em]',
+          'text-xs font-semibold uppercase ridge-label',
           spine ? 'text-spine' : 'text-accent',
         ].join(' ')}
       >

@@ -216,7 +216,7 @@ export function Library() {
 
       {[...byCategory.entries()].map(([category, tracks]) => (
         <section key={category}>
-          <h3 className="mb-1.5 px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-faint">
+          <h3 className="mb-1.5 px-1 text-[11px] font-semibold uppercase ridge-label text-faint">
             {category}
           </h3>
           <div className="space-y-1.5">

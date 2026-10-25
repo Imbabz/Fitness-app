@@ -137,6 +137,26 @@
     letter-spacing: var(--tracking-title);
   }
 
+  /*
+   * Screen rhythm. Day is dense and quick, night has air — both from tokens,
+   * so no component branches on the mode to decide how much room it gets.
+   */
+  .ridge-rhythm > * + * {
+    margin-top: var(--gap-screen);
+  }
+  .ridge-pad {
+    padding: var(--pad-card);
+  }
+  /* Micro-labels. Wider at night, where everything is slower to read anyway. */
+  .ridge-label {
+    letter-spacing: var(--tracking-label);
+  }
+  /* Numbers are the sporty part of the interface, so they line up and stay put. */
+  .ridge-metric {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
   /* Vertical rhythm inside a stage. Night breathes wider than day. */
   .ridge-stack {
     display: flex;

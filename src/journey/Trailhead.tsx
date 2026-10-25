@@ -181,7 +181,7 @@ export function Trailhead({
           )}
         </div>
 
-        <ul ref={listRef} className="space-y-2">
+        <ul ref={listRef} className="space-y-1.5">
           {session.exercises.map((ex, i) => {
             const dragging = ex.id === dragId;
             return (
@@ -205,7 +205,7 @@ export function Trailhead({
                   onClick={() => setEditing(ex)}
                   aria-label={`Adjust ${ex.name}`}
                   className={[
-                    'flex w-full items-center gap-3 rounded-card border py-2.5 pl-3 pr-12 text-left transition-colors active:bg-raised',
+                    'flex w-full items-center gap-2.5 rounded-card border py-2 pl-2.5 pr-11 text-left transition-colors active:bg-raised',
                     ex.block === 'spine'
                       ? 'border-spine/40 bg-spine/[0.07]'
                       : 'border-line/60 bg-surface',
@@ -213,18 +213,22 @@ export function Trailhead({
                   ].join(' ')}
                 >
                   <span
-                    className={`h-8 w-1 shrink-0 rounded-full ${BLOCK_DOT[ex.block]} opacity-80`}
+                    className={`h-7 w-[3px] shrink-0 rounded-full ${BLOCK_DOT[ex.block]}`}
                     aria-hidden="true"
                   />
                   <span className="shrink-0 text-muted">
                     <ExerciseAnimation animation={ex.animation} size={30} />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium text-ink">{ex.name}</span>
-                    <span className="block truncate text-xs text-faint">{ex.prescription}</span>
+                    <span className="block truncate text-[0.8125rem] font-semibold text-ink">
+                      {ex.name}
+                    </span>
+                    <span className="ridge-metric block truncate text-[0.6875rem] text-faint">
+                      {ex.prescription}
+                    </span>
                   </span>
                   <span className="flex shrink-0 flex-col items-end gap-1">
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-faint">
+                    <span className="ridge-label text-[9px] font-semibold uppercase text-faint">
                       {i === 0 || session.exercises[i - 1]?.block !== ex.block
                         ? BLOCK_LABEL[ex.block]
                         : ''}

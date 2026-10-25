@@ -13,43 +13,59 @@
 :root {
   --t-mode: 600ms; /* background / accent / card cross-fade */
   --t-text: 220ms; /* text colour, faster so it doesn't smear */
-  --r-card: 11px;
+  --r-card: 8px;
 }
 
-/* ── Day — gym. Near-black, amber, sharp. ─────────────────────────────── */
+/* ── Day — gym. Near-black, hot amber, hard edges. ────────────────────── */
 .mode-day {
-  --c-base: 26 29 35; /* #1a1d23 */
-  --c-surface: 34 38 46;
-  --c-raised: 44 49 59;
-  --c-line: 62 69 82;
-  --c-ink: 238 240 244;
-  --c-muted: 158 166 180;
-  --c-faint: 134 141 153; /* 4.5:1 on surface — this tier carries 10-12px text */
-  --c-accent: 242 165 65; /* #f2a541 */
-  --c-accent-soft: 120 78 26;
+  /*
+   * The base drops and the surfaces rise, so a card is a clear step out of the
+   * page rather than a slightly different grey. The old pair sat four points
+   * apart and read as one flat field, which is most of what made the screen
+   * feel like a form to fill in.
+   */
+  --c-base: 15 17 21;
+  --c-surface: 26 29 36;
+  --c-raised: 39 43 53;
+  --c-line: 61 68 82;
+  --c-ink: 244 246 250;
+  --c-muted: 162 170 184;
+  --c-faint: 136 143 156; /* 4.5:1 on surface — this tier carries 10-12px text */
+  --c-accent: 255 142 42; /* hotter and more saturated than the old amber */
+  --c-accent-soft: 128 70 18;
 
-  --c-warmup: 122 162 190;
-  --c-main: 242 165 65;
-  --c-spine: 226 122 88; /* warmer than main — spine work reads as its own category */
-  --c-mobility: 160 150 200;
-  --c-danger: 226 106 96;
+  --c-warmup: 110 170 208;
+  --c-main: 255 142 42;
+  --c-spine: 232 112 78; /* warmer than main — spine work reads as its own category */
+  --c-mobility: 164 152 208;
+  --c-danger: 232 98 88;
 
-  --r-card: 11px;
+  --r-card: 8px; /* sharper: pillowy corners are the opposite of athletic */
   --t-motion: 150ms; /* snappy */
-  --grad-top: 38 33 30;
-  --grad-bottom: 22 24 30;
+  --grad-top: 32 27 24;
+  --grad-bottom: 13 15 19;
   --card-border-opacity: 1; /* identity: day keeps each border's own alpha */
-  --shadow-card: 0 1px 0 0 rgb(255 255 255 / 0.03);
-  --tracking-title: -0.02em;
-  --weight-title: 700;
-  --stage-gap: 1.25rem;
+  --shadow-card: 0 1px 0 0 rgb(255 255 255 / 0.04);
+  --tracking-title: -0.03em;
+  --weight-title: 800;
+  --stage-gap: 1rem;
+
+  /*
+   * Density is itself part of the day/night metaphor, not a global setting.
+   * The gym screen is dense and quick because you read it between sets with
+   * chalky hands; the night screen has air because the point of it is to slow
+   * down. Same components, different rhythm.
+   */
+  --gap-screen: 1.1rem;
+  --pad-card: 0.9rem;
+  --tracking-label: 0.18em;
 }
 
 /* ── Night — restore. Deep indigo, violet, low luminance. ─────────────── */
 .mode-night {
-  --c-base: 18 19 34; /* deep indigo */
-  --c-surface: 27 29 50;
-  --c-raised: 36 39 66;
+  --c-base: 15 16 30; /* deep indigo */
+  --c-surface: 27 29 52;
+  --c-raised: 38 41 70;
   --c-line: 55 58 92;
   --c-ink: 218 219 238;
   --c-muted: 148 150 182;
@@ -63,13 +79,18 @@
   --c-mobility: 150 178 218;
   --c-danger: 208 122 126;
 
-  --r-card: 18px; /* softer edges */
+  --r-card: 14px; /* still softer than day, less pillowy than before */
   --t-motion: 400ms; /* slow, breathing */
   --grad-top: 30 28 58;
-  --grad-bottom: 15 16 30;
+  --grad-bottom: 13 14 27;
   --card-border-opacity: 0.3; /* borders recede at night, they do not vanish */
   --shadow-card: 0 2px 24px -8px rgb(0 0 0 / 0.5);
-  --tracking-title: 0.01em;
-  --weight-title: 500;
-  --stage-gap: 1.75rem;
+  --tracking-title: 0.005em;
+  --weight-title: 600;
+  --stage-gap: 1.6rem;
+
+  /* The counterpart to day's density: night keeps its air. See the note above. */
+  --gap-screen: 1.5rem;
+  --pad-card: 1.15rem;
+  --tracking-label: 0.22em;
 }

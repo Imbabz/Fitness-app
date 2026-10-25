@@ -272,7 +272,7 @@ export function Settings() {
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-faint">
+      <h2 className="mb-2.5 text-[11px] font-semibold uppercase ridge-label text-faint">
         {title}
       </h2>
       <div className="divide-y divide-line/50 overflow-hidden rounded-card border border-line/50 bg-surface">

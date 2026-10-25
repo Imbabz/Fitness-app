@@ -97,7 +97,7 @@ export function TuningSheet({
       <div className="ridge-sheet max-h-[88dvh] overflow-y-auto rounded-t-[1.75rem] border-t border-line bg-surface px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-faint">
+            <span className="text-[10px] font-semibold uppercase ridge-label text-faint">
               {BLOCK_LABEL[seed.block]}
             </span>
             <h2 className="mt-1 text-xl ridge-title text-ink">{seed.name}</h2>

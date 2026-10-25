@@ -58,7 +58,7 @@ export function AddSheet({
         ) : (
           groups.map((group) => (
             <div key={group.block} className="mt-5">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-faint">
+              <span className="text-[10px] font-semibold uppercase ridge-label text-faint">
                 {BLOCK_LABEL[group.block]}
               </span>
               <div className="mt-2 space-y-1.5">

@@ -192,7 +192,7 @@ export function SetPips({
 /** Left / right indicator for bilateral holds. Both sides before the set counts. */
 export function SideIndicator({ side }: { side: 'left' | 'right' }) {
   return (
-    <div className="flex items-center justify-center gap-1.5 text-xs font-semibold uppercase tracking-widest">
+    <div className="flex items-center justify-center gap-1.5 text-xs font-semibold uppercase ridge-label">
       <span className={side === 'left' ? 'text-accent' : 'text-faint'}>Left</span>
       <span className="text-faint">·</span>
       <span className={side === 'right' ? 'text-accent' : 'text-faint'}>Right</span>

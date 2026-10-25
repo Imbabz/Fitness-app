@@ -118,7 +118,7 @@ export function Builder({
       />
 
       <section>
-        <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-faint">
+        <h2 className="mb-2 text-[11px] font-semibold uppercase ridge-label text-faint">
           What you have
         </h2>
         <div className="flex flex-wrap gap-2">
@@ -150,7 +150,7 @@ export function Builder({
 
       {chosen.length > 0 && (
         <section>
-          <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-faint">
+          <h2 className="mb-2 text-[11px] font-semibold uppercase ridge-label text-faint">
             In order · {chosen.length} stations
           </h2>
           <ol className="space-y-2">
@@ -211,7 +211,7 @@ export function Builder({
       )}
 
       <section>
-        <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-faint">
+        <h2 className="mb-2 text-[11px] font-semibold uppercase ridge-label text-faint">
           Stations
         </h2>
         <div className="space-y-4">
@@ -246,7 +246,7 @@ export function Builder({
       </section>
 
       <section>
-        <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-faint">
+        <h2 className="mb-2 text-[11px] font-semibold uppercase ridge-label text-faint">
           Format
         </h2>
         <div className="flex gap-1.5">

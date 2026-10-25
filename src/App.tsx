@@ -75,8 +75,8 @@ function Shell() {
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col">
-      <header className="flex items-center justify-between px-5 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
-        <span className="text-sm font-bold uppercase tracking-[0.28em] text-faint">Ridge</span>
+      <header className="flex items-center justify-between px-5 pb-1.5 pt-[max(0.875rem,env(safe-area-inset-top))]">
+        <span className="ridge-label text-[0.6875rem] font-bold uppercase text-faint">Ridge</span>
         <button
           type="button"
           onClick={() => {
@@ -90,7 +90,7 @@ function Shell() {
         </button>
       </header>
 
-      <main className="flex-1 px-5 pb-28 pt-3">
+      <main className="flex-1 px-5 pb-28 pt-2">
         {view === 'home' && <Home onOpen={open} onCircuits={() => setView('builder')} />}
         {view === 'history' && <History />}
         {view === 'settings' && <Settings />}

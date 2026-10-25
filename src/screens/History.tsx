@@ -69,7 +69,7 @@ export function History() {
 
       {tracked.length > 0 && (
         <section>
-          <h2 className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-faint">
+          <h2 className="mb-2.5 text-[11px] font-semibold uppercase ridge-label text-faint">
             Load over time
           </h2>
           <div className="space-y-1.5">
@@ -93,7 +93,7 @@ export function History() {
 
       <section className="space-y-2">
         <div className="mb-2.5 flex items-center justify-between gap-3">
-          <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-faint">
+          <h2 className="text-[11px] font-semibold uppercase ridge-label text-faint">
             Sessions
           </h2>
           {/* The daily routine outnumbers gym sessions roughly three to one, so

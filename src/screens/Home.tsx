@@ -35,10 +35,10 @@ export function Home({
   const resuming = state.activeSession?.sessionId;
 
   return (
-    <div className="ridge-enter space-y-6">
+    <div className="ridge-enter ridge-rhythm">
       <header>
-        <h1 className="text-[2rem] ridge-title leading-tight text-ink">{greeting}</h1>
-        <p className="mt-0.5 text-sm text-faint">{dateLine}</p>
+        <h1 className="text-[1.875rem] ridge-title leading-[1.1] text-ink">{greeting}</h1>
+        <p className="mt-0.5 text-xs text-faint">{dateLine}</p>
       </header>
 
       {night ? (
@@ -65,19 +65,21 @@ export function Home({
               the screen actually opened during the day, not only at night. */}
           <StreakLine />
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
             {GYM_SESSIONS.filter((s) => s.id !== upNext.id).map((s) => (
               <button
                 key={s.id}
                 type="button"
                 onClick={() => onOpen(s)}
-                className="rounded-card border border-line/60 bg-surface p-3.5 text-left active:bg-raised"
+                className="ridge-pad rounded-card border border-line/60 bg-surface text-left active:bg-raised"
               >
-                <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-faint">
+                <span className="ridge-label text-[10px] font-semibold uppercase text-faint">
                   Session {s.id}
                 </span>
-                <span className="mt-1 block text-base font-semibold text-ink">{s.title}</span>
-                <span className="mt-0.5 block truncate text-xs text-faint">{s.subtitle}</span>
+                <span className="mt-0.5 block text-[0.9375rem] font-bold text-ink">{s.title}</span>
+                <span className="mt-0.5 block truncate text-[0.6875rem] text-faint">
+                  {s.subtitle}
+                </span>
               </button>
             ))}
           </div>
@@ -86,7 +88,7 @@ export function Home({
             type="button"
             onClick={() => setMode('night')}
             className={[
-              'flex h-14 w-full items-center gap-3 rounded-card border px-4 text-left transition-colors',
+              'flex h-12 w-full items-center gap-2.5 rounded-card border px-3 text-left transition-colors',
               routineDone
                 ? 'border-mobility/40 bg-mobility/[0.08]'
                 : 'border-line/60 bg-surface active:bg-raised',
@@ -98,10 +100,10 @@ export function Home({
               {routineDone ? <Check size={16} strokeWidth={3} /> : <Moon size={15} />}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-sm font-medium text-ink">
+              <span className="block text-[0.8125rem] font-semibold text-ink">
                 {routineDone ? 'Daily routine done' : 'Daily routine — not yet done'}
               </span>
-              <span className="block text-xs text-faint">
+              <span className="block text-[0.6875rem] text-faint">
                 {routineDone ? 'Nice. See you tomorrow.' : `${daily.durationMin} min · McGill Big 3`}
               </span>
             </span>
@@ -111,7 +113,7 @@ export function Home({
       )}
 
       {dense && (
-        <div className="flex gap-2.5 rounded-card border border-line/60 bg-surface p-3.5 text-sm">
+        <div className="ridge-pad flex gap-2.5 rounded-card border border-line/60 bg-surface text-[0.8125rem]">
           <TriangleAlert size={16} className="mt-0.5 shrink-0 text-faint" />
           <p className="leading-relaxed text-muted">
             Three gym sessions in four days. Not a problem in itself — just worth noticing, since
@@ -123,14 +125,14 @@ export function Home({
       <button
         type="button"
         onClick={onCircuits}
-        className="flex w-full items-center gap-3 rounded-card border border-line/60 bg-surface p-3.5 text-left active:bg-raised"
+        className="flex min-h-[3rem] w-full items-center gap-2.5 rounded-card border border-line/60 bg-surface px-3 py-2 text-left active:bg-raised"
       >
         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-raised text-muted">
           <Repeat size={15} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-sm font-medium text-ink">Circuits</span>
-          <span className="block text-xs text-faint">
+          <span className="block text-[0.8125rem] font-semibold text-ink">Circuits</span>
+          <span className="block text-[0.6875rem] leading-snug text-faint">
             Rounds instead of straight sets — bodyweight, bands, the bars
           </span>
         </span>
@@ -138,7 +140,7 @@ export function Home({
       </button>
 
       <section>
-        <h2 className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-faint">
+        <h2 className="ridge-label mb-2 text-[10px] font-semibold uppercase text-faint">
           Last 7 days
         </h2>
         <WeekStrip />
@@ -168,17 +170,19 @@ function HeroCard({
     <button
       type="button"
       onClick={() => onOpen(session)}
-      className="ridge-hero relative w-full overflow-hidden rounded-card border border-line/60 bg-surface p-5 text-left active:opacity-90"
+      className="ridge-hero ridge-pad relative w-full overflow-hidden rounded-card border border-line/60 bg-surface text-left active:opacity-90"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent">
             {resuming ? 'Resume' : done ? 'Done today' : session.id === 'daily' ? 'Tonight' : `Session ${session.id}`}
           </span>
-          <h2 className="mt-1.5 text-3xl ridge-title text-ink">{session.title}</h2>
-          <p className="mt-1 flex items-center gap-1.5 text-sm text-muted">
-            <Clock size={14} />
-            {session.durationMin} min · {session.exercises.length} stages
+          <h2 className="mt-1 text-[2.125rem] ridge-title leading-[0.95] text-ink">{session.title}</h2>
+          <p className="ridge-metric mt-1.5 flex items-center gap-1.5 text-sm text-muted">
+            <Clock size={14} className="shrink-0" />
+            <span className="font-semibold text-ink">{session.durationMin}</span> min
+            <span className="text-line">·</span>
+            <span className="font-semibold text-ink">{session.exercises.length}</span> stages
           </p>
         </div>
         <span className="shrink-0 text-accent">
@@ -189,9 +193,9 @@ function HeroCard({
         </span>
       </div>
 
-      <p className="mt-4 line-clamp-2 text-sm leading-relaxed text-faint">{summary}</p>
+      <p className="mt-3 line-clamp-2 text-[0.8125rem] leading-snug text-faint">{summary}</p>
 
-      <div className="mt-4 flex items-center gap-1.5 text-sm font-semibold text-accent">
+      <div className="mt-3 flex items-center gap-1.5 text-sm font-semibold text-accent">
         {resuming ? 'Pick up where you left off' : done ? 'Do it again' : 'Start'}
         <ArrowRight size={16} />
       </div>
@@ -204,16 +208,19 @@ function StreakLine() {
   const { current, longest } = state.streak;
   if (current === 0 && longest === 0) {
     return (
-      <p className="text-sm text-faint">
-        Do this every day. The streak starts counting once you do.
-      </p>
+      <div className="flex items-center gap-2 text-xs text-faint">
+        <Flame size={14} className="text-line" />
+        <span>No streak yet — it starts with the first routine.</span>
+      </div>
     );
   }
   return (
-    <div className="flex items-center gap-2 text-sm text-muted">
-      <Flame size={15} className="text-accent" />
-      <span className="font-semibold text-ink">{current} day{current === 1 ? '' : 's'}</span>
-      <span className="text-faint">· best {longest}</span>
+    <div className="ridge-metric flex items-center gap-2 text-sm text-muted">
+      <Flame size={15} className="shrink-0 text-accent" />
+      <span className="text-base font-bold text-ink">{current}</span>
+      <span>day{current === 1 ? '' : 's'}</span>
+      <span className="text-line">·</span>
+      <span className="text-faint">best {longest}</span>
     </div>
   );
 }
@@ -221,7 +228,7 @@ function StreakLine() {
 function TomorrowPreview({ session }: { session: Session }) {
   return (
     <div className="rounded-card border border-line/40 bg-surface/60 p-4">
-      <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-faint">
+      <span className="text-[10px] font-semibold uppercase ridge-label text-faint">
         Next gym session
       </span>
       <p className="mt-1 text-base font-semibold text-ink">

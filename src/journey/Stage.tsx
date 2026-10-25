@@ -123,7 +123,7 @@ export function Stage({
         </button>
         <span
           className={[
-            'text-[11px] font-semibold uppercase tracking-[0.18em]',
+            'text-[11px] font-semibold uppercase ridge-label',
             isSpine ? 'text-spine' : 'text-faint',
           ].join(' ')}
         >
