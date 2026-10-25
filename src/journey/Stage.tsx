@@ -77,7 +77,9 @@ export function Stage({
    * doing every round of the pulldown before touching the row is not a circuit,
    * and that is exactly what this did before the distinction was drawn.
    */
-  const isInterval = exercise.tracking === 'interval';
+  // A circuit station is one bout per visit, then on to the next station —
+  // whether the bout was ended by the clock or by the rep target.
+  const isInterval = exercise.circuit === true;
 
   const handleSetComplete = useCallback(
     (reps: number) => {

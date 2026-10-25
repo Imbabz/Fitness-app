@@ -1,5 +1,5 @@
 import type { AppState, Block, HiitConfig, Mode } from '../types';
-import { HIIT_LEVELS, MAX_ROUNDS, MIN_ROUNDS } from '../data/hiit';
+import { HIIT_FORMATS, HIIT_LEVELS, MAX_ROUNDS, MIN_ROUNDS } from '../data/hiit';
 
 const BLOCKS: Block[] = ['warmup', 'main', 'spine', 'mobility'];
 const SYNTH_IDS: string[] = ['rain', 'waves', 'wind', 'fire', 'drone'];
@@ -118,7 +118,14 @@ export function coerceState(raw: unknown): AppState {
       if (!HIIT_LEVELS.some((l) => l.id === c.level)) continue;
       const rounds = typeof c.rounds === 'number' ? Math.round(c.rounds) : NaN;
       if (!Number.isFinite(rounds) || rounds < MIN_ROUNDS || rounds > MAX_ROUNDS) continue;
-      out[id] = { level: c.level as HiitConfig['level'], rounds };
+      // Formats arrived after circuit mode shipped, so a config written before
+      // them has no `format`. Those were all timed intervals, which is what it
+      // falls back to — an unreadable value does the same rather than dropping
+      // the whole entry and silently turning someone's circuit off.
+      const format = HIIT_FORMATS.some((f) => f.id === c.format)
+        ? (c.format as HiitConfig['format'])
+        : 'intervals';
+      out[id] = { format, level: c.level as HiitConfig['level'], rounds };
     }
     return out;
   }

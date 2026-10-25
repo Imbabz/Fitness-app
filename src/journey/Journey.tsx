@@ -35,7 +35,7 @@ export function Journey({ session, onExit }: { session: Session; onExit: () => v
   /*
    * ── The circuit loop ──────────────────────────────────────────────────────
    *
-   * In interval mode the main block is a circuit, not straight sets: you do one
+   * In circuit mode the main block is a circuit, not straight sets: you do one
    * work bout of each exercise, then come back round. So advancing past the
    * last interval exercise jumps back to the first one until every round is
    * banked, and only then falls through to whatever follows — the mobility and
@@ -48,7 +48,7 @@ export function Journey({ session, onExit }: { session: Session; onExit: () => v
    */
   const circuit = session.exercises
     .map((ex, i) => ({ ex, i }))
-    .filter(({ ex }) => ex.tracking === 'interval');
+    .filter(({ ex }) => ex.circuit);
   const circuitFirst = circuit[0]?.i ?? -1;
   const circuitLast = circuit.at(-1)?.i ?? -1;
   const rounds = circuit[0]?.ex.sets ?? 0;

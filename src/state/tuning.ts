@@ -1,7 +1,7 @@
 import type { Exercise, ExerciseTuning, Session } from '../types';
 import { EXERCISES, EXERCISE_BY_ID } from '../data/exercises';
 import { BLOCK_ORDER } from '../data/sessions';
-import { levelOf, MAX_ROUNDS, MIN_ROUNDS, type HiitConfig } from '../data/hiit';
+import { specOf, type HiitConfig } from '../data/hiit';
 
 /*
  * User adjustments to the prescribed numbers, layered over the seed data at
@@ -313,23 +313,44 @@ export function resolveSession(session: Session, custom: Customisation): Session
  */
 export function hiitSession(session: Session, config: HiitConfig | undefined): Session {
   if (!config) return session;
-  const level = levelOf(config);
-  const rounds = Math.max(MIN_ROUNDS, Math.min(MAX_ROUNDS, Math.round(config.rounds)));
+  const { work, rest, rounds, timed } = specOf(config);
 
   let converted = 0;
   const exercises = session.exercises.map((ex) => {
     if (ex.block !== 'main') return ex;
     converted += 1;
+
+    if (timed) {
+      return {
+        ...ex,
+        circuit: true,
+        tracking: 'interval' as const,
+        sets: rounds,
+        // One work bout per round. The array stays an array — see CLAUDE.md
+        // rule 3 — even though every entry is the same here.
+        repScheme: Array.from({ length: rounds }, () => 1),
+        holdSeconds: work,
+        restSeconds: rest,
+        prescription: `${rounds} × ${work}s · ${rest}s rest`,
+      };
+    }
+
+    // Sequential: the rep target ends the bout, so the movement keeps its own
+    // tracking and its own first-set target. A descending scheme collapses to
+    // its opening number here on purpose — a circuit asks for the same work at
+    // every station on every lap, and carrying 6/4/2 round a loop would mean
+    // the rounds were not comparable.
+    const target = ex.repScheme[0] ?? 1;
     return {
       ...ex,
-      tracking: 'interval' as const,
+      circuit: true,
       sets: rounds,
-      // One work bout per round. The array stays an array — see CLAUDE.md
-      // rule 3 — even though every entry is the same here.
-      repScheme: Array.from({ length: rounds }, () => 1),
-      holdSeconds: level.work,
-      restSeconds: level.rest,
-      prescription: `${rounds} × ${level.work}s · ${level.rest}s rest`,
+      repScheme: Array.from({ length: rounds }, () => target),
+      restSeconds: rest,
+      prescription:
+        ex.tracking === 'hold' && ex.holdSeconds
+          ? `${rounds} × ${ex.holdSeconds}s hold · ${rest}s rest`
+          : `${rounds} × ${target} · ${rest}s rest`,
     };
   });
 
@@ -337,16 +358,28 @@ export function hiitSession(session: Session, config: HiitConfig | undefined): S
   // spine and mobility work must not claim to be a circuit.
   if (converted === 0) return session;
 
+  // A timed circuit's length is arithmetic. A sequential one is not — reps take
+  // as long as they take — so it is estimated at roughly three seconds a rep,
+  // which is honest enough for a figure labelled "about".
+  const perRound = timed
+    ? converted * (work + rest)
+    : exercises
+        .filter((ex) => ex.circuit)
+        .reduce(
+          (total, ex) =>
+            total + rest + (ex.tracking === 'hold' ? (ex.holdSeconds ?? 30) : (ex.repScheme[0] ?? 10) * 3),
+          0,
+        );
+
   return {
     ...session,
     exercises,
-    durationMin: Math.max(1, Math.round((rounds * converted * (level.work + level.rest)) / 60)),
+    durationMin: Math.max(1, Math.round((rounds * perRound) / 60)),
   };
 }
 
-/** How many exercises a circuit actually contains, for the round counter. */
 export function circuitLength(session: Session): number {
-  return session.exercises.filter((ex) => ex.tracking === 'interval').length;
+  return session.exercises.filter((ex) => ex.circuit).length;
 }
 
 /** The list a session edit starts from — stored if there is one, else the seed. */

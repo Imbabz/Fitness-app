@@ -48,17 +48,99 @@ export const DEFAULT_ROUNDS = 5;
 export const MIN_ROUNDS = 2;
 export const MAX_ROUNDS = 8;
 
+/*
+ * ── The three formats ──────────────────────────────────────────────────────
+ *
+ * Intervals and Tabata are timed: the clock decides when the bout ends and you
+ * do as many quality reps as fit. Sequential is rep-counted: the rep target
+ * decides when the bout ends and the clock is only there for the rest.
+ *
+ * The difference matters for this back. Under a clock, the last few seconds of
+ * a fatigued bout are where form goes, so a timed station has to be a movement
+ * that stays safe when it gets ugly — which is most of the circuit pool and
+ * none of the Big 3. A rep-counted station lets you stop on the rep, so it is
+ * the honest choice for anything where position is the point.
+ *
+ * EMOM and AMRAP are deliberately absent. Both reward squeezing more work into
+ * a fixed window, which is the same incentive as racing a clock and a worse one
+ * to put in front of someone with a disc protrusion.
+ */
+export type HiitFormat = 'intervals' | 'tabata' | 'sequential';
+
+export interface HiitFormatSpec {
+  id: HiitFormat;
+  label: string;
+  note: string;
+  /** The clock ends the bout. False means the rep target does. */
+  timed: boolean;
+  /** Tabata is 20/10 × 8 and nothing else — the protocol is the point. */
+  fixed?: { work: number; rest: number; rounds: number };
+}
+
+export const HIIT_FORMATS: HiitFormatSpec[] = [
+  {
+    id: 'intervals',
+    label: 'Intervals',
+    note: 'Work and rest on a clock',
+    timed: true,
+  },
+  {
+    id: 'tabata',
+    label: 'Tabata',
+    note: '20s on, 10s off, 8 rounds',
+    timed: true,
+    fixed: { work: 20, rest: 10, rounds: 8 },
+  },
+  {
+    id: 'sequential',
+    label: 'Sequential',
+    note: 'Reps, not a clock, then rest',
+    timed: false,
+  },
+];
+
+export const HIIT_FORMAT_BY_ID: Record<string, HiitFormatSpec> = Object.fromEntries(
+  HIIT_FORMATS.map((f) => [f.id, f]),
+);
+
 export interface HiitConfig {
+  format: HiitFormat;
   level: HiitLevel;
   rounds: number;
 }
 
 export function defaultHiit(): HiitConfig {
-  return { level: 'intermediate', rounds: DEFAULT_ROUNDS };
+  return { format: 'intervals', level: 'intermediate', rounds: DEFAULT_ROUNDS };
 }
 
 export function levelOf(config: HiitConfig): HiitLevelSpec {
   return HIIT_LEVEL_BY_ID[config.level] ?? (HIIT_LEVELS[1] as HiitLevelSpec);
+}
+
+export function formatOf(config: HiitConfig): HiitFormatSpec {
+  return HIIT_FORMAT_BY_ID[config.format] ?? (HIIT_FORMATS[0] as HiitFormatSpec);
+}
+
+/**
+ * What a config actually resolves to. One place decides how format, level and
+ * rounds combine, so the panel's summary line and the session conversion can
+ * never disagree about what is about to happen.
+ */
+export function specOf(config: HiitConfig): {
+  work: number;
+  rest: number;
+  rounds: number;
+  timed: boolean;
+} {
+  const format = formatOf(config);
+  const level = levelOf(config);
+  if (format.fixed) return { ...format.fixed, timed: format.timed };
+  return {
+    work: level.work,
+    rest: level.rest,
+    rounds: Math.max(MIN_ROUNDS, Math.min(MAX_ROUNDS, Math.round(config.rounds))),
+    timed: format.timed,
+  };
 }
 
 /*

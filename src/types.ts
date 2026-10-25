@@ -47,6 +47,15 @@ export interface Exercise {
    */
   bilateral?: boolean;
   /**
+   * This exercise is a station in a circuit: one bout per visit, then on to the
+   * next station, looping back until every round is done.
+   *
+   * Set only by `hiitSession()`, never in seed data. It is a separate flag
+   * rather than `tracking === 'interval'` because a sequential circuit is
+   * rep-counted, not timed, and must still loop.
+   */
+  circuit?: boolean;
+  /**
    * Suggested stand-ins, by exercise id — the movements that genuinely cover the
    * same pattern. A **suggestion, not a gate**: anything in the same block may
    * be substituted. These are surfaced first because "which one actually
