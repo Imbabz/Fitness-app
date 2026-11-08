@@ -65,6 +65,7 @@
   --tracking-title: -0.022em;
   --weight-title: 600;
   --stage-gap: 1.4rem;
+  --stroke-figure: 2.7; /* crisper on paper */
 
   /*
    * Air. The previous pass pushed density hard and the app got terse; the brief
@@ -107,6 +108,7 @@
   --tracking-title: 0.012em;
   --weight-title: 500;
   --stage-gap: 2rem;
+  --stroke-figure: 2.9; /* a touch heavier, to survive low luminance */
 
   /* The counterpart to day's rhythm: night keeps more of it. See the note above. */
   --gap-screen: 1.8rem;

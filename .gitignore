@@ -9,3 +9,8 @@ dist-ssr
 # Screenshots are review material, not part of the app.
 *.png
 !public/**/*.png
+
+# Credentials never enter this repository. It is public.
+.env
+.env.*
+!.env.example

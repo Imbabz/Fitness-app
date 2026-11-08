@@ -84,9 +84,27 @@ export function Figure({
   );
 }
 
-/** Floor reference. Muted so it reads as environment, not body. */
+/**
+ * Floor reference. Muted so it reads as environment, not body.
+ *
+ * A tapered brush mark rather than a line, because a stroke of constant
+ * thickness is a pictogram and not a drawing — see the `visual-language`
+ * skill. It is a filled lens shape: swelling through the middle, coming to a
+ * point at both ends, and deliberately lopsided (the swell sits at 45% on the
+ * way out and 55% on the way back) so it does not read as machine-made.
+ *
+ * Filled, so it carries its own class rather than the stroked `ridge-ground`
+ * one — a CSS `stroke` declaration beats a `stroke="none"` attribute, and the
+ * mark would have picked up the figure's full stroke weight on top of its fill.
+ */
 export function Ground({ y = 56, x1 = 6, x2 = 58 }: { y?: number; x1?: number; x2?: number }) {
-  return <line x1={x1} y1={y} x2={x2} y2={y} className="ridge-ground" strokeWidth={2} />;
+  const span = x2 - x1;
+  const t = Math.min(1.5, Math.max(0.6, span * 0.029)); // half-thickness at the swell
+  const d =
+    `M${x1} ${y}` +
+    `Q${(x1 + span * 0.45).toFixed(1)} ${(y - t).toFixed(1)} ${x2} ${(y - t * 0.14).toFixed(1)}` +
+    `Q${(x1 + span * 0.55).toFixed(1)} ${(y + t).toFixed(1)} ${x1} ${y}Z`;
+  return <path d={d} className="ridge-ground-mark" />;
 }
 
 /** Equipment: bars, benches, walls. Same muted treatment as the ground. */
@@ -98,6 +116,15 @@ export function Prop({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * The head carries slightly more weight than the limbs.
+ *
+ * The other half of what separates a drawing from a pictogram is a hierarchy
+ * of weight — a drawn figure is not one uniform line. A head is the mark you
+ * commit to first and it reads heavier; everything else hangs off it. The
+ * difference is small on purpose: enough to feel deliberate, not enough to
+ * notice as a decision.
+ */
 export function Head({ cx = 32, cy = 12, r = 5 }: { cx?: number; cy?: number; r?: number }) {
-  return <circle cx={cx} cy={cy} r={r} />;
+  return <circle cx={cx} cy={cy} r={r} className="ridge-head" />;
 }
