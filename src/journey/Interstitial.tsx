@@ -35,6 +35,21 @@ const COPY: Record<Block, { line: string; tone: string }> = {
  */
 const DISMISS_MS = 1500;
 
+/*
+ * Les classes de mouvement, écrites en toutes lettres.
+ *
+ * Elles vivent dans `@layer components`, que Tailwind purge quand la classe
+ * n'apparaît nulle part littéralement dans les sources. Un gabarit
+ * `ridge-el-${motion}` est invisible pour son analyseur : la règle est
+ * supprimée du bundle et l'animation ne tourne jamais, sans la moindre erreur.
+ * C'est arrivé ici et seule une mesure de l'angle l'a montré.
+ */
+const MOTION = {
+  sway: 'ridge-el-sway',
+  drift: 'ridge-el-drift',
+  flicker: 'ridge-el-flicker',
+} as const;
+
 export function Interstitial({ block, onDismiss }: { block: Block; onDismiss: () => void }) {
   const spine = block === 'spine';
 
@@ -76,6 +91,20 @@ export function Interstitial({ block, onDismiss }: { block: Block; onDismiss: ()
             aria-hidden="true"
             className="ridge-hour-tint pointer-events-none absolute inset-0 -z-10"
           />
+          {hour.element && (
+            <img
+              src={hour.element.src}
+              alt=""
+              aria-hidden="true"
+              style={{ height: hour.element.h }}
+              className={[
+                'pointer-events-none absolute bottom-0 -z-10 w-auto',
+                'ridge-el',
+                MOTION[hour.element.motion],
+                hour.element.side === 'left' ? 'left-3' : 'right-3',
+              ].join(' ')}
+            />
+          )}
         </>
       )}
       <span

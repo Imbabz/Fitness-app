@@ -247,6 +247,34 @@
   }
 
   /*
+   * Ce qui se tient au bas de l'écran.
+   *
+   * Trois mouvements, tous lents : l'arbre se balance depuis son pied, les
+   * champignons respirent, le feu palpite. Assez lents pour n'être remarqués
+   * que si on les cherche — la règle est que le mouvement non déclenché par
+   * l'utilisateur attire l'attention ou n'existe pas.
+   *
+   * L'arbre pivote depuis `bottom center`, jamais depuis son milieu : un
+   * arbre qui tourne autour de sa cime se lit immédiatement comme faux.
+   */
+  .ridge-el {
+    opacity: 0.88;
+    will-change: transform;
+  }
+  .ridge-el-sway {
+    transform-origin: bottom center;
+    animation: ridge-sway 11s ease-in-out infinite;
+  }
+  .ridge-el-drift {
+    transform-origin: bottom center;
+    animation: ridge-drift-el 13s ease-in-out infinite;
+  }
+  .ridge-el-flicker {
+    transform-origin: bottom center;
+    animation: ridge-flicker 2.6s ease-in-out infinite;
+  }
+
+  /*
    * Screen rhythm. Day is dense and quick, night has air — both from tokens,
    * so no component branches on the mode to decide how much room it gets.
    */
@@ -376,6 +404,51 @@
 @media (prefers-reduced-motion: reduce) {
   /* The sky stays, the weather stops. */
   .ridge-sky::after {
+    animation: none;
+  }
+}
+
+@keyframes ridge-sway {
+  0%,
+  100% {
+    transform: rotate(-1.1deg);
+  }
+  50% {
+    transform: rotate(1.1deg);
+  }
+}
+@keyframes ridge-drift-el {
+  0%,
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+  50% {
+    transform: translateY(-1.5px) scaleY(1.012);
+  }
+}
+/* Le feu : la flamme monte et faiblit. Une échelle verticale plus une
+   variation d'opacité suffisent — une vraie vacillation demanderait des
+   images, et à cette taille personne ne la verrait. */
+@keyframes ridge-flicker {
+  0%,
+  100% {
+    transform: scaleY(1) scaleX(1);
+    opacity: 0.86;
+  }
+  38% {
+    transform: scaleY(1.035) scaleX(0.993);
+    opacity: 0.95;
+  }
+  64% {
+    transform: scaleY(0.985) scaleX(1.004);
+    opacity: 0.83;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ridge-el-sway,
+  .ridge-el-drift,
+  .ridge-el-flicker {
     animation: none;
   }
 }
