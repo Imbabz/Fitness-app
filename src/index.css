@@ -132,7 +132,17 @@
    * and lighter. Both come from tokens, so a heading only ever declares its
    * size — never its weight or tracking.
    */
+  /*
+   * The world voice. `.ridge-title` is applied to exactly the things that name
+   * rather than measure — a session, an exercise, a chapter — so the serif
+   * belongs on the class, not sprinkled at each call site.
+   *
+   * `ui-serif` resolves to New York on iOS, which the system already carries:
+   * no download, no network call, and not the Georgia that every generated
+   * page reaches for.
+   */
   .ridge-title {
+    font-family: theme('fontFamily.serif');
     font-weight: var(--weight-title);
     letter-spacing: var(--tracking-title);
   }

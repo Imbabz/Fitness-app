@@ -67,7 +67,7 @@ export function BlockAmbient() {
             <div key={block}>
               <div className="mb-1.5 flex items-center gap-2">
                 <span className={`h-2.5 w-1 rounded-full ${BLOCK_DOT[block]}`} aria-hidden="true" />
-                <span className="text-xs font-semibold uppercase tracking-wider text-faint">
+                <span className="text-xs font-semibold ridge-label text-faint">
                   {BLOCK_LABEL[block]}
                 </span>
               </div>

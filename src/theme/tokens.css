@@ -35,83 +35,92 @@
   --r-card: 5px;
 }
 
-/* ── Day — gym. Washi paper, sumi ink, an indigo seal. ────────────────── */
+/* ── Day — gym. Full daylight: near-white, cool, high contrast. ──────── */
 .mode-day {
-  --c-base: 240 234 224; /* unbleached paper */
-  --c-surface: 253 251 247; /* a sheet laid on the page */
-  --c-raised: 222 213 196;
-  --c-line: 198 189 172;
-  --c-ink: 26 27 30; /* sumi */
-  --c-muted: 92 96 104;
-  --c-faint: 98 102 110; /* 4.5:1 on BASE, not just on surface — this tier carries 10-12px text, and on paper much of it sits on the page itself */
-  --c-accent: 45 78 125; /* 藍 */
-  --c-accent-soft: 206 216 230;
+  /*
+   * The ground was a warm cream (#f0e9db) and that was a mistake twice over.
+   * It is not bright — it is a mid warm tone, so the day/night swing was a
+   * change of hue rather than of light. And warm cream under a serif display
+   * with a terracotta accent is the single most recognisable signature of
+   * generated design; it was my default, not a decision for this app.
+   *
+   * Daylight is near-white and slightly cool. The swing against night is now
+   * genuine, which is what the day/night cycle was always claiming.
+   */
+  /* Pulled off pure white so a white sheet reads as its own plane: at 247 the
+     card edge measured 1.06, which is below the point a surface is visible. */
+  --c-base: 241 245 249;
+  --c-surface: 255 255 255;
+  /* A filled button has to be clearly darker than a bright page; at 234 it
+     measured 1.06 against the base and read as bare text. */
+  --c-raised: 221 229 238;
+  --c-line: 205 213 222;
+  --c-ink: 17 21 28;
+  --c-muted: 84 94 107;
+  --c-faint: 102 112 126; /* 4.5:1 on BASE, not just on surface */
+  --c-accent: 29 61 110; /* 藍 — deepened to hold against white */
+  --c-accent-soft: 208 220 236;
 
-  --c-warmup: 74 124 146; /* 浅葱 */
-  --c-main: 45 78 125; /* 藍 */
-  --c-spine: 190 62 38; /* 朱 — a different category of work, not more main work */
-  --c-mobility: 118 102 158; /* 藤 */
-  --c-danger: 140 48 48; /* 蘇芳 — duller than the vermillion so the two do not read alike */
+  --c-warmup: 42 112 136; /* 浅葱 */
+  --c-main: 29 61 110; /* 藍 */
+  --c-spine: 183 48 28; /* 朱 — the seal, and the one warm thing on the screen */
+  --c-mobility: 99 84 148; /* 藤 */
+  --c-danger: 150 36 36; /* 蘇芳 */
 
-  --c-horizon: 198 188 172;
-  --c-mist: 206 196 178;
+  --c-horizon: 186 197 210;
+  --c-mist: 176 192 210;
 
-  --r-card: 5px; /* print, not plastic */
-  --t-motion: 150ms; /* snappy */
-  --grad-top: 248 243 234;
-  --grad-bottom: 233 226 214;
-  --card-border-opacity: 1; /* identity: day keeps each border's own alpha */
-  --shadow-card: 0 1px 2px 0 rgb(40 34 26 / 0.05);
+  --r-card: 5px;
+  --t-motion: 150ms;
+  --grad-top: 252 253 254;
+  --grad-bottom: 240 244 248;
+  --card-border-opacity: 1;
+  --shadow-card: 0 1px 2px 0 rgb(17 21 28 / 0.05);
   --tracking-title: -0.022em;
   --weight-title: 600;
   --stage-gap: 1.4rem;
-  --stroke-figure: 2.7; /* crisper on paper */
+  --stroke-figure: 2.7;
 
-  /*
-   * Air. The previous pass pushed density hard and the app got terse; the brief
-   * since is for something lighter, so the rhythm opens again. Day still sits
-   * tighter than night, because you read it between sets, but the gap is now
-   * one of degree rather than one of character.
-   */
   --gap-screen: 1.4rem;
   --pad-card: 1.15rem;
-  --tracking-label: 0.2em;
+  --tracking-label: 0.01em; /* labels are sentence case now; see index.css */
 }
 
-/* ── Night — restore. Indigo ground, moonlight ink. ───────────────────── */
+/* ── Night — restore. Real darkness, moonlight ink. ──────────────────── */
 .mode-night {
-  --c-base: 14 17 30;
-  --c-surface: 24 28 46;
-  --c-raised: 36 42 64;
-  --c-line: 56 63 92;
-  --c-ink: 228 231 242; /* 月白 */
-  --c-muted: 150 158 184;
-  --c-faint: 132 140 166; /* 4.5:1 on surface — this tier carries 10-12px text */
-  --c-accent: 158 180 220; /* moonlight */
-  --c-accent-soft: 62 72 108;
+  /* Deeper than before, for the same reason day is brighter: the two have to
+     be genuinely different amounts of light, not two shades of dim. */
+  --c-base: 6 9 17;
+  --c-surface: 17 21 36;
+  --c-raised: 29 35 56;
+  --c-line: 49 57 86;
+  --c-ink: 232 236 246; /* 月白 */
+  --c-muted: 150 160 186;
+  --c-faint: 134 144 172;
+  --c-accent: 150 176 224; /* moonlight */
+  --c-accent-soft: 56 66 102;
 
-  --c-warmup: 126 168 196;
-  --c-main: 158 180 220;
-  --c-spine: 214 118 96; /* vermillion does not survive low light; this is it, softened */
-  --c-mobility: 178 162 212; /* 藤 */
-  --c-danger: 198 108 104;
+  --c-warmup: 120 164 194;
+  --c-main: 150 176 224;
+  --c-spine: 216 120 98; /* vermillion, softened to survive low light */
+  --c-mobility: 176 160 212; /* 藤 */
+  --c-danger: 200 108 104;
 
-  --c-horizon: 70 80 118;
-  --c-mist: 58 70 112;
+  --c-horizon: 62 72 108;
+  --c-mist: 54 66 108;
 
-  --r-card: 10px; /* softer than day, as it always was */
-  --t-motion: 400ms; /* slow, breathing */
-  --grad-top: 26 29 58;
-  --grad-bottom: 10 12 24;
-  --card-border-opacity: 0.35; /* borders recede at night, they do not vanish */
-  --shadow-card: 0 2px 24px -8px rgb(0 0 0 / 0.55);
+  --r-card: 10px;
+  --t-motion: 400ms;
+  --grad-top: 19 24 48;
+  --grad-bottom: 4 6 13;
+  --card-border-opacity: 0.35;
+  --shadow-card: 0 2px 24px -8px rgb(0 0 0 / 0.6);
   --tracking-title: 0.012em;
   --weight-title: 500;
   --stage-gap: 2rem;
-  --stroke-figure: 2.9; /* a touch heavier, to survive low luminance */
+  --stroke-figure: 2.9;
 
-  /* The counterpart to day's rhythm: night keeps more of it. See the note above. */
   --gap-screen: 1.8rem;
   --pad-card: 1.35rem;
-  --tracking-label: 0.24em;
+  --tracking-label: 0.01em;
 }

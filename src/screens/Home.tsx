@@ -73,7 +73,7 @@ export function Home({
                 onClick={() => onOpen(s)}
                 className="ridge-pad rounded-card border border-line/60 bg-surface text-left active:bg-raised"
               >
-                <span className="ridge-label text-[10px] font-semibold uppercase text-faint">
+                <span className="ridge-label text-[10px] font-semibold text-faint">
                   Session {s.id}
                 </span>
                 <span className="mt-0.5 block text-[0.9375rem] font-bold text-ink">{s.title}</span>
@@ -140,7 +140,7 @@ export function Home({
       </button>
 
       <section>
-        <h2 className="ridge-label mb-2 text-[10px] font-semibold uppercase text-faint">
+        <h2 className="ridge-label mb-2 text-[10px] font-semibold text-faint">
           Last 7 days
         </h2>
         <WeekStrip />
@@ -174,7 +174,7 @@ function HeroCard({
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent">
+          <span className="text-[11px] font-semibold ridge-label text-accent">
             {resuming ? 'Resume' : done ? 'Done today' : session.id === 'daily' ? 'Tonight' : `Session ${session.id}`}
           </span>
           <h2 className="mt-1 text-[2.125rem] ridge-title leading-[0.95] text-ink">{session.title}</h2>
@@ -228,7 +228,7 @@ function StreakLine() {
 function TomorrowPreview({ session }: { session: Session }) {
   return (
     <div className="rounded-card border border-line/40 bg-surface/60 p-4">
-      <span className="text-[10px] font-semibold uppercase ridge-label text-faint">
+      <span className="text-[10px] font-semibold ridge-label text-faint">
         Next gym session
       </span>
       <p className="mt-1 text-base font-semibold text-ink">

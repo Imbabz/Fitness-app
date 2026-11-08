@@ -54,7 +54,7 @@ export function Interstitial({ block, onDismiss }: { block: Block; onDismiss: ()
     >
       <span
         className={[
-          'text-xs font-semibold uppercase ridge-label',
+          'text-xs font-semibold ridge-label',
           spine ? 'text-spine' : 'text-accent',
         ].join(' ')}
       >
@@ -63,7 +63,7 @@ export function Interstitial({ block, onDismiss }: { block: Block; onDismiss: ()
       <span className="text-3xl ridge-title text-ink">{copy.line}</span>
       <span className="max-w-xs text-sm leading-relaxed text-muted">{copy.tone}</span>
       {spine && (
-        <span className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-faint">
+        <span className="mt-4 text-xs font-semibold ridge-label text-faint">
           Tap to continue
         </span>
       )}

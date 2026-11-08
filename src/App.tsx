@@ -78,7 +78,7 @@ function Shell() {
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col">
       <div className="ridge-sky" aria-hidden="true" />
       <header className="flex items-center justify-between px-5 pb-1.5 pt-[max(0.875rem,env(safe-area-inset-top))]">
-        <span className="ridge-label text-[0.6875rem] font-bold uppercase text-faint">Ridge</span>
+        <span className="ridge-label text-[0.6875rem] font-bold text-faint">Ridge</span>
         <button
           type="button"
           onClick={() => {

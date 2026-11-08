@@ -166,7 +166,7 @@ function TempoBar({ tempo }: { tempo: NonNullable<Exercise['tempo']> }) {
   const total = tempo.down + tempo.up;
   return (
     <div className="w-full">
-      <div className="mb-1.5 flex justify-between text-[11px] font-medium uppercase tracking-wider text-faint">
+      <div className="mb-1.5 flex justify-between text-[11px] font-medium ridge-label text-faint">
         <span>{tempo.down}s down</span>
         <span>{tempo.up}s up</span>
       </div>

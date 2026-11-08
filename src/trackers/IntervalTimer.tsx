@@ -103,7 +103,7 @@ export function IntervalTimer({
       <div className="flex w-full flex-wrap items-center justify-center gap-x-3 gap-y-2">
         {/* Pips count rounds here, not sets of reps — one bout per round. */}
         <SetPips exercise={exercise} setIndex={setIndex} completedCount={logged.length} />
-        <span className="text-xs font-semibold uppercase tracking-wider text-faint">
+        <span className="text-xs font-semibold ridge-label text-faint">
           Round {round}/{exercise.sets}
         </span>
       </div>

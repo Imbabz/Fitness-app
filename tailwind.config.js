@@ -30,6 +30,13 @@ export default {
         motion: 'var(--t-motion)',
       },
       fontFamily: {
+        /*
+         * The world speaks in serif, the work speaks in sans. `ui-serif` is
+         * New York on iOS — a well-drawn contemporary face the system already
+         * carries, so it costs no download and no network call. Georgia is
+         * only the fallback; on its own it reads as a default.
+         */
+        serif: ['ui-serif', 'New York', 'Georgia', 'Times New Roman', 'serif'],
         sans: [
           'system-ui',
           '-apple-system',
