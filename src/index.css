@@ -215,6 +215,38 @@
   }
 
   /*
+   * ── L'heure ────────────────────────────────────────────────────────────
+   *
+   * The plate dissolves rather than ending. A mask does the work, so there is
+   * no overlay rectangle to keep in sync with the page colour — the image
+   * simply stops existing towards its base, whatever is behind it.
+   *
+   * `-webkit-mask-image` is still required on Safari, which is the only
+   * browser this app actually runs in.
+   */
+  .ridge-hour {
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 94%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 94%);
+    opacity: 0.92;
+  }
+  /* The page takes the hour's low light, so the plate is not a picture stuck
+     on a white sheet — the whole screen is at that hour. */
+  .ridge-hour-tint {
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgb(var(--hour-tint) / 0.26) 52%,
+      rgb(var(--hour-tint) / 0.46) 100%
+    );
+  }
+  .mode-night .ridge-hour {
+    opacity: 0.55;
+  }
+  .mode-night .ridge-hour-tint {
+    background: linear-gradient(to bottom, transparent 0%, rgb(var(--c-base) / 0.72) 54%, rgb(var(--c-base)) 100%);
+  }
+
+  /*
    * Screen rhythm. Day is dense and quick, night has air — both from tokens,
    * so no component branches on the mode to decide how much room it gets.
    */

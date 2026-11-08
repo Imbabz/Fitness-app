@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import type { Block } from '../types';
 import { BLOCK_LABEL } from '../data/sessions';
+import { hourOf } from '../data/hours';
 import { haptic, HAPTIC } from '../lib/haptics';
 
 /*
@@ -45,13 +46,38 @@ export function Interstitial({ block, onDismiss }: { block: Block; onDismiss: ()
   }, [block, onDismiss, spine]);
 
   const copy = COPY[block];
+  const hour = hourOf(block);
 
   return (
     <button
       type="button"
       onClick={onDismiss}
-      className="ridge-interstitial fixed inset-0 z-50 flex w-full flex-col items-center justify-center gap-3 bg-base px-8 text-center"
+      className="ridge-interstitial fixed inset-0 z-50 isolate flex w-full flex-col items-center justify-center gap-3 bg-base px-8 text-center"
+      style={hour ? ({ '--hour-tint': hour.tint } as React.CSSProperties) : undefined}
     >
+      {/*
+        The hour. It sits in the top third and dissolves downwards into the
+        page — a plate with a hard bottom edge would read as a banner pasted
+        on, which is the thing to avoid. Below the fade nothing competes with
+        the text.
+
+        Decoration only: aria-hidden, pointer-events none, and it carries no
+        information the copy does not already give.
+      */}
+      {hour && (
+        <>
+          <img
+            src={hour.src}
+            alt=""
+            aria-hidden="true"
+            className="ridge-hour pointer-events-none absolute inset-x-0 top-0 -z-10 h-[42%] w-full object-cover"
+          />
+          <span
+            aria-hidden="true"
+            className="ridge-hour-tint pointer-events-none absolute inset-0 -z-10"
+          />
+        </>
+      )}
       <span
         className={[
           'text-xs font-semibold ridge-label',
