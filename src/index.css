@@ -138,6 +138,73 @@
   }
 
   /*
+   * ── The sky ────────────────────────────────────────────────────────────
+   *
+   * A landscape behind the app: one horizon rule and two slow banks of mist,
+   * drawn entirely with gradients. No images, so nothing here costs a network
+   * call or a byte of precache, and it works the same offline — see CLAUDE.md
+   * rule 5.
+   *
+   * Gradients rather than `filter: blur()` on purpose: a blurred full-screen
+   * layer is repainted every frame on a phone, a gradient is not.
+   *
+   * It is `fixed` and must stay out of any transformed ancestor, or it becomes
+   * positioned against that element instead of the viewport — the same trap
+   * that re-anchored the rest-timer sheet. It is rendered as the first child of
+   * the app root, which has no transform.
+   */
+  .ridge-sky {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  /* The horizon. One hairline, faded at both ends so it reads as distance
+     rather than as a divider. */
+  .ridge-sky::before {
+    content: '';
+    position: absolute;
+    top: 14%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      rgb(var(--c-horizon) / 0.42) 18%,
+      rgb(var(--c-horizon) / 0.42) 82%,
+      transparent 100%
+    );
+    transition: background var(--t-mode) ease-in-out;
+  }
+  /* Two banks of mist at different heights and speeds. They drift past each
+     other, so the pattern never repeats within a session. */
+  .ridge-sky::after {
+    content: '';
+    position: absolute;
+    inset: -20% -40%;
+    background:
+      radial-gradient(
+        60% 18% at 30% 34%,
+        rgb(var(--c-mist) / 0.4) 0%,
+        rgb(var(--c-mist) / 0) 70%
+      ),
+      radial-gradient(
+        70% 14% at 72% 52%,
+        rgb(var(--c-mist) / 0.26) 0%,
+        rgb(var(--c-mist) / 0) 72%
+      ),
+      radial-gradient(
+        90% 26% at 50% 84%,
+        rgb(var(--c-mist) / 0.26) 0%,
+        rgb(var(--c-mist) / 0) 76%
+      );
+    animation: ridge-drift 96s ease-in-out infinite;
+    transition: background var(--t-mode) ease-in-out;
+  }
+
+  /*
    * Screen rhythm. Day is dense and quick, night has air — both from tokens,
    * so no component branches on the mode to decide how much room it gets.
    */
@@ -250,5 +317,23 @@
   }
   * {
     scroll-behavior: auto !important;
+  }
+}
+
+/* The mist drifts. Small and very slow: at this scale it is weather, not motion. */
+@keyframes ridge-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(2.5%, -1.5%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The sky stays, the weather stops. */
+  .ridge-sky::after {
+    animation: none;
   }
 }

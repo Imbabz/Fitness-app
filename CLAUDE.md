@@ -168,7 +168,9 @@ These are not preferences. Breaking them breaks the product.
 - Vite + React 18 + TypeScript, Tailwind, lucide-react. **That is the whole
   dependency list.** Adding one requires justification in the PR description.
 - Theme colours are CSS custom properties on `<html>`. Day/night is a class
-  swap, never props drilled through the tree.
+  swap, never props drilled through the tree. Day is paper and ink, night is
+  indigo and moonlight — the asymmetry is deliberate, see the `theme-tokens`
+  skill before retuning it.
 - State lives in one `AppState` object, one localStorage key (`ridge:state:v1`),
   versioned. Every read is wrapped in try/catch with a seed-data fallback. A
   corrupt store must degrade, never white-screen.
@@ -295,4 +297,9 @@ Things that have already gone wrong once here:
   browser rather than trusting that the rule applies.
 - **`toISOString()` for a date key.** It is UTC, and it silently shifts the date
   for an evening session west of GMT. Use `todayKey()` from `lib/time.ts`.
+- **A light ground breaks contrast a dark one hid.** Day is paper now. The tier
+  that fails first is `--c-faint`: on paper it sits on the page as often as on a
+  card, so it needs 4.5:1 against `--c-base`, not only against `--c-surface`.
+  Measure the ratios in the browser across both modes; do not eyeball a
+  screenshot.
 - **`text-base` is a colour, not a size.** `--c-base` is the page background.

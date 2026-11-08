@@ -50,6 +50,7 @@ function Shell() {
   if ((view === 'session' || view === 'routine') && session) {
     return (
       <main className="mx-auto min-h-dvh w-full max-w-md">
+        <div className="ridge-sky" aria-hidden="true" />
         <Journey
           session={session}
           onExit={() => {
@@ -75,6 +76,7 @@ function Shell() {
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col">
+      <div className="ridge-sky" aria-hidden="true" />
       <header className="flex items-center justify-between px-5 pb-1.5 pt-[max(0.875rem,env(safe-area-inset-top))]">
         <span className="ridge-label text-[0.6875rem] font-bold uppercase text-faint">Ridge</span>
         <button

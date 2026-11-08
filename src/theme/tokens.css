@@ -8,89 +8,108 @@
  *
  * The mode is a class on <html> (`.mode-day` / `.mode-night`). Nothing drills
  * mode through props.
+ *
+ * ── The palette, and why it is this one ───────────────────────────────────
+ *
+ * Day is paper and ink; night is indigo and moonlight. Two dark themes made
+ * the day/night cycle a change of hue, which is the weakest version of the
+ * app's organising idea — the gym screen and the wind-down screen looked like
+ * the same room with the bulb swapped. A light ground in daylight and a dark
+ * one after dark is the difference the metaphor was always claiming.
+ *
+ * Colours are named from the traditional Japanese set, because the brief is
+ * graphic and sober rather than decorative: a near-monochrome ground carrying
+ * one saturated accent, the way a seal sits on a print.
+ *
+ *   藍  ai        indigo      — the accent and the main block
+ *   朱  shu       vermillion  — the spine block, the one that must be noticed
+ *   浅葱 asagi     pale teal   — the warm-up
+ *   藤  fuji      wisteria    — mobility and restore
+ *   蘇芳 suou      maroon      — danger, kept duller than the vermillion
+ *   月白 geppaku   moon-white  — ink at night
  */
 
 :root {
   --t-mode: 600ms; /* background / accent / card cross-fade */
   --t-text: 220ms; /* text colour, faster so it doesn't smear */
-  --r-card: 8px;
+  --r-card: 5px;
 }
 
-/* ── Day — gym. Near-black, hot amber, hard edges. ────────────────────── */
+/* ── Day — gym. Washi paper, sumi ink, an indigo seal. ────────────────── */
 .mode-day {
-  /*
-   * The base drops and the surfaces rise, so a card is a clear step out of the
-   * page rather than a slightly different grey. The old pair sat four points
-   * apart and read as one flat field, which is most of what made the screen
-   * feel like a form to fill in.
-   */
-  --c-base: 15 17 21;
-  --c-surface: 26 29 36;
-  --c-raised: 39 43 53;
-  --c-line: 61 68 82;
-  --c-ink: 244 246 250;
-  --c-muted: 162 170 184;
-  --c-faint: 136 143 156; /* 4.5:1 on surface — this tier carries 10-12px text */
-  --c-accent: 255 142 42; /* hotter and more saturated than the old amber */
-  --c-accent-soft: 128 70 18;
+  --c-base: 240 234 224; /* unbleached paper */
+  --c-surface: 253 251 247; /* a sheet laid on the page */
+  --c-raised: 222 213 196;
+  --c-line: 198 189 172;
+  --c-ink: 26 27 30; /* sumi */
+  --c-muted: 92 96 104;
+  --c-faint: 98 102 110; /* 4.5:1 on BASE, not just on surface — this tier carries 10-12px text, and on paper much of it sits on the page itself */
+  --c-accent: 45 78 125; /* 藍 */
+  --c-accent-soft: 206 216 230;
 
-  --c-warmup: 110 170 208;
-  --c-main: 255 142 42;
-  --c-spine: 232 112 78; /* warmer than main — spine work reads as its own category */
-  --c-mobility: 164 152 208;
-  --c-danger: 232 98 88;
+  --c-warmup: 74 124 146; /* 浅葱 */
+  --c-main: 45 78 125; /* 藍 */
+  --c-spine: 190 62 38; /* 朱 — a different category of work, not more main work */
+  --c-mobility: 118 102 158; /* 藤 */
+  --c-danger: 140 48 48; /* 蘇芳 — duller than the vermillion so the two do not read alike */
 
-  --r-card: 8px; /* sharper: pillowy corners are the opposite of athletic */
+  --c-horizon: 198 188 172;
+  --c-mist: 206 196 178;
+
+  --r-card: 5px; /* print, not plastic */
   --t-motion: 150ms; /* snappy */
-  --grad-top: 32 27 24;
-  --grad-bottom: 13 15 19;
+  --grad-top: 248 243 234;
+  --grad-bottom: 233 226 214;
   --card-border-opacity: 1; /* identity: day keeps each border's own alpha */
-  --shadow-card: 0 1px 0 0 rgb(255 255 255 / 0.04);
-  --tracking-title: -0.03em;
-  --weight-title: 800;
-  --stage-gap: 1rem;
+  --shadow-card: 0 1px 2px 0 rgb(40 34 26 / 0.05);
+  --tracking-title: -0.022em;
+  --weight-title: 600;
+  --stage-gap: 1.4rem;
 
   /*
-   * Density is itself part of the day/night metaphor, not a global setting.
-   * The gym screen is dense and quick because you read it between sets with
-   * chalky hands; the night screen has air because the point of it is to slow
-   * down. Same components, different rhythm.
+   * Air. The previous pass pushed density hard and the app got terse; the brief
+   * since is for something lighter, so the rhythm opens again. Day still sits
+   * tighter than night, because you read it between sets, but the gap is now
+   * one of degree rather than one of character.
    */
-  --gap-screen: 1.1rem;
-  --pad-card: 0.9rem;
-  --tracking-label: 0.18em;
+  --gap-screen: 1.4rem;
+  --pad-card: 1.15rem;
+  --tracking-label: 0.2em;
 }
 
-/* ── Night — restore. Deep indigo, violet, low luminance. ─────────────── */
+/* ── Night — restore. Indigo ground, moonlight ink. ───────────────────── */
 .mode-night {
-  --c-base: 15 16 30; /* deep indigo */
-  --c-surface: 27 29 52;
-  --c-raised: 38 41 70;
-  --c-line: 55 58 92;
-  --c-ink: 218 219 238;
-  --c-muted: 148 150 182;
-  --c-faint: 130 132 160; /* 4.5:1 on surface — this tier carries 10-12px text */
-  --c-accent: 165 154 232; /* violet */
-  --c-accent-soft: 74 68 122;
+  --c-base: 14 17 30;
+  --c-surface: 24 28 46;
+  --c-raised: 36 42 64;
+  --c-line: 56 63 92;
+  --c-ink: 228 231 242; /* 月白 */
+  --c-muted: 150 158 184;
+  --c-faint: 132 140 166; /* 4.5:1 on surface — this tier carries 10-12px text */
+  --c-accent: 158 180 220; /* moonlight */
+  --c-accent-soft: 62 72 108;
 
-  --c-warmup: 128 156 200;
-  --c-main: 165 154 232;
-  --c-spine: 196 152 214;
-  --c-mobility: 150 178 218;
-  --c-danger: 208 122 126;
+  --c-warmup: 126 168 196;
+  --c-main: 158 180 220;
+  --c-spine: 214 118 96; /* vermillion does not survive low light; this is it, softened */
+  --c-mobility: 178 162 212; /* 藤 */
+  --c-danger: 198 108 104;
 
-  --r-card: 14px; /* still softer than day, less pillowy than before */
+  --c-horizon: 70 80 118;
+  --c-mist: 58 70 112;
+
+  --r-card: 10px; /* softer than day, as it always was */
   --t-motion: 400ms; /* slow, breathing */
-  --grad-top: 30 28 58;
-  --grad-bottom: 13 14 27;
-  --card-border-opacity: 0.3; /* borders recede at night, they do not vanish */
-  --shadow-card: 0 2px 24px -8px rgb(0 0 0 / 0.5);
-  --tracking-title: 0.005em;
-  --weight-title: 600;
-  --stage-gap: 1.6rem;
+  --grad-top: 26 29 58;
+  --grad-bottom: 10 12 24;
+  --card-border-opacity: 0.35; /* borders recede at night, they do not vanish */
+  --shadow-card: 0 2px 24px -8px rgb(0 0 0 / 0.55);
+  --tracking-title: 0.012em;
+  --weight-title: 500;
+  --stage-gap: 2rem;
 
-  /* The counterpart to day's density: night keeps its air. See the note above. */
-  --gap-screen: 1.5rem;
-  --pad-card: 1.15rem;
-  --tracking-label: 0.22em;
+  /* The counterpart to day's rhythm: night keeps more of it. See the note above. */
+  --gap-screen: 1.8rem;
+  --pad-card: 1.35rem;
+  --tracking-label: 0.24em;
 }

@@ -826,3 +826,25 @@
     transform: rotate(-45deg);
   }
 }
+
+/*
+ * The breath. See the note on `Figure` in primitives.tsx for why this is a
+ * translate and never a scale, and why its period is the loop times phi.
+ *
+ * It overrides the base rule's duration, which it can only do because that
+ * rule is wrapped in `:where()` and contributes no specificity. If the breath
+ * ever starts running at the movement's tempo, that wrapper has been removed.
+ */
+.ra-breath {
+  animation-name: ra-breath;
+  animation-duration: calc(var(--loop, 2.2s) * 1.618);
+}
+@keyframes ra-breath {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.7px);
+  }
+}

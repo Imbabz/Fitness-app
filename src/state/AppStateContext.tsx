@@ -108,7 +108,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     el.classList.toggle('mode-night', state.mode === 'night');
     document
       .querySelector('meta[name="theme-color"]')
-      ?.setAttribute('content', state.mode === 'day' ? '#1a1d23' : '#121322');
+      ?.setAttribute('content', state.mode === 'day' ? '#faf6ee' : '#1a1d3a');
   }, [state.mode]);
 
   useEffect(() => {

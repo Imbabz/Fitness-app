@@ -66,20 +66,68 @@ selector in `index.css`:
 
 ## The current token set
 
+Day is **paper and ink**, night is **indigo and moonlight**. That asymmetry is
+the point: two dark themes made the day/night cycle a change of hue, which is
+the weakest version of the app's organising idea. A light ground in daylight
+and a dark one after dark is the difference the metaphor was always claiming.
+
+Colours are named from the traditional Japanese set, because the look is meant
+to be graphic and sober rather than decorative — a near-monochrome ground
+carrying one saturated accent, the way a seal sits on a print.
+
 | Token | Day | Night |
 |---|---|---|
-| `--c-base` | near-black `#1a1d23` | deep indigo |
-| `--c-surface` / `--c-raised` | half-steps lighter | half-steps lighter, softer |
-| `--c-line` | visible 1px borders | low opacity; night has no hard borders |
-| `--c-ink` / `--c-muted` / `--c-faint` | text ramp | lower contrast |
-| `--c-accent` | amber `#f2a541` | violet |
-| `--c-warmup` / `--c-main` / `--c-spine` / `--c-mobility` | block colours | block colours |
-| `--c-danger` | pain flag, destructive actions | ditto |
-| `--r-card` | 11px, sharp | 18px, softer |
+| `--c-base` | unbleached paper | deep indigo |
+| `--c-surface` / `--c-raised` | a near-white sheet, then a warmer step **below** the page | half-steps lighter |
+| `--c-line` | visible hairlines | low opacity; night has no hard borders |
+| `--c-ink` / `--c-muted` / `--c-faint` | sumi text ramp | 月白 moon-white ramp |
+| `--c-accent` | 藍 indigo | moonlight blue |
+| `--c-warmup` | 浅葱 asagi | paler asagi |
+| `--c-main` | 藍, same as the accent | moonlight blue |
+| `--c-spine` | 朱 vermillion | softened vermillion |
+| `--c-mobility` | 藤 wisteria | paler wisteria |
+| `--c-danger` | 蘇芳 maroon, kept duller than the vermillion | muted red |
+| `--c-horizon` / `--c-mist` | the sky layer; see below | ditto |
+| `--r-card` | 5px, print | 10px, softer |
 | `--t-motion` | 150ms, snappy | 400ms, breathing |
 | `--t-mode` | 600ms cross-fade | same |
 | `--t-text` | 220ms | same |
+| `--gap-screen` / `--pad-card` | the screen rhythm; day sits tighter | night keeps more air |
+| `--tracking-title` / `--weight-title` / `--tracking-label` | type, by mode | ditto |
+| `--stage-gap` | vertical rhythm inside a stage | wider |
 | `--grad-top` / `--grad-bottom` | body gradient | body gradient |
+
+### `raised` is below the page in day, above it at night
+
+On a dark theme an elevated surface is lighter than the page, and `raised` was
+written that way. On paper it has to go the other way: a filled button a few
+points lighter than a near-white page is invisible, and the Start button
+briefly shipped reading as bare text. In day, `surface` is the sheet laid on
+top and `raised` is the darker fill; at night both step up. Check a filled
+button against the page, not just text against a card.
+
+### The sky
+
+`.ridge-sky` in `index.css` draws a horizon hairline and three banks of mist
+from `--c-horizon` and `--c-mist`, entirely with gradients — no images, so it
+costs no network call and no precache, which rule 5 requires.
+
+Two things about it are load-bearing. It is `position: fixed` and must stay out
+of any transformed ancestor, or it anchors to that element instead of the
+viewport — the same trap that re-anchored the rest-timer sheet. And the mist is
+gradients rather than `filter: blur()`, because a blurred full-screen layer
+repaints every frame on a phone.
+
+In day the mist is **darker** than the page, not lighter. A white mist on white
+paper is nothing; it has to behave like thinned ink.
+
+### Measure contrast, do not eyeball it
+
+A light ground breaks contrast in places a dark one never did. The tier that
+goes first is `--c-faint`, which carries 10–12px text and on paper sits on the
+page itself as often as on a card — it needs 4.5:1 against **`--c-base`**, not
+only against `--c-surface`. Compute the ratios in the browser across both
+modes before shipping a palette change.
 
 ## Motion timing conventions
 
@@ -123,4 +171,7 @@ separation if you retune the palette.
 - [ ] Exposed through `tailwind.config.js` if components need it
 - [ ] No `state.mode` branching added to a className
 - [ ] Checked in both modes at phone width, including the cross-fade itself
+- [ ] Contrast measured, not eyeballed: every text tier ≥ 4.5:1 on **both**
+      `--c-surface` and `--c-base`, and a filled button distinguishable from
+      the page
 - [ ] `npm run build` passes

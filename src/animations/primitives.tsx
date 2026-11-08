@@ -1,4 +1,4 @@
-import { createContext, useContext, type CSSProperties, type ReactNode } from 'react';
+import { Children, createContext, isValidElement, useContext, type CSSProperties, type ReactNode } from 'react';
 
 /*
  * Shared conventions for every exercise animation. See
@@ -26,6 +26,29 @@ export interface AnimProps {
  */
 export const LoopOverride = createContext<number | null>(null);
 
+/*
+ * The body breathes.
+ *
+ * Every figure gets a slow vertical rise and fall on top of whatever its own
+ * joints are doing, so a figure between reps is alive rather than switched off.
+ * It is the cheapest way to make these read as drawn rather than diagrammed,
+ * and it costs nothing: no new element, no new asset, one transform.
+ *
+ * Three things make it safe:
+ *
+ *  - It is a TRANSLATE and never a scale. The group wraps the animated joints,
+ *    so a scale here would move where their origins land and quietly break the
+ *    rigid-body rule; a translate shifts everything together and cannot.
+ *  - The ground and any equipment stay out of it. They are the room, not the
+ *    body, and a floor that breathes is a floor that is wrong. `Figure` sorts
+ *    them out of the breathing group rather than asking each animation to.
+ *  - Its period is the movement's loop times phi, so the two rhythms never
+ *    settle into step with each other. A breath locked to the rep reads as one
+ *    mechanism; drifting against it reads as two. That also avoids inventing a
+ *    fourth timing constant, which the theme has a rule against.
+ */
+const ENVIRONMENT = new Set<unknown>([Ground, Prop]);
+
 export function Figure({
   children,
   size = 64,
@@ -34,6 +57,12 @@ export function Figure({
 }: AnimProps & { children: ReactNode; loop?: number }) {
   const override = useContext(LoopOverride);
   const seconds = override ?? loop;
+
+  const room: ReactNode[] = [];
+  const body: ReactNode[] = [];
+  for (const child of Children.toArray(children)) {
+    (isValidElement(child) && ENVIRONMENT.has(child.type) ? room : body).push(child);
+  }
 
   return (
     <svg
@@ -49,7 +78,8 @@ export function Figure({
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      {children}
+      {room}
+      <g className="ra-breath">{body}</g>
     </svg>
   );
 }
