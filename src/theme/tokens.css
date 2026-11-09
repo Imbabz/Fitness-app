@@ -57,7 +57,7 @@
   --c-line: 205 213 222;
   --c-ink: 17 21 28;
   --c-muted: 84 94 107;
-  --c-faint: 102 112 126; /* 4.5:1 on BASE, not just on surface */
+  --c-faint: 90 99 112; /* 4.5:1 sur la page LAVÉE, pas seulement sur --c-base : le ciel de l'heure assombrit la bande du haut, et c'est là que vit le plus petit texte */
   --c-accent: 29 61 110; /* 藍 — deepened to hold against white */
   --c-accent-soft: 208 220 236;
 

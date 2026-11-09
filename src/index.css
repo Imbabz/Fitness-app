@@ -170,6 +170,41 @@
     pointer-events: none;
     overflow: hidden;
   }
+  /*
+   * Le ciel de l'heure, en fond de page.
+   *
+   * Très pâle, et volontairement : au-delà d'une quinzaine de pour cent il
+   * commence à manger le contraste du texte posé dessus, et le contraste du
+   * texte n'est pas négociable. Ce qu'on cherche ici n'est pas une image mais
+   * une couleur d'air — on doit le remarquer en le cherchant, pas avant.
+   */
+  .ridge-hour-wash {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 38%;
+    object-fit: cover;
+    /* Décalé vers la droite : la lune de la plaque de nuit tombe sinon
+       exactement derrière le chevron de retour et le titre d_etape, et une
+       tache claire derrière un texte est une tache, pas une lune. Elle garde
+       sa place en plein écran, dans l'interstitiel. */
+    object-position: 100% top;
+    /* En clair, une image posée à 17 % sur une page presque blanche ne se voit
+       pas : elle s'éclaircit vers le papier. En multiply elle le teinte au
+       lieu de s'y diluer, ce qui est ce qu'on veut — une couleur d'air, pas
+       une photo. La nuit c'est l'inverse : la page est sombre, multiply
+       l'éteindrait, donc fondu normal. */
+    mix-blend-mode: multiply;
+    opacity: 0.45;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 22%, rgba(0, 0, 0, 0.3) 66%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 22%, rgba(0, 0, 0, 0.3) 66%, transparent 100%);
+    transition: opacity var(--t-mode) ease-in-out;
+  }
+  .mode-night .ridge-hour-wash {
+    mix-blend-mode: normal;
+    opacity: 0.3;
+  }
   /* The horizon. One hairline, faded at both ends so it reads as distance
      rather than as a divider. */
   .ridge-sky::before {
@@ -225,9 +260,14 @@
    * browser this app actually runs in.
    */
   .ridge-hour {
-    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 94%);
-    mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 94%);
-    opacity: 0.92;
+    /* The plate has to stop being a picture and start being the top of the
+       page. The fade runs to the plate's own bottom edge, not to 94% of it:
+       the last 6% were still at a few percent alpha, which is a visible line
+       on a phone screen, and a visible line is the whole thing we are
+       avoiding. Two stops, both soft, nothing hard anywhere. */
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 30%, rgba(0, 0, 0, 0.35) 72%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 30%, rgba(0, 0, 0, 0.35) 72%, transparent 100%);
+    opacity: 0.95;
   }
   /* The page takes the hour's low light, so the plate is not a picture stuck
      on a white sheet — the whole screen is at that hour. */
@@ -235,15 +275,24 @@
     background: linear-gradient(
       to bottom,
       transparent 0%,
-      rgb(var(--hour-tint) / 0.26) 52%,
-      rgb(var(--hour-tint) / 0.46) 100%
+      rgb(var(--hour-tint) / 0.2) 46%,
+      rgb(var(--hour-tint) / 0.4) 100%
     );
   }
+  /* Posé sur le ciel : il lui faut sa propre couleur, pas celle de la page,
+     parce qu'il se lit sur l'image et non sur le fond. */
+  .ridge-hour-name {
+    color: rgb(255 255 255 / 0.82);
+    text-shadow: 0 1px 10px rgb(10 20 40 / 0.35);
+  }
+  .mode-night .ridge-hour-name {
+    color: rgb(226 234 250 / 0.72);
+  }
   .mode-night .ridge-hour {
-    opacity: 0.55;
+    opacity: 0.8;
   }
   .mode-night .ridge-hour-tint {
-    background: linear-gradient(to bottom, transparent 0%, rgb(var(--c-base) / 0.72) 54%, rgb(var(--c-base)) 100%);
+    background: linear-gradient(to bottom, transparent 0%, rgb(var(--c-base) / 0.55) 50%, rgb(var(--c-base) / 0.94) 100%);
   }
 
   /*
@@ -260,6 +309,12 @@
   .ridge-el {
     opacity: 0.88;
     will-change: transform;
+    /* Rien n'est coupé net dans cette app. Le pied de l'arbre et la base du
+       feu touchent le bord bas de leur propre image : sans ce fondu, le bord
+       bas de l'écran les tranche comme un ciseau. Ils se dissolvent dans la
+       page, exactement comme la plaque se dissout en haut. */
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 78%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 78%, transparent 100%);
   }
   .ridge-el-sway {
     transform-origin: bottom center;
@@ -268,6 +323,43 @@
   .ridge-el-drift {
     transform-origin: bottom center;
     animation: ridge-drift-el 13s ease-in-out infinite;
+  }
+  /* Le feu est une source de lumière avant d'être un objet. Sans cette lueur
+     il se lit comme un autocollant posé sur la nuit ; avec elle, il éclaire
+     son coin d'écran et le reste suit. La lueur bat sur le même tempo que la
+     flamme, un cran plus lent. */
+  .ridge-el-glow::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 380px;
+    height: 380px;
+    transform: translate(-50%, 34%);
+    /* `transparent` est un noir transparent : en dégradé radial il tire vers
+       le noir avant de disparaître et laisse un anneau net sur un fond
+       sombre. La dernière teinte est donc la même couleur à alpha zéro, et la
+       chute est étalée sur cinq arrêts pour que rien ne banding. */
+    background: radial-gradient(
+      circle at center,
+      rgb(255 178 96 / 0.2) 0%,
+      rgb(255 168 86 / 0.13) 24%,
+      rgb(255 156 74 / 0.07) 44%,
+      rgb(255 150 70 / 0.028) 64%,
+      rgb(255 150 70 / 0) 82%
+    );
+    animation: ridge-glow 5.2s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .mode-night .ridge-el-glow::before {
+    background: radial-gradient(
+      circle at center,
+      rgb(255 188 118 / 0.23) 0%,
+      rgb(255 172 92 / 0.15) 24%,
+      rgb(255 156 74 / 0.08) 44%,
+      rgb(255 148 66 / 0.03) 64%,
+      rgb(255 148 66 / 0) 82%
+    );
   }
   .ridge-el-flicker {
     transform-origin: bottom center;
@@ -408,6 +500,16 @@
   }
 }
 
+@keyframes ridge-glow {
+  0%,
+  100% {
+    opacity: 0.76;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 @keyframes ridge-sway {
   0%,
   100% {
@@ -449,6 +551,9 @@
   .ridge-el-sway,
   .ridge-el-drift,
   .ridge-el-flicker {
+    animation: none;
+  }
+  .ridge-el-glow::before {
     animation: none;
   }
 }
