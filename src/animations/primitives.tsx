@@ -125,6 +125,8 @@ export function Prop({ children }: { children: ReactNode }) {
  * difference is small on purpose: enough to feel deliberate, not enough to
  * notice as a decision.
  */
-export function Head({ cx = 32, cy = 12, r = 5 }: { cx?: number; cy?: number; r?: number }) {
+// La tête pleine pèse plus qu'un contour du même rayon : 5 devenait un
+// ballon. 4,4 rend le poids d'avant à une tache.
+export function Head({ cx = 32, cy = 12, r = 4.4 }: { cx?: number; cy?: number; r?: number }) {
   return <circle cx={cx} cy={cy} r={r} className="ridge-head" />;
 }

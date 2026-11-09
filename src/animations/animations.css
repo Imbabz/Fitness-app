@@ -54,9 +54,55 @@
  */
 .ridge-anim {
   stroke-width: var(--stroke-figure, 3);
+  stroke-linejoin: round;
 }
 .ridge-head {
-  stroke-width: calc(var(--stroke-figure, 3) + 0.35px);
+  /*
+   * La tête est pleine.
+   *
+   * Un cercle vide au bout d'un trait, c'est un pictogramme ; une tache
+   * pleine, c'est un geste de pinceau — on pose, on lève. C'est aussi ce qui
+   * se lit le mieux à 28 px, où un contour de 2,7 px sur un rayon de 5
+   * devient un anneau gris.
+   *
+   * Et un avertissement : `+ 0.35px` ici était invalide depuis le premier
+   * jour. `--stroke-figure` vaut 2.7, sans unité, et `calc(2.7 + 0.35px)`
+   * mélange un nombre et une longueur — la déclaration entière est jetée par
+   * l'analyseur, sans erreur. La tête n'a donc jamais été plus épaisse que le
+   * reste. Tout calcul sur ce jeton reste sans unité.
+   */
+  fill: currentColor;
+  stroke: none;
+}
+
+/*
+ * Le trait s'allège vers les extrémités.
+ *
+ * Un pinceau est chargé au départ du geste et sec à la fin : le tronc porte
+ * l'encre, l'avant-bras beaucoup moins. C'est la seule chose qui sépare
+ * vraiment un dessin d'un pictogramme, et une épaisseur constante partout
+ * était ce qui faisait lire ces figures comme des icônes d'interface.
+ *
+ * Trois paliers seulement, sur le vocabulaire de classes qui existe déjà —
+ * `-torso`, `-arm`, `-forearm` — donc les trente figures en bénéficient
+ * ensemble, sans toucher une seule d'entre elles.
+ *
+ * Spécificité : (0,2,0), au-dessus du (0,1,0) de `.ridge-anim`, et aucune
+ * règle `.ra-*` ne déclare d'épaisseur, donc rien n'entre en conflit. Vérifié
+ * en lisant les valeurs calculées, pas en regardant.
+ */
+.ridge-anim [class*='-torso'],
+.ridge-anim [class*='-body'],
+.ridge-anim [class*='-thigh'],
+.ridge-anim [class*='-upper'] {
+  stroke-width: calc(var(--stroke-figure, 3) + 0.6);
+}
+.ridge-anim [class*='-forearm'],
+.ridge-anim [class*='-shin'],
+.ridge-anim [class*='-hand'],
+.ridge-anim [class*='-neck'],
+.ridge-anim [class*='-tail'] {
+  stroke-width: calc(var(--stroke-figure, 3) - 1);
 }
 
 /*

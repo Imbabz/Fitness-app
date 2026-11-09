@@ -189,3 +189,24 @@ to skip step 2.
 - [ ] `Ground` present for floor-based movements
 - [ ] The 50% pose is a good freeze-frame
 - [ ] Registered in `ANIMATIONS` and referenced by an exercise
+
+
+## The stroke is not uniform
+
+The figures are brush marks, not pictograms, and the thing that makes the
+difference is that the line loses ink towards the extremities. Three steps,
+declared once in `animations.css` against the class vocabulary that already
+exists — `-torso`, `-body`, `-thigh`, `-upper` heavier; `-arm`, `-leg` at the
+base weight; `-forearm`, `-shin`, `-hand`, `-neck`, `-tail` lighter. A new
+animation gets the taper for free by naming its groups from that vocabulary,
+and gets none of it by inventing new names. Name the parts.
+
+The head is filled, not stroked: a hollow ring at 28px is a grey doughnut, and
+a loaded brush puts down a mark, it does not outline one.
+
+Two things to check by reading the computed style rather than by looking:
+
+- that your group names actually matched one of the three tiers;
+- that any `calc()` you write on `--stroke-figure` is unitless. The token has
+  no unit. `calc(var(--stroke-figure) + 0.35px)` is invalid and is dropped
+  silently, which is how the head spent its whole life at the body's weight.

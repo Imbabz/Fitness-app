@@ -87,10 +87,6 @@ export function Interstitial({ block, onDismiss }: { block: Block; onDismiss: ()
             aria-hidden="true"
             className="ridge-hour pointer-events-none absolute inset-x-0 top-0 -z-10 h-[38%] w-full object-cover object-top"
           />
-          <span
-            aria-hidden="true"
-            className="ridge-hour-tint pointer-events-none absolute inset-0 -z-10"
-          />
           {/* Le nom de l'heure, posé dans le ciel. C'est ce qui fait des
               quatre plaques un même lieu plutôt que quatre images. */}
           <span
@@ -99,7 +95,11 @@ export function Interstitial({ block, onDismiss }: { block: Block; onDismiss: ()
           >
             {hour.label}
           </span>
-          {hour.element && (
+          <span
+            aria-hidden="true"
+            className="ridge-hour-tint pointer-events-none absolute inset-0 -z-10"
+          />
+          {hour.elements.map((el, i) => (
             /*
              * L'objet est enveloppé, et la lueur est portée par l'enveloppe.
              * `::before` ne s'applique pas à un élément remplacé : posé sur le
@@ -107,21 +107,35 @@ export function Interstitial({ block, onDismiss }: { block: Block; onDismiss: ()
              * sans erreur ni avertissement.
              */
             <span
+              key={el.src + i}
               aria-hidden="true"
               className={[
                 'pointer-events-none absolute bottom-0 -z-10 block',
-                hour.element.motion === 'flicker' ? 'ridge-el-glow' : '',
-                hour.element.side === 'left' ? 'left-3' : 'right-3',
+                el.motion === 'flicker' ? 'ridge-el-glow' : '',
+                el.far ? 'ridge-el-far' : '',
+                el.side === 'left' ? 'left-3' : 'right-3',
               ].join(' ')}
             >
               <img
-                src={hour.element.src}
+                src={el.src}
                 alt=""
-                style={{ height: hour.element.h }}
-                className={['block w-auto ridge-el', MOTION[hour.element.motion]].join(' ')}
+                style={{ height: el.h }}
+                className={['block w-auto ridge-el', MOTION[el.motion]].join(' ')}
               />
             </span>
-          )}
+          ))}
+          {/*
+            Un voile léger par-dessus les objets.
+            Le grand voile de l'heure reste dessous, où il colore la page ;
+            celui-ci est faible et sert à autre chose : donner aux objets la
+            lumière de leur propre scène. Sans lui, un arbre vert restait vert
+            à l'heure dorée. Avec le grand voile par-dessus, essayé d'abord,
+            il n'en restait rien du tout — la nuit le passe à 94 %.
+          */}
+          <span
+            aria-hidden="true"
+            className="ridge-hour-veil pointer-events-none absolute inset-0 -z-10"
+          />
         </>
       )}
       <span
