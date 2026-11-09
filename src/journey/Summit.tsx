@@ -39,7 +39,7 @@ export function Summit({
 
   return (
     <div className="ridge-enter flex min-h-dvh flex-col px-5 pb-8 pt-[max(1.5rem,env(safe-area-inset-top))]">
-      <span className="text-xs font-semibold uppercase tracking-[0.2em] text-faint">Summit</span>
+      <span className="text-xs font-semibold ridge-label text-faint">Summit</span>
       <h1 className="mt-2 text-4xl ridge-title text-ink">{session.title} done.</h1>
 
       <div className="mt-6 grid grid-cols-2 gap-3">
@@ -72,7 +72,7 @@ export function Summit({
       {/* Domain rule 3. The wording is deliberately specific — "sore" is normal,
           radiating symptoms down a dermatome are not the same thing. The heading
           exists so this reads as a question to answer, not an optional field. */}
-      <span className="mt-6 text-xs font-semibold uppercase tracking-wider text-faint">
+      <span className="mt-6 text-xs font-semibold ridge-label text-faint">
         Before you save
       </span>
       <button
@@ -105,7 +105,7 @@ export function Summit({
       </button>
 
       <label className="mt-4 block">
-        <span className="text-xs font-semibold uppercase tracking-wider text-faint">Note</span>
+        <span className="text-xs font-semibold ridge-label text-faint">Note</span>
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
@@ -146,7 +146,7 @@ function Stat({ value, label }: { value: string; label: string }) {
   return (
     <div className="rounded-card border border-line/60 bg-surface p-4">
       <div className="text-2xl font-bold tabular-nums text-ink">{value}</div>
-      <div className="mt-0.5 text-xs font-medium uppercase tracking-wider text-faint">{label}</div>
+      <div className="mt-0.5 text-xs font-medium ridge-label text-faint">{label}</div>
     </div>
   );
 }

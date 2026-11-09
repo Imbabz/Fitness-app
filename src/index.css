@@ -132,7 +132,17 @@
    * and lighter. Both come from tokens, so a heading only ever declares its
    * size — never its weight or tracking.
    */
+  /*
+   * The world voice. `.ridge-title` is applied to exactly the things that name
+   * rather than measure — a session, an exercise, a chapter — so the serif
+   * belongs on the class, not sprinkled at each call site.
+   *
+   * `ui-serif` resolves to New York on iOS, which the system already carries:
+   * no download, no network call, and not the Georgia that every generated
+   * page reaches for.
+   */
   .ridge-title {
+    font-family: theme('fontFamily.serif');
     font-weight: var(--weight-title);
     letter-spacing: var(--tracking-title);
   }
@@ -202,6 +212,66 @@
       );
     animation: ridge-drift 96s ease-in-out infinite;
     transition: background var(--t-mode) ease-in-out;
+  }
+
+  /*
+   * ── L'heure ────────────────────────────────────────────────────────────
+   *
+   * The plate dissolves rather than ending. A mask does the work, so there is
+   * no overlay rectangle to keep in sync with the page colour — the image
+   * simply stops existing towards its base, whatever is behind it.
+   *
+   * `-webkit-mask-image` is still required on Safari, which is the only
+   * browser this app actually runs in.
+   */
+  .ridge-hour {
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 94%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 46%, transparent 94%);
+    opacity: 0.92;
+  }
+  /* The page takes the hour's low light, so the plate is not a picture stuck
+     on a white sheet — the whole screen is at that hour. */
+  .ridge-hour-tint {
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgb(var(--hour-tint) / 0.26) 52%,
+      rgb(var(--hour-tint) / 0.46) 100%
+    );
+  }
+  .mode-night .ridge-hour {
+    opacity: 0.55;
+  }
+  .mode-night .ridge-hour-tint {
+    background: linear-gradient(to bottom, transparent 0%, rgb(var(--c-base) / 0.72) 54%, rgb(var(--c-base)) 100%);
+  }
+
+  /*
+   * Ce qui se tient au bas de l'écran.
+   *
+   * Trois mouvements, tous lents : l'arbre se balance depuis son pied, les
+   * champignons respirent, le feu palpite. Assez lents pour n'être remarqués
+   * que si on les cherche — la règle est que le mouvement non déclenché par
+   * l'utilisateur attire l'attention ou n'existe pas.
+   *
+   * L'arbre pivote depuis `bottom center`, jamais depuis son milieu : un
+   * arbre qui tourne autour de sa cime se lit immédiatement comme faux.
+   */
+  .ridge-el {
+    opacity: 0.88;
+    will-change: transform;
+  }
+  .ridge-el-sway {
+    transform-origin: bottom center;
+    animation: ridge-sway 11s ease-in-out infinite;
+  }
+  .ridge-el-drift {
+    transform-origin: bottom center;
+    animation: ridge-drift-el 13s ease-in-out infinite;
+  }
+  .ridge-el-flicker {
+    transform-origin: bottom center;
+    animation: ridge-flicker 2.6s ease-in-out infinite;
   }
 
   /*
@@ -334,6 +404,51 @@
 @media (prefers-reduced-motion: reduce) {
   /* The sky stays, the weather stops. */
   .ridge-sky::after {
+    animation: none;
+  }
+}
+
+@keyframes ridge-sway {
+  0%,
+  100% {
+    transform: rotate(-1.1deg);
+  }
+  50% {
+    transform: rotate(1.1deg);
+  }
+}
+@keyframes ridge-drift-el {
+  0%,
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+  50% {
+    transform: translateY(-1.5px) scaleY(1.012);
+  }
+}
+/* Le feu : la flamme monte et faiblit. Une échelle verticale plus une
+   variation d'opacité suffisent — une vraie vacillation demanderait des
+   images, et à cette taille personne ne la verrait. */
+@keyframes ridge-flicker {
+  0%,
+  100% {
+    transform: scaleY(1) scaleX(1);
+    opacity: 0.86;
+  }
+  38% {
+    transform: scaleY(1.035) scaleX(0.993);
+    opacity: 0.95;
+  }
+  64% {
+    transform: scaleY(0.985) scaleX(1.004);
+    opacity: 0.83;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ridge-el-sway,
+  .ridge-el-drift,
+  .ridge-el-flicker {
     animation: none;
   }
 }

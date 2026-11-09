@@ -128,7 +128,7 @@ export function Trailhead({
   return (
     <div className="ridge-enter flex min-h-dvh flex-col px-5 pb-8 pt-[max(1rem,env(safe-area-inset-top))]">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-[0.2em] text-faint">
+        <span className="text-xs font-semibold ridge-label text-faint">
           Session {session.id}
         </span>
         <button
@@ -228,7 +228,7 @@ export function Trailhead({
                     </span>
                   </span>
                   <span className="flex shrink-0 flex-col items-end gap-1">
-                    <span className="ridge-label text-[9px] font-semibold uppercase text-faint">
+                    <span className="ridge-label text-[9px] font-semibold text-faint">
                       {i === 0 || session.exercises[i - 1]?.block !== ex.block
                         ? BLOCK_LABEL[ex.block]
                         : ''}

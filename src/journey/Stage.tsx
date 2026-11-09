@@ -123,7 +123,7 @@ export function Stage({
         </button>
         <span
           className={[
-            'text-[11px] font-semibold uppercase ridge-label',
+            'text-[11px] font-semibold ridge-label',
             isSpine ? 'text-spine' : 'text-faint',
           ].join(' ')}
         >
@@ -221,7 +221,7 @@ export function Stage({
           <p className="text-muted">{exercise.execution}</p>
           {exercise.why && (
             <p className="border-l-2 border-line pl-3 text-faint">
-              <span className="font-semibold uppercase tracking-wider text-faint">Why</span>
+              <span className="font-semibold ridge-label text-faint">Why</span>
               <br />
               {exercise.why}
             </p>
