@@ -95,7 +95,7 @@ export function Interstitial({ block, onDismiss }: { block: Block; onDismiss: ()
               quatre plaques un même lieu plutôt que quatre images. */}
           <span
             aria-hidden="true"
-            className="ridge-hour-name pointer-events-none absolute inset-x-0 top-0 -z-10 pt-[max(1.75rem,env(safe-area-inset-top))] text-center ridge-title text-[0.8125rem] tracking-[0.08em]"
+            className="ridge-on-plate pointer-events-none absolute inset-x-0 top-0 -z-10 pt-[max(1.75rem,env(safe-area-inset-top))] text-center ridge-title text-[0.8125rem] tracking-[0.08em]"
           >
             {hour.label}
           </span>

@@ -279,14 +279,15 @@
       rgb(var(--hour-tint) / 0.4) 100%
     );
   }
-  /* Posé sur le ciel : il lui faut sa propre couleur, pas celle de la page,
-     parce qu'il se lit sur l'image et non sur le fond. */
-  .ridge-hour-name {
-    color: rgb(255 255 255 / 0.82);
-    text-shadow: 0 1px 10px rgb(10 20 40 / 0.35);
+  /* Un texte court posé sur une plaque, en haut d'écran. Il lui faut sa
+     propre couleur : le gris le plus pâle de la page y tombe sous 3:1. */
+  .ridge-on-plate {
+    color: rgb(56 66 80);
+    text-shadow: 0 1px 8px rgb(var(--c-base) / 0.55);
   }
-  .mode-night .ridge-hour-name {
-    color: rgb(226 234 250 / 0.72);
+  .mode-night .ridge-on-plate {
+    color: rgb(214 224 244 / 0.9);
+    text-shadow: 0 1px 10px rgb(4 8 18 / 0.7);
   }
   .mode-night .ridge-hour {
     opacity: 0.8;

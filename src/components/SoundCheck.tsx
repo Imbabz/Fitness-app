@@ -83,7 +83,7 @@ export function SoundCheck() {
         >
           <span
             className={[
-              'absolute top-1 h-6 w-6 rounded-full bg-ink transition-transform duration-200',
+              'absolute left-0 top-1 h-6 w-6 rounded-full border border-line/50 bg-surface shadow-sm transition-transform duration-200',
               state.settings.musicAppMode ? 'translate-x-7' : 'translate-x-1',
             ].join(' ')}
           />
