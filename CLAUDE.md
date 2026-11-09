@@ -302,4 +302,11 @@ Things that have already gone wrong once here:
   card, so it needs 4.5:1 against `--c-base`, not only against `--c-surface`.
   Measure the ratios in the browser across both modes; do not eyeball a
   screenshot.
+- **`calc()` on a unitless token.** `--stroke-figure` is `2.7`, with no unit,
+  so `calc(var(--stroke-figure) + 0.35px)` mixes a number and a length and the
+  whole declaration is thrown away at parse time — no error, no warning, the
+  element silently keeps the inherited value. The head's extra weight was
+  written that way and had never once applied. Any arithmetic on that token
+  stays unitless, and the way to know it took is to read the computed value,
+  not to look at the figure.
 - **`text-base` is a colour, not a size.** `--c-base` is the page background.

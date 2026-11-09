@@ -313,6 +313,22 @@
     color: rgb(214 224 244 / 0.9);
     text-shadow: 0 1px 10px rgb(4 8 18 / 0.7);
   }
+  .ridge-hour-veil {
+    background: linear-gradient(
+      to bottom,
+      rgb(var(--hour-tint) / 0) 40%,
+      rgb(var(--hour-tint) / 0.1) 70%,
+      rgb(var(--hour-tint) / 0.22) 100%
+    );
+  }
+  .mode-night .ridge-hour-veil {
+    background: linear-gradient(
+      to bottom,
+      rgb(var(--hour-tint) / 0) 40%,
+      rgb(var(--hour-tint) / 0.06) 72%,
+      rgb(var(--hour-tint) / 0.14) 100%
+    );
+  }
   .mode-night .ridge-hour {
     opacity: 0.8;
   }
@@ -340,6 +356,23 @@
        page, exactement comme la plaque se dissout en haut. */
     -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 78%, transparent 100%);
     mask-image: linear-gradient(to bottom, #000 0%, #000 78%, transparent 100%);
+  }
+  /* Au loin : plus pâle, un rien flou, et décalé vers l'intérieur pour ne
+     pas se tenir au même bord que l'objet du premier plan. */
+  .ridge-el-far {
+    opacity: 0.42;
+    /* Ce qui est loin perd sa couleur avant de perdre sa forme. */
+    filter: blur(0.6px) saturate(0.55);
+    /* Retourné, et remonté de quelques pixels.
+       Retourné parce que c'est le même fichier : deux fois la même
+       silhouette côte à côte ne se lit pas comme deux arbres mais comme un
+       copier-coller. Remonté parce que ce qui est loin est plus près de
+       l'horizon — sur la même ligne de sol, la taille seule ne dit rien. */
+    transform: translate(var(--far-shift, -18px), -14px) scaleX(-1);
+    transform-origin: bottom center;
+  }
+  .ridge-el-far.left-3 {
+    --far-shift: 112px;
   }
   .ridge-el-sway {
     transform-origin: bottom center;

@@ -40,9 +40,37 @@ export function Dial({
   label: string;
   accentClass?: string;
 } & React.ComponentProps<'button'>) {
+  /*
+   * Le cadran est un 円相 : un cercle tracé d'un seul geste, qui ne se referme
+   * pas tout à fait.
+   *
+   * Ce qu'il y avait avant : une piste grise de 9 px, pleine, et un arc de la
+   * même épaisseur par-dessus. Un indicateur d'interface. Trois choses le
+   * font basculer dans le registre du trait :
+   *
+   *  - La piste s'ouvre en haut. Un cercle parfait est une forme produite ;
+   *    celui qui garde l'écart du pinceau est une forme tracée. L'écart est
+   *    au sommet, là où le geste commence et finit.
+   *  - La piste maigrit à 2,5 px et l'arc actif reste épais : l'encre est
+   *    dans ce qui est fait, pas dans ce qui reste à faire.
+   *  - L'arc porte un second trait, plus fin, légèrement au large et à demi
+   *    transparent. C'est le bord chargé du pinceau. De près on le voit, de
+   *    loin il donne seulement au trait une épaisseur qui n'est pas constante.
+   *
+   * L'arc n'apparaît pas avant d'être assez long pour être un trait : en
+   * dessous, un bout d'arc à bout rond n'est pas un début de cercle, c'est
+   * un point posé à côté du cercle.
+   *
+   * Le fond plein disparaît. Ce qui tenait la cible tactile, c'est la taille
+   * du bouton, pas sa couleur de remplissage — et un disque gris sous un
+   * cercle d'encre, c'est le cercle qui perd.
+   */
   const R = 86;
   const C = 2 * Math.PI * R;
   const clamped = Math.max(0, Math.min(1, progress));
+  // L'ouverture, en fraction du tour. 0,035 ≈ 12,6°.
+  const GAP = 0.035;
+  const arc = (frac: number) => `${C * frac} ${C}`;
 
   return (
     <button
@@ -51,25 +79,64 @@ export function Dial({
       className={[
         'relative mx-auto grid aspect-square w-full max-w-[240px] min-w-[180px] place-items-center',
         'touch-none select-none rounded-full transition-colors',
-        complete ? 'bg-accent/10' : 'bg-raised/60 active:bg-raised',
+        complete ? 'bg-accent/[0.07]' : 'bg-raised/25 active:bg-raised/60',
       ].join(' ')}
       {...handlers}
     >
       <svg viewBox="0 0 200 200" className="absolute inset-0 h-full w-full -rotate-90">
-        <circle cx="100" cy="100" r={R} className="stroke-line/70" strokeWidth="9" fill="none" />
-        <circle
-          cx="100"
-          cy="100"
-          r={R}
-          className={`${complete ? accentClass : 'text-muted'} transition-colors duration-300`}
-          stroke="currentColor"
-          strokeWidth="9"
-          strokeLinecap="round"
-          fill="none"
-          strokeDasharray={C}
-          strokeDashoffset={C * (1 - clamped)}
-          style={{ transition: 'stroke-dashoffset 180ms ease-out' }}
-        />
+        {/* L'écart est au sommet, et tout ce qui tourne part de son bord :
+            piste comme arc actif. Sans cette rotation, l'arc commençait au
+            sommet exact, c'est-à-dire au milieu de l'ouverture — à une
+            seconde de course on voyait un point isolé flotter dans le vide
+            du cercle, ce qui se lit comme une poussière, pas comme un début. */}
+        <g transform={`rotate(${GAP * 180} 100 100)`}>
+          <circle
+            cx="100"
+            cy="100"
+            r={R}
+            /* La piste porte un état : elle doit se voir. `--c-line` est une
+               couleur de bordure de carte, à 1,2:1 du fond en clair — un
+               cercle qu'on devine. Mesurée, la valeur ci-dessous tient
+               au-dessus de 3:1 dans les deux modes, ce qui est le minimum
+               pour un trait qui n'est pas du texte mais qui dit quelque
+               chose. */
+            className="stroke-faint/75"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            fill="none"
+            strokeDasharray={arc(1 - GAP)}
+          />
+          {clamped > 0.012 && (
+            <>
+              <circle
+                cx="100"
+                cy="100"
+                r={R}
+                className={`${complete ? accentClass : 'text-ink'} transition-colors duration-300`}
+                stroke="currentColor"
+                strokeWidth="8"
+                strokeLinecap="round"
+                fill="none"
+                strokeDasharray={arc(clamped * (1 - GAP))}
+                style={{ transition: 'stroke-dasharray 180ms ease-out' }}
+              />
+              {/* Le bord chargé du pinceau. */}
+              <circle
+                cx="100"
+                cy="100"
+                r={R + 4.2}
+                className={complete ? accentClass : 'text-ink'}
+                stroke="currentColor"
+                strokeOpacity="0.28"
+                strokeWidth="2"
+                strokeLinecap="round"
+                fill="none"
+                strokeDasharray={arc(clamped * (1 - GAP))}
+                style={{ transition: 'stroke-dasharray 180ms ease-out' }}
+              />
+            </>
+          )}
+        </g>
       </svg>
       <div className="relative z-10 flex flex-col items-center">{children}</div>
     </button>

@@ -4,6 +4,7 @@ import plein from '../assets/hours/plein.webp';
 import doree from '../assets/hours/doree.webp';
 import nuit from '../assets/hours/nuit.webp';
 import elArbre from '../assets/hours/el-arbre.webp';
+import elArbreNuit from '../assets/hours/el-arbre-nuit.webp';
 import elChampis from '../assets/hours/el-champis.webp';
 import elFeu from '../assets/hours/el-feu.webp';
 
@@ -35,6 +36,22 @@ import elFeu from '../assets/hours/el-feu.webp';
  * at the horizon took the dead half out and left the half that was good. It
  * also says the thing the app wants to say: aérien.
  */
+export interface Element {
+  src: string;
+  side: 'left' | 'right';
+  motion: 'sway' | 'drift' | 'flicker';
+  h: number;
+  /**
+   * Au loin.
+   *
+   * Même image, plus petite, plus pâle, très légèrement floue : c'est de la
+   * perspective atmosphérique, et c'est ce qui fait une scène plutôt qu'un
+   * objet posé dans un coin. Aucun fichier de plus — le lieu est le même, on
+   * en voit juste un bout plus loin.
+   */
+  far?: true;
+}
+
 export interface Hour {
   /** The plate. Fades into the page; it never carries information. */
   src: string;
@@ -43,37 +60,55 @@ export interface Hour {
   /** The hour's own name, shown small in the sky. One place, four hours. */
   label: string;
   /**
-   * One thing standing at the bottom of the screen, on one side.
+   * What stands at the bottom of the screen. One object, or two when the hour
+   * needs a scene rather than a token — the night has a tree and a fire under
+   * it, which is a camp, where either one alone is just an object.
    *
    * Decoration and nothing else: it carries no information, it is never
    * tappable, and the block's copy says everything the screen has to say
    * without it. `sway`, `drift` and `flicker` are the three motions it can
    * have, each slow enough to be noticed only if you look for it.
    */
-  element?: { src: string; side: 'left' | 'right'; motion: 'sway' | 'drift' | 'flicker'; h: number };
+  elements: Element[];
 }
 
 export const HOURS: Partial<Record<Block, Hour>> = {
   warmup: {
     src: aube, tint: '212 228 228', label: 'First light',
-    element: { src: elArbre, side: 'left', motion: 'sway', h: 152 },
+    elements: [
+      { src: elArbre, side: 'left', motion: 'sway', h: 152 },
+      { src: elArbre, side: 'right', motion: 'sway', h: 86, far: true },
+    ],
   },
   main: {
     src: plein, tint: '208 230 240', label: 'Full day',
-    element: { src: elChampis, side: 'right', motion: 'drift', h: 86 },
+    elements: [
+      { src: elArbre, side: 'left', motion: 'sway', h: 78, far: true },
+      { src: elChampis, side: 'right', motion: 'drift', h: 86 },
+    ],
   },
   mobility: {
     src: nuit, tint: '120 140 186', label: 'Night',
-    // Un feu sous les étoiles. C'est le même objet que le bloc rachis, et les
-    // deux ne se croisent jamais : le rachis est dans les séances de jour, la
-    // mobilité est la routine du soir.
-    element: { src: elFeu, side: 'left', motion: 'flicker', h: 96 },
+    // Un camp : l'arbre sous la lune, le feu dessous. L'arbre est le même
+    // qu'à la première heure, la lumière du jour retirée — la nuit n'est pas
+    // un autre lieu, c'est le même à une autre heure, et un pin qui a changé
+    // d'espèce entre l'aube et le soir dirait le contraire.
+    elements: [
+      { src: elArbreNuit, side: 'left', motion: 'sway', h: 150 },
+      // Le lointain reste à gauche : à droite il tomberait dans le feu, et
+      // deux objets au même endroit ne font pas une profondeur.
+      { src: elArbreNuit, side: 'left', motion: 'sway', h: 74, far: true },
+      { src: elFeu, side: 'right', motion: 'flicker', h: 84 },
+    ],
   },
   spine: {
     src: doree, tint: '240 221 199', label: 'Golden hour',
     // Le feu à l'heure dorée : c'est le seul bloc où l'on ralentit, et la
     // seule lumière chaude de la séance.
-    element: { src: elFeu, side: 'right', motion: 'flicker', h: 104 },
+    elements: [
+      { src: elArbre, side: 'left', motion: 'sway', h: 92, far: true },
+      { src: elFeu, side: 'right', motion: 'flicker', h: 104 },
+    ],
   },
 };
 
