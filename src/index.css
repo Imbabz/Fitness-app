@@ -48,6 +48,30 @@
       color var(--t-text) ease-in-out;
   }
 
+  /*
+   * Le texte aussi, sinon il saute.
+   *
+   * La liste ci-dessus ne contient que des conteneurs. Un titre posé dedans
+   * n'est ni un bouton ni une section : sa couleur n'avait aucune transition
+   * et basculait d'un coup, pendant que sa carte, elle, fondait. Au premier
+   * cinquantième de seconde du bascule on voyait un titre déjà en couleur de
+   * nuit sur une carte encore blanche — pâle sur blanc, illisible. La couleur
+   * seule est transitionnée ici : pas de fond, pas de bordure, rien qui
+   * coûte une mise en page.
+   */
+  h1,
+  h2,
+  h3,
+  p,
+  span,
+  li,
+  label,
+  strong,
+  time,
+  small {
+    transition: color var(--t-text) ease-in-out;
+  }
+
   /* Touch targets are at least 44px everywhere. Chalky hands, phone propped
      against a water bottle. */
   button {

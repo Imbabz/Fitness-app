@@ -30,8 +30,19 @@
  */
 
 :root {
-  --t-mode: 600ms; /* background / accent / card cross-fade */
-  --t-text: 220ms; /* text colour, faster so it doesn't smear */
+  /*
+   * Le passage jour/nuit.
+   *
+   * Les deux durées étaient 600 et 220 ms : le texte arrivait à sa couleur de
+   * nuit pendant que sa carte était encore blanche, et le titre devenait
+   * illisible pendant près de 400 ms — mesuré à 1,2:1 au pire. Les faire
+   * durer pareil ne supprime pas le creux : tout fondu entre clair et sombre
+   * passe par un milieu où le texte et son fond se rejoignent. Ce qu'on peut
+   * faire, c'est le rendre trop court pour être lu comme un défaut. Une seule
+   * durée, courte, pour tout ce qui porte la couleur du mode.
+   */
+  --t-mode: 240ms;
+  --t-text: 240ms;
   --r-card: 5px;
 }
 
