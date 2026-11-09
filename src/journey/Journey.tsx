@@ -8,6 +8,7 @@ import { Interstitial } from './Interstitial';
 import { Summit } from './Summit';
 import { MorningWarning } from './MorningWarning';
 import { AmbientButton } from './AmbientButton';
+import { HourSky } from '../components/HourSky';
 import { prepareAmbient, resolveAmbient, startAmbient, stopAmbient } from '../lib/ambient';
 import { seek, setProgress } from '../lib/arc';
 import { haptic, HAPTIC } from '../lib/haptics';
@@ -194,6 +195,9 @@ export function Journey({ session, onExit }: { session: Session; onExit: () => v
 
     return (
       <>
+        {/* Avant de partir, le ciel est celui du premier bloc : on voit
+            l'heure à laquelle la séance commence. */}
+        <HourSky block={session.exercises[0]?.block} />
         <Trailhead
           session={session}
           onBegin={begin}
@@ -220,6 +224,12 @@ export function Journey({ session, onExit }: { session: Session; onExit: () => v
 
   return (
     <div onPointerDown={onPointerDown} onPointerUp={onPointerUp} className="min-h-dvh">
+      {/*
+        Le ciel suit le bloc. On traverse les heures en traversant la séance —
+        c'est la métaphore de l'app prise au mot, et c'est gratuit : les
+        plaques sont déjà là et déjà en cache.
+      */}
+      <HourSky block={session.exercises[stageIndex]?.block} />
       <div className="sticky top-0 z-20 flex items-center gap-3 bg-base/90 px-5 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm">
         <div className="min-w-0 flex-1">
           <ProgressArc session={session} stageIndex={stageIndex} />

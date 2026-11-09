@@ -85,25 +85,42 @@ export function Interstitial({ block, onDismiss }: { block: Block; onDismiss: ()
             src={hour.src}
             alt=""
             aria-hidden="true"
-            className="ridge-hour pointer-events-none absolute inset-x-0 top-0 -z-10 h-[42%] w-full object-cover"
+            className="ridge-hour pointer-events-none absolute inset-x-0 top-0 -z-10 h-[38%] w-full object-cover object-top"
           />
           <span
             aria-hidden="true"
             className="ridge-hour-tint pointer-events-none absolute inset-0 -z-10"
           />
+          {/* Le nom de l'heure, posé dans le ciel. C'est ce qui fait des
+              quatre plaques un même lieu plutôt que quatre images. */}
+          <span
+            aria-hidden="true"
+            className="ridge-on-plate pointer-events-none absolute inset-x-0 top-0 -z-10 pt-[max(1.75rem,env(safe-area-inset-top))] text-center ridge-title text-[0.8125rem] tracking-[0.08em]"
+          >
+            {hour.label}
+          </span>
           {hour.element && (
-            <img
-              src={hour.element.src}
-              alt=""
+            /*
+             * L'objet est enveloppé, et la lueur est portée par l'enveloppe.
+             * `::before` ne s'applique pas à un élément remplacé : posé sur le
+             * <img> lui-même, le pseudo-élément n'existe tout simplement pas,
+             * sans erreur ni avertissement.
+             */
+            <span
               aria-hidden="true"
-              style={{ height: hour.element.h }}
               className={[
-                'pointer-events-none absolute bottom-0 -z-10 w-auto',
-                'ridge-el',
-                MOTION[hour.element.motion],
+                'pointer-events-none absolute bottom-0 -z-10 block',
+                hour.element.motion === 'flicker' ? 'ridge-el-glow' : '',
                 hour.element.side === 'left' ? 'left-3' : 'right-3',
               ].join(' ')}
-            />
+            >
+              <img
+                src={hour.element.src}
+                alt=""
+                style={{ height: hour.element.h }}
+                className={['block w-auto ridge-el', MOTION[hour.element.motion]].join(' ')}
+              />
+            </span>
           )}
         </>
       )}

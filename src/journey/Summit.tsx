@@ -4,6 +4,7 @@ import type { Session } from '../types';
 import { useApp } from '../state/AppStateContext';
 import { detectPRs } from '../state/selectors';
 import { humanDuration } from '../lib/time';
+import { hourOf } from '../data/hours';
 import { haptic, HAPTIC } from '../lib/haptics';
 
 export function Summit({
@@ -37,9 +38,51 @@ export function Summit({
     onSaved();
   };
 
+  /*
+   * On arrive quelque part.
+   *
+   * Le sommet était un formulaire : un titre, deux chiffres, une case à
+   * cocher, un bouton. C'est juste, et c'est le seul moment de la séance qui
+   * avait le droit d'être autre chose. Il prend donc le ciel du dernier bloc
+   * traversé — on finit à l'heure où la séance s'est terminée, et la routine
+   * du soir finit de nuit.
+   */
+  // La routine du soir se termine de nuit, quel que soit son dernier bloc :
+  // elle finit sur une flexion du rachis, et prendre l'heure du bloc donnerait
+  // un ciel doré en plein thème sombre.
+  const hour = session.mode === 'night'
+    ? hourOf('mobility')
+    : hourOf(session.exercises.at(-1)?.block ?? 'main');
+
   return (
-    <div className="ridge-enter flex min-h-dvh flex-col px-5 pb-8 pt-[max(1.5rem,env(safe-area-inset-top))]">
-      <span className="text-xs font-semibold ridge-label text-faint">Summit</span>
+    <div
+      className="ridge-enter relative isolate flex min-h-dvh flex-col px-5 pb-8 pt-[max(1.5rem,env(safe-area-inset-top))]"
+      style={hour ? ({ '--hour-tint': hour.tint } as React.CSSProperties) : undefined}
+    >
+      {hour && (
+        <>
+          <img
+            src={hour.src}
+            alt=""
+            aria-hidden="true"
+            className="ridge-hour pointer-events-none absolute inset-x-0 top-0 -z-10 h-[30%] w-full object-cover object-top"
+          />
+          <span
+            aria-hidden="true"
+            className="ridge-hour-tint pointer-events-none absolute inset-0 -z-10"
+          />
+        </>
+      )}
+      <span
+        className={[
+          'text-xs font-semibold ridge-label',
+          // Posé sur la plaque, pas sur la page : le gris le plus pâle y
+          // disparaît. Mesuré sur les pixels composités, pas sur le jeton.
+          hour ? 'ridge-on-plate' : 'text-faint',
+        ].join(' ')}
+      >
+        {hour ? hour.label : 'Summit'}
+      </span>
       <h1 className="mt-2 text-4xl ridge-title text-ink">{session.title} done.</h1>
 
       <div className="mt-6 grid grid-cols-2 gap-3">

@@ -326,9 +326,16 @@ function Toggle({
           value ? 'bg-accent' : 'bg-raised',
         ].join(' ')}
       >
+        {/*
+          `left-0` n'est pas décoratif. Sans lui la pastille est positionnée
+          sur sa « static position », que le navigateur calcule ici au bord
+          DROIT de la piste : mesurée, elle se tenait entièrement hors de son
+          interrupteur, dans les deux états, sur les trois interrupteurs de
+          l'écran. Un interrupteur dont le bouton est à côté.
+        */}
         <span
           className={[
-            'absolute top-1 h-6 w-6 rounded-full bg-ink transition-transform duration-200',
+            'absolute left-0 top-1 h-6 w-6 rounded-full border border-line/50 bg-surface shadow-sm transition-transform duration-200',
             value ? 'translate-x-7' : 'translate-x-1',
           ].join(' ')}
         />
