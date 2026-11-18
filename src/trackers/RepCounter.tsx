@@ -1,6 +1,6 @@
 import { Check, Pause, Play } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Dial, SetPips, WeightInput, targetFor, type TrackerProps } from './shared';
+import { Dial, NumberField, SetPips, WeightInput, targetFor, type TrackerProps } from './shared';
 import { useTapOrHold, useWakeLock } from './hooks';
 import { haptic, HAPTIC } from '../lib/haptics';
 import type { Exercise } from '../types';
@@ -104,6 +104,22 @@ export function RepCounter({
           button below is the primary action and has to stay above the fold. */}
       <div className="flex w-full flex-wrap items-center justify-center gap-x-3 gap-y-2">
         <SetPips exercise={exercise} setIndex={setIndex} completedCount={logged.length} />
+
+        {/* Taper le compte plutôt que le taper au doigt. Neuf tapes pour dire
+            neuf, c'est le cas où le cadran a tort. Zéro est permis et remet
+            l'écran dans son état « journaliser la série prescrite ». Le
+            plafond est à 99 et non à la cible : un dépassement est une
+            donnée, pas une faute. */}
+        <NumberField
+          label="Reps"
+          value={count}
+          range={{ min: 0, max: 99 }}
+          onCommit={(n) => {
+            setAuto(false);
+            setCount(n);
+            setPulse((p) => p + 1);
+          }}
+        />
 
         {/* Both hands are on the bar during a set, so tapping once per rep is
             not something you can actually do. This counts at the prescribed

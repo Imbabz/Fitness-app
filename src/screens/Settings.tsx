@@ -321,11 +321,18 @@ function Toggle({
         aria-checked={value}
         aria-label={label}
         onClick={() => onChange(!value)}
-        className={[
-          'relative h-8 w-14 rounded-full transition-colors',
-          value ? 'bg-accent' : 'bg-raised',
-        ].join(' ')}
+        /* 44 px de haut, pas 32. La piste visible en fait toujours 32, mais
+           la zone qu'on touche est le bouton, et la règle des 44 px ne
+           distingue pas les interrupteurs du reste. Personne ne l'avait vu
+           parce que l'audit des cibles ne passait pas par les réglages. */
+        className="relative grid h-11 w-14 shrink-0 place-items-center rounded-full"
       >
+        <span
+          className={[
+            'h-8 w-14 rounded-full transition-colors',
+            value ? 'bg-accent' : 'bg-raised',
+          ].join(' ')}
+        />
         {/*
           `left-0` n'est pas décoratif. Sans lui la pastille est positionnée
           sur sa « static position », que le navigateur calcule ici au bord
@@ -335,7 +342,7 @@ function Toggle({
         */}
         <span
           className={[
-            'absolute left-0 top-1 h-6 w-6 rounded-full border border-line/50 bg-surface shadow-sm transition-transform duration-200',
+            'absolute left-0 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full border border-line/50 bg-surface shadow-sm transition-transform duration-200',
             value ? 'translate-x-7' : 'translate-x-1',
           ].join(' ')}
         />

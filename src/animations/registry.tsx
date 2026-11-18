@@ -554,6 +554,102 @@ const squat = ({ size, className }: AnimProps) => (
   </Figure>
 );
 
+// ── Night · deep stretches ─────────────────────────────────────────────────
+//
+// Cinq tenues longues, toutes au rythme de nuit. Un seul groupe articulé
+// chacune, sauf l'ouverture de poitrine qui en a deux : la main est posée sur
+// un montant et ne peut donc pas voyager avec le buste.
+
+/** Fente genou à terre : le bassin se glisse sous le buste. */
+const hipFlexor = ({ size, className }: AnimProps) => (
+  <Figure size={size} loop={3} className={className}>
+    <Ground y={52} />
+    {/* Jambe arrière, genou au sol. Jambe avant, pied planté. Les deux sont
+        fixes : ce qui bouge dans cet étirement, c'est le bassin. */}
+    <polyline points="32,36 22,50 14,52" />
+    <polyline points="32,36 44,40 44,52" />
+    <g className="ra-hipflex-torso">
+      <line x1={32} y1={36} x2={32} y2={17} />
+      <Head />
+      <polyline points="32,24 40,30 44,38" />
+    </g>
+  </Figure>
+);
+
+/** 90/90 : assis, le buste s'incline sur le tibia avant. */
+const hip9090 = ({ size, className }: AnimProps) => (
+  <Figure size={size} loop={3} className={className}>
+    <Ground y={52} />
+    <line x1={32} y1={44} x2={17} y2={48} />
+    <line x1={17} y1={48} x2={20} y2={52} />
+    <line x1={32} y1={44} x2={48} y2={47} />
+    <line x1={48} y1={47} x2={47} y2={52} />
+    <g className="ra-9090-torso">
+      <line x1={32} y1={44} x2={32} y2={25} />
+      <Head cx={32} cy={20} r={4.4} />
+      <line x1={32} y1={30} x2={41} y2={41} />
+    </g>
+  </Figure>
+);
+
+/** Chiffre 4 au sol : la cheville croisée sur le genou, le tout vers la poitrine. */
+const figureFour = ({ size, className }: AnimProps) => (
+  <Figure size={size} loop={3} className={className}>
+    <Ground y={52} />
+    <Head cx={12} cy={44} r={4.4} />
+    <line x1={17} y1={45} x2={34} y2={46} />
+    {/* Les deux jambes partent de la même hanche et tournent ensemble : le
+        croisement est une forme rigide, il ne se défait pas en route. */}
+    <g className="ra-fig4-leg">
+      <polyline points="34,46 43,30 47,45" />
+      {/* La jambe croisée monte franchement du bassin puis redescend en
+          barre sur le genou porteur : c'est le croisement qui fait lire le
+          « 4 », et à 30 px il faut qu'il ne touche pas le tronc. */}
+      <polyline points="34,46 27,33 41,29" />
+    </g>
+  </Figure>
+);
+
+/** Ouverture de poitrine au montant de porte. */
+const doorwayPec = ({ size, className }: AnimProps) => (
+  <Figure size={size} loop={3} className={className}>
+    <Ground y={54} />
+    <Prop>
+      <line x1={50} y1={6} x2={50} y2={54} />
+    </Prop>
+    {legs(32, 40, 54, 5)}
+    {/* Le buste tourne autour de la hanche, et le bras contre-tourne de
+        l'exact même angle autour de l'épaule, aux mêmes pourcentages et avec
+        la même courbe. Sans cette égalité la main quitte le montant, ce qui
+        est la seule chose que cet étirement ne peut pas faire. */}
+    <g className="ra-pec-torso">
+      <line x1={32} y1={40} x2={32} y2={17} />
+      <Head />
+      <g className="ra-pec-arm">
+        <polyline points="32,23 42,19 50,22" />
+      </g>
+    </g>
+  </Figure>
+);
+
+/** Livre ouvert : couché sur le côté, le bras du dessus balaie. */
+const openBook = ({ size, className }: AnimProps) => (
+  <Figure size={size} loop={3} className={className}>
+    <Ground y={52} />
+    <Head cx={13} cy={42} r={4.4} />
+    <line x1={18} y1={43} x2={34} y2={44} />
+    {/* Genoux pliés et empilés : c'est eux qui verrouillent le bas du dos,
+        et c'est pour ça qu'ils sont dessinés. */}
+    <polyline points="34,44 44,36 52,44" />
+    {/* Le bras part franchement en avant et en haut, pas couché sur le
+        tronc : à plat il disparaissait dedans, et une figure dont le membre
+        animé est invisible au repos ne dit rien. */}
+    <g className="ra-book-arm">
+      <line x1={22} y1={43} x2={33} y2={32} />
+    </g>
+  </Figure>
+);
+
 export const ANIMATIONS: Record<string, (p: AnimProps) => ReactNode> = {
   bike,
   scapRetract,
@@ -587,6 +683,11 @@ export const ANIMATIONS: Record<string, (p: AnimProps) => ReactNode> = {
   kneehug: kneeHug,
   childpose: childPose,
   frontplank: frontPlank,
+  hipflexor: hipFlexor,
+  hip9090,
+  figurefour: figureFour,
+  doorwaypec: doorwayPec,
+  openbook: openBook,
   squat,
 };
 

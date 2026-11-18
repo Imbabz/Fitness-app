@@ -1,8 +1,9 @@
-import { Bell, BellOff, Minus, Plus } from 'lucide-react';
+import { Bell, BellOff, Minus, Pencil, Plus } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import type { Exercise, LoggedSet } from '../types';
 import { haptic, HAPTIC } from '../lib/haptics';
 import { useApp } from '../state/AppStateContext';
+import { clampTo } from '../state/tuning';
 
 /**
  * The contract every tracker shares: it owns the current set, it emits a
@@ -217,6 +218,93 @@ export function WeightInput({
         <Plus size={20} />
       </button>
     </div>
+  );
+}
+
+/**
+ * Taper le nombre au lieu de le compter.
+ *
+ * Le cadran se tape une fois par répétition, ce qui est juste quand on compte
+ * en direct et absurde quand la série est déjà finie : neuf tapes pour dire
+ * neuf. Ce champ est la sortie — on écrit le chiffre.
+ *
+ * Il ne touche pas au cadran. La règle 6 du skill des trackers interdit les
+ * petites commandes sur l'interaction principale : avec de la magnésie sur les
+ * doigts, un « − » de 24 px se rate. Celui-ci vit dans la rangée du dessous,
+ * fait 44 px de haut comme tout le reste, et la pression ouvre un clavier
+ * numérique — `inputMode` compris, sinon le téléphone sort l'alphabet.
+ *
+ * Entrée valide, Échap annule, et la perte du focus vaut validation : sur un
+ * téléphone on ne ferme pas un clavier avec Entrée, on tape à côté.
+ */
+export function NumberField({
+  label,
+  value,
+  unit,
+  range,
+  onCommit,
+}: {
+  label: string;
+  value: number;
+  unit?: string;
+  range: { min: number; max: number };
+  onCommit: (n: number) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+
+  const commit = () => {
+    const parsed = Number.parseInt(draft, 10);
+    if (Number.isFinite(parsed)) {
+      haptic(HAPTIC.tick);
+      onCommit(clampTo(range, parsed));
+    }
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <span className="flex h-11 items-center gap-2 rounded-full border border-accent/60 bg-surface pl-3.5 pr-2">
+        <span className="text-sm font-semibold text-faint">{label}</span>
+        <input
+          autoFocus
+          type="number"
+          inputMode="numeric"
+          min={range.min}
+          max={range.max}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onFocus={(e) => e.currentTarget.select()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') commit();
+            if (e.key === 'Escape') setEditing(false);
+          }}
+          aria-label={`${label}, between ${range.min} and ${range.max}`}
+          className="h-9 w-16 rounded-lg bg-raised text-center text-base font-semibold tabular-nums text-ink outline-none"
+        />
+      </span>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        haptic(HAPTIC.tick);
+        setDraft(String(value));
+        setEditing(true);
+      }}
+      aria-label={`${label}: ${value}${unit ?? ''}. Tap to type a number.`}
+      className="flex h-11 items-center gap-2 rounded-full border border-line bg-surface px-3.5 text-sm font-semibold text-muted active:bg-raised"
+    >
+      <Pencil size={14} className="text-faint" />
+      {label}
+      <span className="tabular-nums text-ink">
+        {value}
+        {unit}
+      </span>
+    </button>
   );
 }
 

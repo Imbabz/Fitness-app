@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   CountdownToggle,
   Dial,
+  NumberField,
   SetPips,
   SideIndicator,
   WeightInput,
@@ -13,6 +14,7 @@ import { useCountdown, useCountdownBeeps, useWakeLock } from './hooks';
 import { haptic, HAPTIC } from '../lib/haptics';
 import { beep } from '../lib/sound';
 import { useApp } from '../state/AppStateContext';
+import { TUNING_LIMITS } from '../state/tuning';
 
 const GAP_SECONDS = 3;
 
@@ -33,12 +35,22 @@ export function HoldTimer({
   onWeightChange,
   onSetComplete,
 }: TrackerProps) {
-  const { state, updateSettings } = useApp();
+  const { state, updateSettings, setTuning } = useApp();
   const target = targetFor(exercise, setIndex);
   const holdMs = (exercise.holdSeconds ?? 5) * 1000;
   const bilateral = exercise.bilateral === true;
 
   const [reps, setReps] = useState(0);
+  /*
+   * La durée de la tenue en cours, figée au départ de celle-ci.
+   *
+   * `holdMs` vient de la prescription, qui est réglable — et la régler pendant
+   * une tenue changerait le dénominateur de l'anneau sous les doigts : le
+   * trait sauterait d'un coup sans que le temps restant bouge. La tenue en
+   * cours garde donc la durée avec laquelle elle a commencé, et le nouveau
+   * chiffre prend effet à la suivante.
+   */
+  const [activeHoldMs, setActiveHoldMs] = useState(holdMs);
   const [side, setSide] = useState<'left' | 'right'>('left');
   const [phase, setPhase] = useState<Phase>('idle');
   const [endsAt, setEndsAt] = useState<number | null>(null);
@@ -57,6 +69,7 @@ export function HoldTimer({
 
   const startHold = useCallback(() => {
     setPhase('holding');
+    setActiveHoldMs(holdMs);
     setEndsAt(Date.now() + holdMs);
   }, [holdMs]);
 
@@ -110,7 +123,7 @@ export function HoldTimer({
 
   const done = reps >= target;
   const progress =
-    phase === 'holding' ? Math.max(0, remainingMs / holdMs) : phase === 'gap' ? 0 : done ? 1 : 0;
+    phase === 'holding' ? Math.max(0, remainingMs / activeHoldMs) : phase === 'gap' ? 0 : done ? 1 : 0;
 
   const onDialPress = () => {
     if (done) return;
@@ -164,7 +177,24 @@ export function HoldTimer({
 
       {bilateral && !done && <SideIndicator side={side} />}
 
-      <RepPips count={target} done={reps} />
+      <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+        <RepPips count={target} done={reps} />
+
+        {/* Le temps par tenue, tapé au clavier. Il passe par le même réglage
+            que la feuille de tuning plutôt que par un état local : une tenue
+            qu'on allonge à huit secondes, on la veut encore à huit la série
+            suivante, et au prochain passage. « Restaurer » dans les réglages
+            la ramène à la prescription. */}
+        <NumberField
+          label="Hold"
+          value={exercise.holdSeconds ?? 5}
+          unit="s"
+          range={TUNING_LIMITS.holdSeconds}
+          onCommit={(n) =>
+            setTuning(exercise.id, { ...state.tuning[exercise.id], holdSeconds: n })
+          }
+        />
+      </div>
 
       <div className="w-full space-y-3">
         <SetPips exercise={exercise} setIndex={setIndex} completedCount={logged.length} />
