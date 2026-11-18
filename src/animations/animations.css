@@ -922,3 +922,106 @@
     transform: translateY(-0.7px);
   }
 }
+
+/*
+ * ── Nuit · étirements profonds ──────────────────────────────────────────────
+ *
+ * Cinq tenues. Une seule articulation chacune, sauf l'ouverture de poitrine,
+ * qui en a deux parce que la main est posée sur un montant et ne peut pas
+ * suivre le buste.
+ *
+ * Chaque origine est le joint dessiné dans `registry.tsx`. Si un point bouge
+ * là-bas, il bouge ici, dans le même commit.
+ */
+.ra-hipflex-torso {
+  transform-origin: 32px 36px; /* la hanche */
+  animation-name: ra-hipflex;
+}
+@keyframes ra-hipflex {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    /* Le bassin se glisse sous le buste. Petit angle, volontairement : plus
+       grand, la figure se penche en avant, ce qui est l'inverse du geste. */
+    transform: rotate(6deg);
+  }
+}
+
+.ra-9090-torso {
+  transform-origin: 32px 44px; /* la hanche, assise */
+  animation-name: ra-9090;
+}
+@keyframes ra-9090 {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(20deg);
+  }
+}
+
+.ra-fig4-leg {
+  transform-origin: 34px 46px; /* la hanche, couché */
+  animation-name: ra-fig4;
+}
+@keyframes ra-fig4 {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-12deg);
+  }
+}
+
+.ra-pec-torso {
+  transform-origin: 32px 40px; /* la hanche, debout */
+  animation-name: ra-pec-torso;
+}
+.ra-pec-arm {
+  transform-origin: 32px 23px; /* l'épaule */
+  animation-name: ra-pec-arm;
+}
+/* Mêmes pourcentages, même courbe, angles exactement opposés. C'est la
+   condition pour que la main reste sur le montant ; des timings différents la
+   feraient dériver, ce qui est déjà arrivé une fois sur le Jefferson curl. */
+@keyframes ra-pec-torso {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-7deg);
+  }
+}
+@keyframes ra-pec-arm {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(7deg);
+  }
+}
+
+.ra-book-arm {
+  transform-origin: 22px 43px; /* l'épaule du dessus */
+  animation-name: ra-book;
+}
+@keyframes ra-book {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    /* Le bras s'ouvre vers l'arrière et finit à la verticale, au-dessus du
+       corps. À -110° il retombait sur la tête, où il se confondait avec elle :
+       un membre animé invisible à l'une des deux extrémités de sa course ne
+       raconte rien. La pose à 50 % est aussi celle que voit un utilisateur en
+       mouvement réduit — c'est l'ouverture, donc l'étirement lui-même. */
+    transform: rotate(-85deg);
+  }
+}

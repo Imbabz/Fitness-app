@@ -76,14 +76,18 @@ export function SoundCheck() {
           aria-checked={state.settings.musicAppMode}
           aria-label="Play like a music app"
           onClick={() => updateSettings({ musicAppMode: !state.settings.musicAppMode })}
-          className={[
-            'relative mt-0.5 h-8 w-14 shrink-0 rounded-full transition-colors',
-            state.settings.musicAppMode ? 'bg-accent' : 'bg-raised',
-          ].join(' ')}
+          /* Comme dans les réglages : la cible fait 44 px, la piste 32. */
+          className="relative grid h-11 w-14 shrink-0 place-items-center rounded-full"
         >
           <span
             className={[
-              'absolute left-0 top-1 h-6 w-6 rounded-full border border-line/50 bg-surface shadow-sm transition-transform duration-200',
+              'h-8 w-14 rounded-full transition-colors',
+              state.settings.musicAppMode ? 'bg-accent' : 'bg-raised',
+            ].join(' ')}
+          />
+          <span
+            className={[
+              'absolute left-0 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full border border-line/50 bg-surface shadow-sm transition-transform duration-200',
               state.settings.musicAppMode ? 'translate-x-7' : 'translate-x-1',
             ].join(' ')}
           />

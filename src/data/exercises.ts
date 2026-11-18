@@ -783,6 +783,172 @@ export const EXERCISES: Exercise[] = [
   },
   jeffersonCurl('d-jefferson'),
 
+  // ── Night · deep stretches ────────────────────────────────────────────────
+  //
+  // Added at the owner's explicit request, and deliberately NOT placed in any
+  // session: they live in the library so they can be added at the trailhead on
+  // a night when there is time for them. The nightly routine is a McGill
+  // sequence with a reason for every item and a length that gets it done; a
+  // long stretch has no business pushing the Big 3 further down it.
+  //
+  // What they have in common is that none of them asks the lumbar spine for
+  // anything. Three are hip stretches — a stiff hip is paid for by the back,
+  // and that is the whole argument for them being here. One opens the chest,
+  // one rotates the thorax with the knees stacked so the lumbar cannot join in.
+  //
+  // DELIBERATELY NOT INCLUDED, for the same reason the excluded list at the
+  // top of this file exists:
+  //   · Seated forward fold / toe touch — loaded end-range lumbar flexion, the
+  //     exact mechanism. There is no "careful" version of it here.
+  //   · Any hamstring stretch — hamstring tightness alongside an L5-S1
+  //     protrusion is frequently neural rather than muscular, and stretching a
+  //     sensitised sciatic nerve reliably makes it worse. The sciatic nerve
+  //     glide already in this file is the treatment for that, and it works by
+  //     sliding the nerve rather than lengthening it.
+  //   · Lying spinal twist (knees dropped across the body) — passive end-range
+  //     lumbar rotation under the weight of both legs. The open book does the
+  //     same job from the segment that should be providing rotation.
+  {
+    id: 'd-hip-flexor',
+    name: 'Half-kneeling hip flexor stretch',
+    block: 'mobility',
+    prescription: '1 × 2 each side · 30s holds',
+    tracking: 'hold',
+    sets: 1,
+    repScheme: [2],
+    holdSeconds: 30,
+    restSeconds: 30,
+    bilateral: true,
+    execution:
+      'Half-kneeling, back knee on something soft, front foot flat and far enough forward that the ' +
+      'front shin stays vertical. Before moving at all, squeeze the back glute and let the tailbone ' +
+      'drop — that tucks the pelvis under, and the stretch arrives at the front of the back hip. ' +
+      'Then ease the hips forward a few centimetres. Ribs stay down. If you feel it in your lower ' +
+      'back rather than at the front of the hip, you have lost the tuck: reset rather than push on.',
+    cue: 'Tuck the tailbone, then move.',
+    why:
+      'Short hip flexors pull the pelvis into a forward tilt, and a forward-tilted pelvis leaves the ' +
+      'lumbar spine holding an extension it did not choose — all day, at a desk, and under a pack. ' +
+      'Lengthening them is one of the few ways to reduce the resting demand on L5-S1 rather than ' +
+      'just training around it. The tuck is not a detail: without it the stretch is taken from the ' +
+      'low back instead of the hip, which is the common way this is done and the reason it is often ' +
+      'reported as useless.',
+    animation: 'hipflexor',
+    loadTracked: false,
+    alternates: ['d-glute-bridge'],
+  },
+  {
+    id: 'd-90-90',
+    name: '90/90 hip rotation',
+    block: 'mobility',
+    prescription: '1 × 2 each side · 30s holds',
+    tracking: 'hold',
+    sets: 1,
+    repScheme: [2],
+    holdSeconds: 30,
+    restSeconds: 30,
+    bilateral: true,
+    execution:
+      'Sit on the floor with the front shin across you at a right angle to the thigh, and the back ' +
+      'leg bent out behind at the same angle. Sit tall first, hands on the floor behind if the ' +
+      'hamstrings will not let you. Then hinge forward over the front shin from the hips, keeping ' +
+      'the back long — the chest leads, the spine does not round. Stop where the back wants to ' +
+      'round; that is the end of the useful range, whatever the internet says.',
+    cue: 'Hinge from the hip, back stays long.',
+    why:
+      'Climbing asks for hip rotation constantly — drop knees, high steps, anything that brings the ' +
+      'knee across the body. A hip that will not rotate forces the lumbar spine to supply the ' +
+      'difference, and lumbar rotation under load is the combination this programme excludes ' +
+      'everywhere else. Restoring it at the hip is how to get the movement without taking it from ' +
+      'the segment that cannot afford it. This is hip rotation, not spinal rotation, which is why ' +
+      'it is here and a lying twist is not.',
+    animation: 'hip9090',
+    loadTracked: false,
+  },
+  {
+    id: 'd-figure-4',
+    name: 'Figure-4 glute stretch',
+    block: 'mobility',
+    prescription: '1 × 2 each side · 30s holds',
+    tracking: 'hold',
+    sets: 1,
+    repScheme: [2],
+    holdSeconds: 30,
+    restSeconds: 30,
+    bilateral: true,
+    execution:
+      'On your back, both knees bent, feet flat. Cross one ankle over the opposite thigh just above ' +
+      'the knee and let that knee fall open. Reach through the gap and draw the supporting thigh ' +
+      'towards you, only as far as the lower back stays flat on the floor. The moment the back ' +
+      'starts to peel up, you have gone past the hip and into the spine — come back. Stop entirely ' +
+      'if anything travels below the knee.',
+    cue: 'Low back stays flat on the floor.',
+    why:
+      'The deep glutes and piriformis guard hard when the back is irritated, and a guarded glute ' +
+      'both limits the hip and sits directly on the sciatic nerve. Done on the floor the spine is ' +
+      'unloaded and supported, which is what separates this from the seated version. The flat-back ' +
+      'limit is the whole safety mechanism: pulled further this becomes knee-to-chest flexion, and ' +
+      'repeated end-range flexion is the mechanism behind a posterior protrusion in the first place.',
+    animation: 'figurefour',
+    loadTracked: false,
+    alternates: ['d-nerve-glide'],
+  },
+  {
+    id: 'd-open-book',
+    name: 'Open book',
+    block: 'mobility',
+    prescription: '1 × 2 each side · 30s holds',
+    tracking: 'hold',
+    sets: 1,
+    repScheme: [2],
+    holdSeconds: 30,
+    restSeconds: 30,
+    bilateral: true,
+    execution:
+      'Lie on your side, knees bent to roughly ninety degrees and stacked, arms straight out in ' +
+      'front with the palms together. Keep the knees stacked and pinned — a cushion between them ' +
+      'helps — and open the top arm across to the other side, following the hand with your eyes. ' +
+      'The pelvis does not follow. Breathe out at the end and let the chest settle a little further ' +
+      'rather than forcing it.',
+    cue: 'Knees stay stacked. Only the chest turns.',
+    why:
+      'Rotation has to come from somewhere, and the thoracic spine is built for it while the lumbar ' +
+      'is not — L5-S1 offers a couple of degrees before it is asking the disc to twist. Pinning the ' +
+      'knees locks the pelvis and the low back out of the movement, so the range that opens up is ' +
+      'the range that should have been there. This is unloaded and self-limiting, which is what ' +
+      'distinguishes it from the loaded rotation excluded everywhere in this programme.',
+    animation: 'openbook',
+    loadTracked: false,
+    alternates: ['d-wall-glides'],
+  },
+  {
+    id: 'd-doorway-pec',
+    name: 'Doorway chest opener',
+    block: 'mobility',
+    prescription: '1 × 2 each side · 30s holds',
+    tracking: 'hold',
+    sets: 1,
+    repScheme: [2],
+    holdSeconds: 30,
+    restSeconds: 30,
+    bilateral: true,
+    execution:
+      'Forearm flat on a door frame, elbow at about shoulder height. Step through with the near ' +
+      'foot and turn the chest away from the arm until there is a stretch across the front of the ' +
+      'shoulder. Ribs down, no arching to gain range. Do it at two or three elbow heights across ' +
+      'the holds if one spot feels like it is doing everything.',
+    cue: 'Turn the chest away, ribs stay down.',
+    why:
+      'Pulling is most of what climbing is, and the front of the shoulder shortens accordingly. A ' +
+      'short chest rounds the upper back, a rounded upper back is paid for lower down, and the wall ' +
+      'glides in this routine cannot do their job through a chest that will not let the arms get ' +
+      'overhead. The ribs-down instruction is the point: arching the lower back to find range here ' +
+      'borrows it from exactly the segment being protected.',
+    animation: 'doorwaypec',
+    loadTracked: false,
+    alternates: ['d-wall-glides'],
+  },
+
   // ── Gym · shared alternates ───────────────────────────────────────────────
   //
   // Not part of any fixed session — hence the `alt-` prefix rather than a
