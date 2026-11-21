@@ -461,8 +461,11 @@
   .text-spine.ridge-figure-back {
     opacity: 0.74;
   }
+  /* La nuit, la même bande, assombrie : une colonne claire dans le noir
+     prenait l'œil avant la figure. */
   .mode-night .ridge-trunk {
-    background: linear-gradient(to top, rgb(150 136 120 / 0.45), rgb(150 136 120 / 0.1));
+    opacity: 0.4;
+    filter: brightness(0.7) saturate(0.6);
   }
   .ridge-string {
     background: linear-gradient(to top, rgb(var(--c-faint) / 0.6), rgb(var(--c-faint) / 0.15));

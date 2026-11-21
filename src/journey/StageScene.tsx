@@ -122,7 +122,7 @@ export function StageScene({
       )}
 
       {adventure?.climber && (
-        <div className="ridge-climb absolute bottom-0 left-[3%] top-0 w-20">
+        <div className="ridge-climb absolute bottom-0 left-0 top-0 w-16">
           {/* Le tronc : un trait d'écorce, pas une illustration. L'arbre en grand
               est dans les passages ; ici il suffit qu'on sache sur quoi il monte. */}
           {/* Ce sur quoi il monte : une bande prise dans l'illustration de
@@ -139,8 +139,19 @@ export function StageScene({
           <img
             src={adventure.climber}
             alt=""
-            className="ridge-climber absolute left-1/2 w-auto -translate-x-[30%]"
-            style={{ bottom: `${climb}%`, height: adventure.climberHeight ?? 72 }}
+            className="ridge-climber absolute left-1/2 -translate-x-1/2"
+            // Borné dans les deux sens, proportions gardées : un personnage
+            // large (la grue fait 74 px à sa hauteur) mordait de 9 px sur le
+            // tracé de la figure. À 62 px de large au plus, centré sur son
+            // support calé au bord, il s'arrête à 15 px de la boîte de la
+            // figure — et la figure, c'est la consigne.
+            style={{
+              bottom: `${climb}%`,
+              width: 'auto',
+              height: 'auto',
+              maxHeight: adventure.climberHeight ?? 72,
+              maxWidth: 62,
+            }}
           />
         </div>
       )}
