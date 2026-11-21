@@ -464,6 +464,9 @@
   .mode-night .ridge-trunk {
     background: linear-gradient(to top, rgb(150 136 120 / 0.45), rgb(150 136 120 / 0.1));
   }
+  .ridge-string {
+    background: linear-gradient(to top, rgb(var(--c-faint) / 0.6), rgb(var(--c-faint) / 0.15));
+  }
   .ridge-climber {
     transition: bottom 1.4s cubic-bezier(0.4, 0, 0.2, 1);
     filter: saturate(0.9);

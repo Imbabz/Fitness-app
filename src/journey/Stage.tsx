@@ -5,7 +5,7 @@ import type { Exercise, LoggedSet, Session } from '../types';
 import { BLOCK_LABEL } from '../data/sessions';
 import { ExerciseAnimation } from '../animations/registry';
 import { StageScene } from './StageScene';
-import { adventureFor } from '../data/adventures';
+import { adventureFor, beatFor } from '../data/adventures';
 import { RepCounter } from '../trackers/RepCounter';
 import { HoldTimer } from '../trackers/HoldTimer';
 import { DurationTimer } from '../trackers/DurationTimer';
@@ -111,7 +111,7 @@ export function Stage({
   const Tracker = TRACKERS[exercise.tracking];
   const isSpine = exercise.block === 'spine';
   const adventure = adventureFor(session.id);
-  const beat = adventure?.beats[exercise.id];
+  const beat = adventure && beatFor(adventure, exercise.id, exercise.block);
   const showProgression = allSetsDone && progressionReady(state, exercise);
 
   return (

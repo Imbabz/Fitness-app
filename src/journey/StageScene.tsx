@@ -118,18 +118,22 @@ export function StageScene({
         <div className="ridge-climb absolute bottom-0 left-[3%] top-0 w-20">
           {/* Le tronc : un trait d'écorce, pas une illustration. L'arbre en grand
               est dans les passages ; ici il suffit qu'on sache sur quoi il monte. */}
-          {/* Le vrai tronc : une bande d'écorce prise dans l'illustration du
-              camphrier, fondue sur les côtés et vers le haut. Il grimpe sur
-              l'arbre des passages, pas sur un poteau. */}
-          <span
-            className="ridge-trunk absolute bottom-0 left-1/2 top-0 w-[30px] -translate-x-1/2"
-            style={{ backgroundImage: `url(${adventure.surface})` }}
-          />
+          {/* Ce sur quoi il monte : une bande prise dans l'illustration de
+              l'aventure (l'écorce, les nuages, les marches), fondue sur les
+              côtés — ou le fil du cerf-volant. */}
+          {adventure.surface === 'string' ? (
+            <span className="ridge-string absolute bottom-0 left-1/2 w-px -translate-x-1/2" style={{ height: `${climb + 20}%` }} />
+          ) : adventure.surface ? (
+            <span
+              className="ridge-trunk absolute bottom-0 left-1/2 top-0 w-[30px] -translate-x-1/2"
+              style={{ backgroundImage: `url(${adventure.surface})` }}
+            />
+          ) : null}
           <img
             src={adventure.climber}
             alt=""
             className="ridge-climber absolute left-1/2 w-auto -translate-x-[30%]"
-            style={{ bottom: `${climb}%`, height: 76 }}
+            style={{ bottom: `${climb}%`, height: adventure.climberHeight }}
           />
         </div>
       )}
