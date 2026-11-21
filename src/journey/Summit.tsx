@@ -5,6 +5,7 @@ import { useApp } from '../state/AppStateContext';
 import { detectPRs } from '../state/selectors';
 import { humanDuration } from '../lib/time';
 import { hourOf } from '../data/hours';
+import { HourPlate } from '../components/HourPlate';
 import { haptic, HAPTIC } from '../lib/haptics';
 
 export function Summit({
@@ -61,12 +62,7 @@ export function Summit({
     >
       {hour && (
         <>
-          <img
-            src={hour.src}
-            alt=""
-            aria-hidden="true"
-            className="ridge-hour pointer-events-none absolute inset-x-0 top-0 -z-10 h-[30%] w-full object-cover object-top"
-          />
+          <HourPlate hour={hour} className="absolute inset-x-0 top-0 -z-10 h-[30%] w-full" />
           <span
             aria-hidden="true"
             className="ridge-hour-tint pointer-events-none absolute inset-0 -z-10"

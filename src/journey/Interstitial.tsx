@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import type { Block } from '../types';
 import { BLOCK_LABEL } from '../data/sessions';
-import { hourOf } from '../data/hours';
+import { hourOf, MOTION_CLASS } from '../data/hours';
+import { HourPlate } from '../components/HourPlate';
 import { haptic, HAPTIC } from '../lib/haptics';
 
 /*
@@ -35,20 +36,6 @@ const COPY: Record<Block, { line: string; tone: string }> = {
  */
 const DISMISS_MS = 1500;
 
-/*
- * Les classes de mouvement, écrites en toutes lettres.
- *
- * Elles vivent dans `@layer components`, que Tailwind purge quand la classe
- * n'apparaît nulle part littéralement dans les sources. Un gabarit
- * `ridge-el-${motion}` est invisible pour son analyseur : la règle est
- * supprimée du bundle et l'animation ne tourne jamais, sans la moindre erreur.
- * C'est arrivé ici et seule une mesure de l'angle l'a montré.
- */
-const MOTION = {
-  sway: 'ridge-el-sway',
-  drift: 'ridge-el-drift',
-  flicker: 'ridge-el-flicker',
-} as const;
 
 export function Interstitial({ block, onDismiss }: { block: Block; onDismiss: () => void }) {
   const spine = block === 'spine';
@@ -81,12 +68,7 @@ export function Interstitial({ block, onDismiss }: { block: Block; onDismiss: ()
       */}
       {hour && (
         <>
-          <img
-            src={hour.src}
-            alt=""
-            aria-hidden="true"
-            className="ridge-hour pointer-events-none absolute inset-x-0 top-0 -z-10 h-[38%] w-full object-cover object-top"
-          />
+          <HourPlate hour={hour} className="absolute inset-x-0 top-0 -z-10 h-[38%] w-full" />
           {/* Le nom de l'heure, posé dans le ciel. C'est ce qui fait des
               quatre plaques un même lieu plutôt que quatre images. */}
           <span
@@ -120,7 +102,7 @@ export function Interstitial({ block, onDismiss }: { block: Block; onDismiss: ()
                 src={el.src}
                 alt=""
                 style={{ height: el.h }}
-                className={['block w-auto ridge-el', MOTION[el.motion]].join(' ')}
+                className={['block w-auto ridge-el', MOTION_CLASS[el.motion]].join(' ')}
               />
             </span>
           ))}

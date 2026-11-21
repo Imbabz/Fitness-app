@@ -1,9 +1,13 @@
 import type { Block } from '../types';
+import { seasonOf, type Season } from '../lib/sky';
 import aube from '../assets/hours/aube.webp';
 import plein from '../assets/hours/plein.webp';
 import doree from '../assets/hours/doree.webp';
 import nuit from '../assets/hours/nuit.webp';
 import elArbre from '../assets/hours/el-arbre.webp';
+import elArbrePrintemps from '../assets/hours/el-arbre-printemps.webp';
+import elArbreAutomne from '../assets/hours/el-arbre-automne.webp';
+import elArbreHiver from '../assets/hours/el-arbre-hiver.webp';
 import elArbreNuit from '../assets/hours/el-arbre-nuit.webp';
 import elChampis from '../assets/hours/el-champis.webp';
 import elFeu from '../assets/hours/el-feu.webp';
@@ -53,6 +57,11 @@ export interface Element {
 }
 
 export interface Hour {
+  /**
+   * La plaque porte la lune de ce soir. Seule la nuit en a une : la plaque
+   * est peinte sans, et la lune est dessinée par-dessus avec sa vraie phase.
+   */
+  moon?: true;
   /** The plate. Fades into the page; it never carries information. */
   src: string;
   /** What the page takes from it, as an RGB triple. */
@@ -88,6 +97,7 @@ export const HOURS: Partial<Record<Block, Hour>> = {
     ],
   },
   mobility: {
+    moon: true,
     src: nuit, tint: '120 140 186', label: 'Night',
     // Un camp : l'arbre sous la lune, le feu dessous. L'arbre est le même
     // qu'à la première heure, la lumière du jour retirée — la nuit n'est pas
@@ -112,8 +122,48 @@ export const HOURS: Partial<Record<Block, Hour>> = {
   },
 };
 
-export function hourOf(block: Block): Hour | undefined {
-  return HOURS[block];
+/*
+ * Le même arbre aux quatre saisons.
+ *
+ * Seul le feuillage change — le tronc est le même pixel pour pixel, parce que
+ * c'est le même arbre. Les variantes sont cuites d'avance plutôt que filtrées
+ * à l'exécution : un `hue-rotate` qui fait rougir les feuilles fait aussi
+ * virer le tronc au magenta.
+ */
+const TREE: Record<Season, string> = {
+  spring: elArbrePrintemps,
+  summer: elArbre,
+  autumn: elArbreAutomne,
+  winter: elArbreHiver,
+};
+
+function inSeason(hour: Hour, date: Date): Hour {
+  const tree = TREE[seasonOf(date)];
+  if (tree === elArbre) return hour;
+  return {
+    ...hour,
+    elements: hour.elements.map((el) => (el.src === elArbre ? { ...el, src: tree } : el)),
+  };
+}
+
+/*
+ * Les classes de mouvement, écrites en toutes lettres.
+ *
+ * Elles vivent dans `@layer components`, que Tailwind purge quand la classe
+ * n'apparaît nulle part littéralement dans les sources. Un gabarit
+ * `ridge-el-${motion}` est invisible pour son analyseur : la règle est
+ * supprimée du bundle et l'animation ne tourne jamais, sans la moindre erreur.
+ * C'est arrivé ici et seule une mesure de l'angle l'a montré.
+ */
+export const MOTION_CLASS = {
+  sway: 'ridge-el-sway',
+  drift: 'ridge-el-drift',
+  flicker: 'ridge-el-flicker',
+} as const;
+
+export function hourOf(block: Block, date: Date = new Date()): Hour | undefined {
+  const hour = HOURS[block];
+  return hour && inSeason(hour, date);
 }
 
 /**
@@ -128,9 +178,9 @@ export function hourNow(mode: 'day' | 'night', date = new Date()): Hour {
   // Le mode l'emporte sur l'horloge. L'utilisateur qui bascule en jour demande
   // qu'il fasse jour : lui laisser un ciel de nuit derrière un thème clair
   // donne un lavis gris qui n'est ni l'un ni l'autre.
-  if (mode === 'night') return HOURS.mobility!;
+  if (mode === 'night') return inSeason(HOURS.mobility!, date);
   const h = date.getHours();
-  if (h < 10) return HOURS.warmup!;
-  if (h < 17) return HOURS.main!;
-  return HOURS.spine!;
+  if (h < 10) return inSeason(HOURS.warmup!, date);
+  if (h < 17) return inSeason(HOURS.main!, date);
+  return inSeason(HOURS.spine!, date);
 }

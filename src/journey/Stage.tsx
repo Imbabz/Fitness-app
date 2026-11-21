@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import type { Exercise, LoggedSet, Session } from '../types';
 import { BLOCK_LABEL } from '../data/sessions';
 import { ExerciseAnimation } from '../animations/registry';
+import { StageScene } from './StageScene';
 import { RepCounter } from '../trackers/RepCounter';
 import { HoldTimer } from '../trackers/HoldTimer';
 import { DurationTimer } from '../trackers/DurationTimer';
@@ -146,6 +147,10 @@ export function Stage({
           isSpine ? 'border border-spine/35 bg-spine/[0.07]' : '',
         ].join(' ')}
       >
+        {/* La figure se tient quelque part. La bande est isolée pour que la
+            scène, en -z-10, passe derrière la figure et pas derrière la carte. */}
+        <div className="relative isolate flex w-full justify-center">
+          <StageScene block={exercise.block} mode={state.mode} />
         <span className={isSpine ? 'text-spine' : 'text-accent'}>
           <ExerciseAnimation
             animation={exercise.animation}
@@ -156,6 +161,7 @@ export function Stage({
               : {})}
           />
         </span>
+        </div>
         <h2 className="mt-3 text-center text-2xl ridge-title text-ink">
           {exercise.name}
         </h2>

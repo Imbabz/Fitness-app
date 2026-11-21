@@ -165,6 +165,11 @@
    * no download, no network call, and not the Georgia that every generated
    * page reaches for.
    */
+  /* La voix du lieu : dans la police des titres, en italique. C'est
+     l'interstitiel qui parle, en plus petit. */
+  .ridge-place-line {
+    font-family: theme('fontFamily.serif');
+  }
   .ridge-title {
     font-family: theme('fontFamily.serif');
     font-weight: var(--weight-title);
@@ -209,10 +214,12 @@
     width: 100%;
     height: 38%;
     object-fit: cover;
-    /* Décalé vers la droite : la lune de la plaque de nuit tombe sinon
-       exactement derrière le chevron de retour et le titre d_etape, et une
-       tache claire derrière un texte est une tache, pas une lune. Elle garde
-       sa place en plein écran, dans l'interstitiel. */
+    /* Calé à droite. D'abord pour la lune, quand elle était peinte dans la
+       plaque de nuit et tombait derrière le chevron de retour. Elle ne l'est
+       plus — elle est dessinée à part, avec sa vraie phase — mais centrée, la
+       plaque pose le grand cumulus pile derrière la figure de l'étape, et son
+       flanc droit, presque vertical, se lit comme le bord d'une boîte. À
+       droite, la page reçoit les nuages bas et doux. */
     object-position: 100% top;
     /* En clair, une image posée à 17 % sur une page presque blanche ne se voit
        pas : elle s'éclaircit vers le papier. En multiply elle le teinte au
@@ -386,20 +393,145 @@
      il se lit comme un autocollant posé sur la nuit ; avec elle, il éclaire
      son coin d'écran et le reste suit. La lueur bat sur le même tempo que la
      flamme, un cran plus lent. */
+  /*
+   * La scène autour de la figure — voir StageScene.tsx.
+   *
+   * Tout y est plus pâle que dans l'interstitiel : là-bas la scène est le
+   * sujet, ici c'est la figure. Les objets à 42 %, désaturés ; les
+   * particules sous 70 %, et jamais plus grandes qu'un ongle.
+   */
+  /* Les bords de la bande se fondent au lieu de couper.
+
+     La bande doit couper — sinon les particules tombent dans le titre de
+     l'exercice, et la lueur du feu déborde de l'écran et ouvre un défilement
+     horizontal. Mais un fondu coupé net est un rectangle : la lueur du feu
+     s'arrêtait sur une ligne verticale à droite de la flamme. Les bords
+     latéraux et le bas s'estompent donc sur quelques pixels, et ce qui
+     franchit le bord s'éteint au lieu d'être tranché. Les feuilles en
+     profitent aussi : elles ne disparaissent plus d'un coup en sortant. */
+  .ridge-scene {
+    -webkit-mask-image:
+      linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%),
+      linear-gradient(to bottom, #000 calc(100% - 18px), transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%),
+      linear-gradient(to bottom, #000 calc(100% - 18px), transparent 100%);
+    mask-composite: intersect;
+  }
+  .ridge-scene-obj {
+    /* 55 % et non 42 : sur une page presque blanche, l'arbre à 42 % n'était
+       plus un arbre mais une buée. */
+    opacity: 0.55;
+    filter: saturate(0.75);
+  }
+  /* La lueur du feu à l'échelle de la bande. Telle quelle elle fait 380 px :
+     la bande la coupait net à son bord, et un fondu coupé net est un
+     rectangle. Réduite, elle s'éteint avant d'atteindre les bords. */
+  .ridge-scene-obj.ridge-el-glow::before {
+    width: 170px;
+    height: 170px;
+  }
+  .mode-night .ridge-scene-obj {
+    opacity: 0.55;
+  }
+  /* La lune de la scène. De nuit elle est claire sur le sombre ; de jour —
+     la routine du soir faite en thème clair — un disque blanc sur une page
+     presque blanche ne se verrait pas, donc elle prend l'encre pâle. */
+  .ridge-moon-lit {
+    fill: rgb(232 236 244);
+  }
+  .ridge-moon-dark {
+    fill: rgb(58 66 92);
+    opacity: 0.5;
+  }
+  .mode-day .ridge-moon-lit {
+    fill: rgb(132 148 184);
+  }
+  .mode-day .ridge-moon-dark {
+    fill: rgb(196 206 224);
+    opacity: 0.45;
+  }
+
+  .ridge-p {
+    position: absolute;
+    top: 0;
+    width: calc(var(--p-s, 1) * 8px);
+    height: calc(var(--p-s, 1) * 6px);
+    opacity: 0;
+    animation: ridge-fall var(--p-d, 13s) linear var(--p-delay, 0s) infinite;
+    will-change: transform, opacity;
+  }
+  /* Momiji : le rouge des érables, avec une feuille sur deux plus ocre. */
+  .ridge-p-leaf {
+    --p-o: 0.62;
+    background: rgb(178 76 54);
+    border-radius: 0 85% 0 85%;
+  }
+  .ridge-p-leaf:nth-child(even) {
+    background: rgb(194 128 60);
+  }
+  .ridge-p-petal {
+    --p-o: 0.6;
+    background: rgb(232 178 192);
+    border-radius: 70% 0 70% 0;
+  }
+  /* La neige est blanche la nuit et gris-bleu le jour : un flocon blanc sur
+     une page presque blanche n'existe pas. */
+  .ridge-p-snow {
+    --p-o: 0.7;
+    width: calc(var(--p-s, 1) * 4.5px);
+    height: calc(var(--p-s, 1) * 4.5px);
+    border-radius: 9999px;
+    background: rgb(150 170 202);
+    filter: blur(0.3px);
+  }
+  .mode-night .ridge-p-snow {
+    background: rgb(236 240 248);
+  }
+  .ridge-p-seed {
+    --p-o: 0.5;
+    width: calc(var(--p-s, 1) * 3.5px);
+    height: calc(var(--p-s, 1) * 3.5px);
+    border-radius: 9999px;
+    background: rgb(176 164 128);
+  }
+  /* Les lucioles ne tombent pas : elles errent à mi-hauteur et s'allument. */
+  .ridge-p-firefly {
+    top: 38%;
+    width: calc(var(--p-s, 1) * 3.5px);
+    height: calc(var(--p-s, 1) * 3.5px);
+    border-radius: 9999px;
+    background: rgb(255 224 128);
+    box-shadow: 0 0 7px 2px rgb(255 206 96 / 0.55);
+    animation-name: ridge-firefly;
+    animation-timing-function: ease-in-out;
+  }
+
   .ridge-el-glow::before {
     content: '';
     position: absolute;
     left: 50%;
     bottom: 0;
-    width: 380px;
-    height: 380px;
+    /* 520 et non 380 : le dégradé est maintenant mesuré jusqu'au bord de sa
+       boîte et non plus jusqu'au coin (voir plus bas), ce qui le raccourcit
+       d'un facteur √2. La lueur garde ainsi la portée qu'elle avait. */
+    width: 520px;
+    height: 520px;
     transform: translate(-50%, 34%);
-    /* `transparent` est un noir transparent : en dégradé radial il tire vers
+    /* `closest-side` : sans lui, un cercle se mesure jusqu'au coin le plus
+       éloigné de la boîte. Le dernier arrêt, à 82 %, tombait alors à 87 px du
+       centre d'une boîte de 150 — au-delà de son bord, à 75. La lueur n'était
+       pas encore éteinte quand la boîte s'arrêtait, et ce bord se voyait
+       comme un rectangle brun autour du feu. Mesuré au bord, le dégradé
+       s'éteint dedans, quelle que soit la taille de la boîte.
+
+       `transparent` est un noir transparent : en dégradé radial il tire vers
        le noir avant de disparaître et laisse un anneau net sur un fond
        sombre. La dernière teinte est donc la même couleur à alpha zéro, et la
        chute est étalée sur cinq arrêts pour que rien ne banding. */
     background: radial-gradient(
-      circle at center,
+      circle closest-side at center,
       rgb(255 178 96 / 0.2) 0%,
       rgb(255 168 86 / 0.13) 24%,
       rgb(255 156 74 / 0.07) 44%,
@@ -411,7 +543,7 @@
   }
   .mode-night .ridge-el-glow::before {
     background: radial-gradient(
-      circle at center,
+      circle closest-side at center,
       rgb(255 188 118 / 0.23) 0%,
       rgb(255 172 92 / 0.15) 24%,
       rgb(255 156 74 / 0.08) 44%,
@@ -558,6 +690,42 @@
   }
 }
 
+/* La chute : de l'entrée en haut de la bande jusque sous son bord bas, en
+   dérivant et en tournant. Linéaire : une feuille ne freine pas. Elle
+   apparaît et disparaît en fondu, jamais d'un coup aux bords. */
+@keyframes ridge-fall {
+  0% {
+    transform: translate3d(0, -14px, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10%,
+  82% {
+    opacity: var(--p-o, 0.6);
+  }
+  100% {
+    transform: translate3d(var(--p-drift, 0px), 176px, 0) rotate(var(--p-spin, 0deg));
+    opacity: 0;
+  }
+}
+@keyframes ridge-firefly {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.85;
+  }
+  45% {
+    transform: translate3d(calc(var(--p-drift, 0px) * 0.6), -18px, 0);
+    opacity: 0.2;
+  }
+  70% {
+    transform: translate3d(var(--p-drift, 0px), 8px, 0);
+    opacity: 0.9;
+  }
+}
+
 @keyframes ridge-glow {
   0%,
   100% {
@@ -613,5 +781,9 @@
   }
   .ridge-el-glow::before {
     animation: none;
+  }
+  /* Elles ne disent rien que le reste ne dise déjà. */
+  .ridge-p {
+    display: none;
   }
 }
