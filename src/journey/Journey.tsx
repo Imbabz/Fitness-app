@@ -9,6 +9,7 @@ import { Summit } from './Summit';
 import { MorningWarning } from './MorningWarning';
 import { AmbientButton } from './AmbientButton';
 import { HourSky } from '../components/HourSky';
+import { adventureFor } from '../data/adventures';
 import { prepareAmbient, resolveAmbient, startAmbient, stopAmbient } from '../lib/ambient';
 import { seek, setProgress } from '../lib/arc';
 import { haptic, HAPTIC } from '../lib/haptics';
@@ -212,7 +213,7 @@ export function Journey({ session, onExit }: { session: Session; onExit: () => v
           </div>
         )}
         {interstitial && (
-          <Interstitial block={interstitial} onDismiss={() => setInterstitial(null)} />
+          <Interstitial block={interstitial} adventure={adventureFor(session.id, active ? new Date(active.startedAt) : undefined)} onDismiss={() => setInterstitial(null)} />
         )}
       </>
     );
@@ -254,7 +255,7 @@ export function Journey({ session, onExit }: { session: Session; onExit: () => v
       </div>
 
       {interstitial && (
-        <Interstitial block={interstitial} onDismiss={() => setInterstitial(null)} />
+        <Interstitial block={interstitial} adventure={adventureFor(session.id, active ? new Date(active.startedAt) : undefined)} onDismiss={() => setInterstitial(null)} />
       )}
     </div>
   );

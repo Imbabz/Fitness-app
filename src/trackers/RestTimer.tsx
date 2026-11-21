@@ -16,11 +16,17 @@ import { CountdownToggle, targetFor } from './shared';
  * the next-stage prompt instead.
  */
 export function RestTimer({
+  art,
+  line,
   exercise,
   nextSetIndex,
   seconds,
   onDone,
 }: {
+  /** Une plaque d'aventure, en tête de la feuille. Décor pur. */
+  art?: string | undefined;
+  /** L'écho du repos. */
+  line?: string | undefined;
   exercise: Exercise;
   nextSetIndex: number;
   seconds: number;
@@ -51,6 +57,14 @@ export function RestTimer({
   return createPortal(
     <div className="ridge-sheet fixed inset-x-0 bottom-0 z-40 border-t border-line/60 bg-surface/95 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur-md">
       <div className="mx-auto w-full max-w-md">
+        {art && (
+          <div className="ridge-rest-art relative -mx-5 -mt-4 mb-3 h-24 overflow-hidden" aria-hidden="true">
+            <img src={art} alt="" className="h-full w-full object-cover" />
+          </div>
+        )}
+        {line && (
+          <p className="ridge-place-line mb-2 text-center text-[0.8125rem] italic text-muted">{line}</p>
+        )}
         <div className="mb-3 h-1 w-full overflow-hidden rounded-full bg-raised">
           <div
             className="h-full rounded-full bg-accent transition-[width] duration-200 ease-linear"

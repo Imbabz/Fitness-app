@@ -419,6 +419,73 @@
       linear-gradient(to bottom, #000 calc(100% - 18px), transparent 100%);
     mask-composite: intersect;
   }
+  /* Les personnages d'aventure : la réserve de papier suit la page, et
+     l'éclat garde sa couleur dans les deux modes. */
+  .ridge-paper-fill {
+    fill: rgb(var(--c-base));
+  }
+  .ridge-eclat-camphrier {
+    fill: rgb(220 158 82);
+  }
+  .ridge-hour.ridge-plate-busy {
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.55) 45%, transparent 82%);
+    mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.55) 45%, transparent 82%);
+  }
+  /* La montée — prototype de l'aventure du camphrier. */
+  .ridge-trunk {
+    background-size: cover;
+    background-position: center bottom;
+    opacity: 0.85;
+    -webkit-mask-image:
+      linear-gradient(to right, transparent 0, #000 30%, #000 70%, transparent 100%),
+      linear-gradient(to top, #000 55%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      linear-gradient(to right, transparent 0, #000 30%, #000 70%, transparent 100%),
+      linear-gradient(to top, #000 55%, transparent 100%);
+    mask-composite: intersect;
+  }
+  .ridge-branch {
+    border-radius: 3px;
+    background: rgb(128 98 74 / 0.45);
+  }
+  /* La figure en retrait : on baisse l'opacité, jamais sous ce qui garde un
+     trait lisible — mesuré sur la page composée, pas estimé. */
+  .ridge-figure-back {
+    opacity: 0.62;
+  }
+  /* Sauf au rachis. Le vermillon sur la carte teintée tombait à 2,70:1 à
+     62 % — sous le 3:1 d'un tracé qui porte une information, sur la figure
+     même où la forme compte le plus : le Jefferson curl, le soulevé de terre.
+     À 74 % il tient 3,3:1 le jour et 3,7:1 la nuit. */
+  .text-spine.ridge-figure-back {
+    opacity: 0.74;
+  }
+  /* La nuit, la même bande, assombrie : une colonne claire dans le noir
+     prenait l'œil avant la figure. */
+  .mode-night .ridge-trunk {
+    opacity: 0.4;
+    filter: brightness(0.7) saturate(0.6);
+  }
+  .ridge-string {
+    background: linear-gradient(to top, rgb(var(--c-faint) / 0.6), rgb(var(--c-faint) / 0.15));
+  }
+  /* Une pièce du camp apparaît en fondu, jamais d'un coup. */
+  .ridge-build {
+    animation: ridge-fade 1.2s ease-out both;
+  }
+  .ridge-build.ridge-el-glow::before {
+    width: 170px;
+    height: 170px;
+  }
+  .ridge-climber {
+    transition: bottom 1.4s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: saturate(0.9);
+  }
+  .ridge-rest-art {
+    -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 40%, transparent 100%);
+  }
   .ridge-scene-obj {
     /* 55 % et non 42 : sur une page presque blanche, l'arbre à 42 % n'était
        plus un arbre mais une buée. */
