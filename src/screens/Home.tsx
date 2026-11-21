@@ -5,6 +5,7 @@ import { GYM_SESSIONS } from '../data/sessions';
 import { dailyDoneToday, isTrainingDense, nextSession, tunedSession } from '../state/selectors';
 import { WeekStrip } from '../components/WeekStrip';
 import { ExerciseAnimation } from '../animations/registry';
+import { placeLine } from '../lib/sky';
 
 /**
  * One home screen, two priorities. In day mode the gym session is the hero and
@@ -39,6 +40,12 @@ export function Home({
       <header>
         <h1 className="text-[1.875rem] ridge-title leading-[1.1] text-ink">{greeting}</h1>
         <p className="mt-0.5 text-xs text-faint">{dateLine}</p>
+        {/* Une phrase du lieu. Ce qu'on dirait en passant, jamais une consigne
+            et jamais un mot sur toi : le lieu fait son temps, il ne te regarde
+            pas t'entraîner. Elle change avec le jour, pas avec le rendu. */}
+        <p className="ridge-place-line mt-2 text-[0.8125rem] italic text-muted">
+          {placeLine(night ? 'night' : 'day')}
+        </p>
       </header>
 
       {night ? (
