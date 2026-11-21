@@ -6,6 +6,7 @@ import { detectPRs } from '../state/selectors';
 import { humanDuration } from '../lib/time';
 import { hourOf } from '../data/hours';
 import { HourPlate } from '../components/HourPlate';
+import { adventureFor } from '../data/adventures';
 import { haptic, HAPTIC } from '../lib/haptics';
 
 export function Summit({
@@ -51,9 +52,14 @@ export function Summit({
   // La routine du soir se termine de nuit, quel que soit son dernier bloc :
   // elle finit sur une flexion du rachis, et prendre l'heure du bloc donnerait
   // un ciel doré en plein thème sombre.
-  const hour = session.mode === 'night'
+  const adventure = adventureFor(session.id);
+  const baseHour = session.mode === 'night'
     ? hourOf('mobility')
     : hourOf(session.exercises.at(-1)?.block ?? 'main');
+  // L'aventure finit sur sa propre image : on arrive en haut, et on s'en va.
+  const hour = adventure && baseHour
+    ? { ...baseHour, src: adventure.plates.summit, moon: undefined }
+    : baseHour;
 
   return (
     <div
@@ -62,13 +68,26 @@ export function Summit({
     >
       {hour && (
         <>
-          <HourPlate hour={hour} className="absolute inset-x-0 top-0 -z-10 h-[30%] w-full" />
+          <HourPlate
+            hour={hour}
+            className={[
+              'absolute inset-x-0 top-0 -z-10 w-full',
+              // Une illustration est plus chargée qu'un ciel : plus haute, et
+              // fondue plus tôt, pour que le titre se pose sur la page et non
+              // sur le feuillage.
+              adventure ? 'ridge-plate-busy h-[26%]' : 'h-[30%]',
+            ].join(' ')}
+          />
           <span
             aria-hidden="true"
             className="ridge-hour-tint pointer-events-none absolute inset-0 -z-10"
           />
         </>
       )}
+      {/* Avec une illustration, l'image tient sa propre bande en haut et le
+          titre se pose dessous, sur la page : posé sur le feuillage, il ne se
+          lisait plus. */}
+      {adventure && <div aria-hidden="true" className="h-[15vh]" />}
       <span
         className={[
           'text-xs font-semibold ridge-label',
@@ -77,7 +96,7 @@ export function Summit({
           hour ? 'ridge-on-plate' : 'text-faint',
         ].join(' ')}
       >
-        {hour ? hour.label : 'Summit'}
+        {adventure ? adventure.name : hour ? hour.label : 'Summit'}
       </span>
       <h1 className="mt-2 text-4xl ridge-title text-ink">{session.title} done.</h1>
 

@@ -5,6 +5,7 @@ import type { Exercise, LoggedSet, Session } from '../types';
 import { BLOCK_LABEL } from '../data/sessions';
 import { ExerciseAnimation } from '../animations/registry';
 import { StageScene } from './StageScene';
+import { adventureFor } from '../data/adventures';
 import { RepCounter } from '../trackers/RepCounter';
 import { HoldTimer } from '../trackers/HoldTimer';
 import { DurationTimer } from '../trackers/DurationTimer';
@@ -109,6 +110,8 @@ export function Stage({
 
   const Tracker = TRACKERS[exercise.tracking];
   const isSpine = exercise.block === 'spine';
+  const adventure = adventureFor(session.id);
+  const beat = adventure?.beats[exercise.id];
   const showProgression = allSetsDone && progressionReady(state, exercise);
 
   return (
@@ -150,10 +153,15 @@ export function Stage({
         {/* La figure se tient quelque part. La bande est isolée pour que la
             scène, en -z-10, passe derrière la figure et pas derrière la carte. */}
         <div className="relative isolate flex w-full justify-center">
-          <StageScene block={exercise.block} mode={state.mode} />
+          <StageScene
+            block={exercise.block}
+            mode={state.mode}
+            adventure={adventure}
+            progress={stageIndex / Math.max(1, session.exercises.length - 1)}
+          />
         <span className={isSpine ? 'text-spine' : 'text-accent'}>
           <ExerciseAnimation
-            animation={exercise.animation}
+            animation={adventure?.figures[exercise.animation] ?? exercise.animation}
             size={140}
             // A prescribed tempo is an instruction, so the figure moves at it.
             {...(exercise.tempo
@@ -171,6 +179,13 @@ export function Stage({
         {exercise.cue && (
           <p className="mt-3 text-balance text-center text-lg font-medium leading-snug text-ink/90">
             “{exercise.cue}”
+          </p>
+        )}
+        {/* L'écho de l'histoire, sous la consigne et plus bas qu'elle : la
+            consigne se lit d'abord, l'histoire ensuite, si on la cherche. */}
+        {beat && (
+          <p className="ridge-place-line mt-2 text-balance text-center text-[0.8125rem] italic text-muted">
+            {beat}
           </p>
         )}
       </div>
@@ -275,6 +290,8 @@ export function Stage({
 
       {resting && (
         <RestTimer
+          art={adventure?.plates.rest}
+          line={adventure?.rest}
           exercise={exercise}
           nextSetIndex={setIndex}
           seconds={exercise.restSeconds || state.settings.restDefaultSeconds}

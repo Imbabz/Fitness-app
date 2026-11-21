@@ -419,6 +419,38 @@
       linear-gradient(to bottom, #000 calc(100% - 18px), transparent 100%);
     mask-composite: intersect;
   }
+  /* Les personnages d'aventure : la réserve de papier suit la page, et
+     l'éclat garde sa couleur dans les deux modes. */
+  .ridge-paper-fill {
+    fill: rgb(var(--c-base));
+  }
+  .ridge-eclat-camphrier {
+    fill: rgb(220 158 82);
+  }
+  .ridge-hour.ridge-plate-busy {
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.55) 45%, transparent 82%);
+    mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.55) 45%, transparent 82%);
+  }
+  /* La montée — prototype de l'aventure du camphrier. */
+  .ridge-trunk {
+    border-radius: 4px;
+    background: linear-gradient(to top, rgb(128 98 74 / 0.5), rgb(128 98 74 / 0.12));
+  }
+  .ridge-branch {
+    border-radius: 3px;
+    background: rgb(128 98 74 / 0.3);
+  }
+  .mode-night .ridge-trunk {
+    background: linear-gradient(to top, rgb(150 136 120 / 0.45), rgb(150 136 120 / 0.1));
+  }
+  .ridge-climber {
+    transition: bottom 1.4s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: saturate(0.9);
+  }
+  .ridge-rest-art {
+    -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 40%, transparent 100%);
+  }
   .ridge-scene-obj {
     /* 55 % et non 42 : sur une page presque blanche, l'arbre à 42 % n'était
        plus un arbre mais une buée. */

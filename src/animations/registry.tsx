@@ -650,6 +650,45 @@ const openBook = ({ size, className }: AnimProps) => (
   </Figure>
 );
 
+// ── Aventure · le Grand Camphrier ──────────────────────────────────────────
+//
+// Prototype : le personnage de l'histoire à la place du stickman, sur le
+// squelette exact des tractions. Mêmes groupes, mêmes classes, mêmes origines :
+// les articulations ne bougent pas d'un pixel, seul le dessin change. C'est ce
+// qui permet de dessiner un animal sans jamais rien enseigner de faux.
+
+/** Le momonga aux tractions : silhouette d'encre, une touche d'ambre. */
+const momongaPullup = ({ size, className }: AnimProps) => (
+  <Figure size={size} loop={2.4} className={className}>
+    <Prop>
+      <line x1={10} y1={12} x2={54} y2={12} />
+    </Prop>
+    <g className="ra-pullup-body">
+      {/* La queue plate du momonga, puis le corps : une seule masse. */}
+      <path d="M32 43 C35 47, 36 52, 33 57" strokeWidth={4.2} />
+      <path d="M26 31 C25 38, 26.5 44, 32 45 C37.5 44, 39 38, 38 31 C36 28.6, 28 28.6, 26 31Z" fill="currentColor" stroke="none" />
+      {/* La membrane, repliée le long des flancs. */}
+      <path d="M26.4 31 L22.6 41.6 L27 43Z M37.6 31 L41.4 41.6 L37 43Z" fill="currentColor" stroke="none" opacity={0.5} />
+      <line x1={29} y1={44} x2={27.4} y2={51} strokeWidth={3.2} />
+      <line x1={35} y1={44} x2={36.6} y2={51} strokeWidth={3.2} />
+      {/* La tête ronde, deux oreilles rondes, deux yeux en réserve de papier. */}
+      <circle cx={32} cy={23} r={5.6} fill="currentColor" stroke="none" />
+      <circle cx={27.4} cy={18.4} r={2.1} fill="currentColor" stroke="none" />
+      <circle cx={36.6} cy={18.4} r={2.1} fill="currentColor" stroke="none" />
+      <circle cx={29.8} cy={23.4} r={1.05} className="ridge-paper-fill" stroke="none" />
+      <circle cx={34.2} cy={23.4} r={1.05} className="ridge-paper-fill" stroke="none" />
+      {/* La sacoche : le seul éclat de la palette du camphrier. */}
+      <rect x={35.4} y={36} width={4.4} height={3.8} rx={1} className="ridge-eclat-camphrier" stroke="none" />
+    </g>
+    <g className="ra-pullup-arm-l">
+      <line x1={22} y1={12} x2={32} y2={29} strokeWidth={3.4} />
+    </g>
+    <g className="ra-pullup-arm-r">
+      <line x1={42} y1={12} x2={32} y2={29} strokeWidth={3.4} />
+    </g>
+  </Figure>
+);
+
 export const ANIMATIONS: Record<string, (p: AnimProps) => ReactNode> = {
   bike,
   scapRetract,
@@ -688,6 +727,7 @@ export const ANIMATIONS: Record<string, (p: AnimProps) => ReactNode> = {
   figurefour: figureFour,
   doorwaypec: doorwayPec,
   openbook: openBook,
+  momongaPullup,
   squat,
 };
 

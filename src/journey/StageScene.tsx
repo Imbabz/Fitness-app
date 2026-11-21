@@ -1,6 +1,7 @@
 import type { Block } from '../types';
 import { hourOf, MOTION_CLASS } from '../data/hours';
 import { moonLitPath, moonOf, seasonOf, type Season } from '../lib/sky';
+import type { Adventure } from '../data/adventures';
 
 /*
  * Le lieu, autour de la figure.
@@ -62,10 +63,16 @@ const KIND_CLASS: Record<Kind, string> = {
 export function StageScene({
   block,
   mode,
+  adventure,
+  progress = 0,
   date = new Date(),
 }: {
   block: Block;
   mode: 'day' | 'night';
+  /** L'aventure de la séance : un personnage qui monte dans la marge gauche. */
+  adventure?: Adventure | undefined;
+  /** Où en est la séance, de 0 à 1 — l'étape, jamais les reps ni la charge. */
+  progress?: number;
   date?: Date;
 }) {
   const hour = hourOf(block, date);
@@ -75,7 +82,15 @@ export function StageScene({
 
   // L'objet de premier plan de l'heure, en petit. Pas le lointain : celui-ci
   // est déjà pâle et flou, et à cette taille il ne resterait qu'une tache.
-  const objects = (hour?.elements ?? []).filter((el) => !el.far).slice(0, 2);
+  // Avec une aventure, la marge gauche est au personnage : l'objet de l'heure
+  // ne garde que la droite.
+  const objects = (hour?.elements ?? [])
+    .filter((el) => !el.far)
+    .filter((el) => !adventure || el.side === 'right')
+    .slice(0, 2);
+  // Le grimpeur monte d'un cran par étape. Il part au pied (8 %) et s'arrête
+  // sous le haut de la bande (72 %) : la cime, c'est le sommet de la séance.
+  const climb = 8 + Math.max(0, Math.min(1, progress)) * 64;
 
   return (
     <div aria-hidden="true" className="ridge-scene pointer-events-none absolute inset-0 -z-10 overflow-hidden">
@@ -94,6 +109,22 @@ export function StageScene({
           <circle cx="20" cy="20" r="7" className="ridge-moon-dark" />
           {moon.lit > 0.01 && <path d={moonLitPath(20, 20, 7, moon)} className="ridge-moon-lit" />}
         </svg>
+      )}
+
+      {adventure && (
+        <div className="ridge-climb absolute bottom-0 left-[6%] top-0 w-14">
+          {/* Le tronc : un trait d'écorce, pas une illustration. L'arbre en grand
+              est dans les passages ; ici il suffit qu'on sache sur quoi il monte. */}
+          <span className="ridge-trunk absolute bottom-0 left-1/2 top-0 w-[7px] -translate-x-1/2" />
+          <span className="ridge-branch absolute left-1/2 top-[34%] h-[3px] w-5" />
+          <span className="ridge-branch ridge-branch-l absolute right-1/2 top-[58%] h-[3px] w-4" />
+          <img
+            src={adventure.climber}
+            alt=""
+            className="ridge-climber absolute left-1/2 w-auto -translate-x-[30%]"
+            style={{ bottom: `${climb}%`, height: 46 }}
+          />
+        </div>
       )}
 
       {objects.map((el, i) => (

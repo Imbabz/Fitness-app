@@ -3,6 +3,7 @@ import type { Block } from '../types';
 import { BLOCK_LABEL } from '../data/sessions';
 import { hourOf, MOTION_CLASS } from '../data/hours';
 import { HourPlate } from '../components/HourPlate';
+import type { Adventure } from '../data/adventures';
 import { haptic, HAPTIC } from '../lib/haptics';
 
 /*
@@ -37,7 +38,15 @@ const COPY: Record<Block, { line: string; tone: string }> = {
 const DISMISS_MS = 1500;
 
 
-export function Interstitial({ block, onDismiss }: { block: Block; onDismiss: () => void }) {
+export function Interstitial({
+  block,
+  adventure,
+  onDismiss,
+}: {
+  block: Block;
+  adventure?: Adventure | undefined;
+  onDismiss: () => void;
+}) {
   const spine = block === 'spine';
 
   useEffect(() => {
@@ -47,8 +56,16 @@ export function Interstitial({ block, onDismiss }: { block: Block; onDismiss: ()
     return () => window.clearTimeout(t);
   }, [block, onDismiss, spine]);
 
-  const copy = COPY[block];
-  const hour = hourOf(block);
+  const baseCopy = COPY[block];
+  const baseHour = hourOf(block);
+  // Une aventure remplace le titre et la plaque — jamais la phrase dessous.
+  // Celle du rachis est une consigne médicale, et aucune histoire ne la réécrit.
+  const passage = adventure?.passage[block];
+  const copy = passage ? { ...baseCopy, line: passage } : baseCopy;
+  const hour =
+    passage && baseHour && adventure
+      ? { ...baseHour, src: adventure.plates.climb, moon: undefined, elements: [] }
+      : baseHour;
 
   return (
     <button
@@ -71,12 +88,12 @@ export function Interstitial({ block, onDismiss }: { block: Block; onDismiss: ()
           <HourPlate hour={hour} className="absolute inset-x-0 top-0 -z-10 h-[38%] w-full" />
           {/* Le nom de l'heure, posé dans le ciel. C'est ce qui fait des
               quatre plaques un même lieu plutôt que quatre images. */}
-          <span
+          {!passage && <span
             aria-hidden="true"
             className="ridge-on-plate pointer-events-none absolute inset-x-0 top-0 -z-10 pt-[max(1.75rem,env(safe-area-inset-top))] text-center ridge-title text-[0.8125rem] tracking-[0.08em]"
           >
             {hour.label}
-          </span>
+          </span>}
           <span
             aria-hidden="true"
             className="ridge-hour-tint pointer-events-none absolute inset-0 -z-10"
