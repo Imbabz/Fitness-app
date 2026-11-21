@@ -3,6 +3,7 @@ import montee from '../assets/adventures/camphrier/plaque-montee.webp';
 import repos from '../assets/adventures/camphrier/plaque-repos.webp';
 import sommet from '../assets/adventures/camphrier/plaque-sommet.webp';
 import momonga from '../assets/adventures/camphrier/momonga.webp';
+import ecorce from '../assets/adventures/camphrier/ecorce.webp';
 
 /*
  * Les aventures.
@@ -33,6 +34,8 @@ export interface Adventure {
   };
   /** Le personnage découpé, qui grimpe dans la marge de chaque étape. */
   climber: string;
+  /** Ce sur quoi il grimpe : une bande prise dans l'illustration elle-même. */
+  surface: string;
   /**
    * Le titre du passage, par bloc. Seul le titre change : la phrase de
    * consigne dessous reste celle du bloc, et celle du rachis est médicale.
@@ -54,6 +57,7 @@ const CAMPHRIER: Adventure = {
   name: 'Le Grand Camphrier',
   plates: { climb: montee, rest: repos, summit: sommet },
   climber: momonga,
+  surface: ecorce,
   passage: {
     warmup: 'At the foot of the camphor tree.',
     main: 'The trunk straightens.',

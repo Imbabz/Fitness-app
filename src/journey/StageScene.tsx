@@ -90,7 +90,10 @@ export function StageScene({
     .slice(0, 2);
   // Le grimpeur monte d'un cran par étape. Il part au pied (8 %) et s'arrête
   // sous le haut de la bande (72 %) : la cime, c'est le sommet de la séance.
-  const climb = 8 + Math.max(0, Math.min(1, progress)) * 64;
+  // La course s'arrête à mi-bande : le personnage fait 76 px dans une bande
+  // de 164, et plus haut sa tête sortait par le haut. Huit étapes sur 46 %,
+  // soit un cran d'une dizaine de pixels par étape — assez pour se voir.
+  const climb = 4 + Math.max(0, Math.min(1, progress)) * 46;
 
   return (
     <div aria-hidden="true" className="ridge-scene pointer-events-none absolute inset-0 -z-10 overflow-hidden">
@@ -112,17 +115,21 @@ export function StageScene({
       )}
 
       {adventure && (
-        <div className="ridge-climb absolute bottom-0 left-[6%] top-0 w-14">
+        <div className="ridge-climb absolute bottom-0 left-[3%] top-0 w-20">
           {/* Le tronc : un trait d'écorce, pas une illustration. L'arbre en grand
               est dans les passages ; ici il suffit qu'on sache sur quoi il monte. */}
-          <span className="ridge-trunk absolute bottom-0 left-1/2 top-0 w-[7px] -translate-x-1/2" />
-          <span className="ridge-branch absolute left-1/2 top-[34%] h-[3px] w-5" />
-          <span className="ridge-branch ridge-branch-l absolute right-1/2 top-[58%] h-[3px] w-4" />
+          {/* Le vrai tronc : une bande d'écorce prise dans l'illustration du
+              camphrier, fondue sur les côtés et vers le haut. Il grimpe sur
+              l'arbre des passages, pas sur un poteau. */}
+          <span
+            className="ridge-trunk absolute bottom-0 left-1/2 top-0 w-[30px] -translate-x-1/2"
+            style={{ backgroundImage: `url(${adventure.surface})` }}
+          />
           <img
             src={adventure.climber}
             alt=""
             className="ridge-climber absolute left-1/2 w-auto -translate-x-[30%]"
-            style={{ bottom: `${climb}%`, height: 46 }}
+            style={{ bottom: `${climb}%`, height: 76 }}
           />
         </div>
       )}

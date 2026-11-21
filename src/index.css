@@ -433,12 +433,33 @@
   }
   /* La montée — prototype de l'aventure du camphrier. */
   .ridge-trunk {
-    border-radius: 4px;
-    background: linear-gradient(to top, rgb(128 98 74 / 0.5), rgb(128 98 74 / 0.12));
+    background-size: cover;
+    background-position: center bottom;
+    opacity: 0.85;
+    -webkit-mask-image:
+      linear-gradient(to right, transparent 0, #000 30%, #000 70%, transparent 100%),
+      linear-gradient(to top, #000 55%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      linear-gradient(to right, transparent 0, #000 30%, #000 70%, transparent 100%),
+      linear-gradient(to top, #000 55%, transparent 100%);
+    mask-composite: intersect;
   }
   .ridge-branch {
     border-radius: 3px;
-    background: rgb(128 98 74 / 0.3);
+    background: rgb(128 98 74 / 0.45);
+  }
+  /* La figure en retrait : on baisse l'opacité, jamais sous ce qui garde un
+     trait lisible — mesuré sur la page composée, pas estimé. */
+  .ridge-figure-back {
+    opacity: 0.62;
+  }
+  /* Sauf au rachis. Le vermillon sur la carte teintée tombait à 2,70:1 à
+     62 % — sous le 3:1 d'un tracé qui porte une information, sur la figure
+     même où la forme compte le plus : le Jefferson curl, le soulevé de terre.
+     À 74 % il tient 3,3:1 le jour et 3,7:1 la nuit. */
+  .text-spine.ridge-figure-back {
+    opacity: 0.74;
   }
   .mode-night .ridge-trunk {
     background: linear-gradient(to top, rgb(150 136 120 / 0.45), rgb(150 136 120 / 0.1));

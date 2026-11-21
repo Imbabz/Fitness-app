@@ -159,10 +159,18 @@ export function Stage({
             adventure={adventure}
             progress={stageIndex / Math.max(1, session.exercises.length - 1)}
           />
-        <span className={isSpine ? 'text-spine' : 'text-accent'}>
+        {/* Avec une aventure, la figure passe en retrait et le personnage devant.
+            Plus pâle, mais plus grande : c'est toujours elle qui porte la
+            consigne, et elle doit rester lisible d'un coup d'œil. */}
+        <span
+          className={[
+            isSpine ? 'text-spine' : 'text-accent',
+            adventure ? 'ridge-figure-back' : '',
+          ].join(' ')}
+        >
           <ExerciseAnimation
             animation={adventure?.figures[exercise.animation] ?? exercise.animation}
-            size={140}
+            size={adventure ? 164 : 140}
             // A prescribed tempo is an instruction, so the figure moves at it.
             {...(exercise.tempo
               ? { loopSeconds: exercise.tempo.down + exercise.tempo.up }
