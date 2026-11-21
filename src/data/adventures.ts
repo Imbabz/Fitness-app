@@ -21,6 +21,7 @@ import kiteMontee from '../assets/adventures/cerfvolant/plaque-montee.webp';
 import kiteRepos from '../assets/adventures/cerfvolant/plaque-repos.webp';
 import kiteSommet from '../assets/adventures/cerfvolant/plaque-sommet.webp';
 import kite from '../assets/adventures/cerfvolant/cerfvolant.webp';
+import feu from '../assets/hours/el-feu.webp';
 
 
 /*
@@ -57,9 +58,25 @@ export interface Adventure {
     summit: string;
   };
   /** Le personnage découpé, qui grimpe dans la marge de chaque étape. */
-  climber: string;
+  climber?: string;
   /** Sa taille dans la marge, en pixels. */
-  climberHeight: number;
+  climberHeight?: number;
+  /**
+   * L'autre façon d'avancer : au lieu de monter, la scène se construit. Chaque
+   * pièce apparaît à partir d'un point de la séance (`from`, de 0 à 1) et peut
+   * disparaître plus loin (`until`) — le voyageur debout laisse la place au
+   * voyageur assis quand le feu prend.
+   */
+  build?: Array<{
+    src: string;
+    side: 'left' | 'right';
+    h: number;
+    from: number;
+    until?: number;
+    /** Décalage depuis le bord, en pixels. */
+    inset?: number;
+    glow?: boolean;
+  }>;
   /**
    * Ce sur quoi il monte : une bande prise dans l'illustration elle-même, ou
    * un fil pour le cerf-volant. Rien pour la grue, qui monte dans le ciel.
@@ -211,9 +228,58 @@ const KITE: Adventure = {
   figures: {},
 };
 
+/*
+ * Le bivouac.
+ *
+ * L'autre histoire du soir, qui alterne avec la grue : un voyageur arrive dans
+ * une clairière, monte sa tente, allume un feu et s'assoit. Ici on ne monte
+ * pas, on construit — chaque étape ajoute quelque chose au camp, et la
+ * dernière allume le feu. Le jour où la séance se termine, le camp est fait.
+ *
+ * Les images du voyageur (un tanuki), de la tente et du bois arrivent avec la
+ * prochaine recharge de génération ; en attendant, seul le feu, qui existait
+ * déjà, est en place.
+ */
+const CAMP: Adventure = {
+  id: 'bivouac',
+  name: 'The Camp',
+  plates: { rest: grueRepos, summit: grueSommet },
+  build: [
+    { src: feu, side: 'right', h: 64, from: 0.84, inset: 10, glow: true },
+  ],
+  passage: {
+    mobility: 'A clearing at dusk.',
+    spine: 'A small flame.',
+  },
+  beats: {
+    'd-cat-cow': 'The tanuki unrolls the canvas and shakes it out.',
+    'd-cobra': 'It lifts the ridge pole, and the tent rises.',
+    'd-deadbug': 'One peg, then the opposite one.',
+    'd-side-plank': 'A guy line pulled taut on one side, then the other.',
+    'd-bird-dog': 'It reaches far for dry twigs, keeping its balance.',
+    'd-wall-glides': 'It stacks the wood, slowly, a little higher.',
+    'd-jefferson': 'It bends down, very slowly, and blows on the first flame.',
+  },
+  rest: 'It sits back on its heels and watches the light go.',
+  figures: {},
+};
+
 const BY_SESSION: Record<string, Adventure> = { A: CAMPHRIER, B: YAK, C: GOLEM, daily: GRUE };
 
-export function adventureFor(sessionId: string): Adventure | undefined {
+/**
+ * Les deux histoires du soir alternent, un soir sur deux. Le soir est celui où
+ * la séance a commencé, pas l'heure qu'il est : une routine lancée à 23 h 55
+ * ne doit pas changer d'histoire à minuit au milieu d'un exercice.
+ */
+function eveningIndex(date: Date): number {
+  const days = Math.floor(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86_400_000,
+  );
+  return days % 2;
+}
+
+export function adventureFor(sessionId: string, startedAt: Date = new Date()): Adventure | undefined {
+  if (sessionId === 'daily') return eveningIndex(startedAt) === 0 ? GRUE : CAMP;
   // Les circuits — composés (`w-…`) ou préréglés (`preset-…`) — prennent
   // tous le cerf-volant, qui fait des tours dans le vent comme eux.
   if (sessionId.startsWith('w-') || sessionId.startsWith('preset-')) return KITE;

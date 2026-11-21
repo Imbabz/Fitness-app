@@ -84,10 +84,17 @@ export function StageScene({
   // est déjà pâle et flou, et à cette taille il ne resterait qu'une tache.
   // Avec une aventure, la marge gauche est au personnage : l'objet de l'heure
   // ne garde que la droite.
-  const objects = (hour?.elements ?? [])
-    .filter((el) => !el.far)
-    .filter((el) => !adventure || el.side === 'right')
-    .slice(0, 2);
+  // Un camp qui se construit prend les deux marges : l'heure s'efface. Un
+  // personnage qui grimpe ne prend que la gauche.
+  const building = !!adventure?.build;
+  const objects = building
+    ? []
+    : (hour?.elements ?? [])
+        .filter((el) => !el.far)
+        .filter((el) => !adventure || el.side === 'right')
+        .slice(0, 2);
+  const p = Math.max(0, Math.min(1, progress));
+  const pieces = (adventure?.build ?? []).filter((b) => p >= b.from && (b.until === undefined || p < b.until));
   // Le grimpeur monte d'un cran par étape. Il part au pied (8 %) et s'arrête
   // sous le haut de la bande (72 %) : la cime, c'est le sommet de la séance.
   // La course s'arrête à mi-bande : le personnage fait 76 px dans une bande
@@ -114,7 +121,7 @@ export function StageScene({
         </svg>
       )}
 
-      {adventure && (
+      {adventure?.climber && (
         <div className="ridge-climb absolute bottom-0 left-[3%] top-0 w-20">
           {/* Le tronc : un trait d'écorce, pas une illustration. L'arbre en grand
               est dans les passages ; ici il suffit qu'on sache sur quoi il monte. */}
@@ -133,10 +140,20 @@ export function StageScene({
             src={adventure.climber}
             alt=""
             className="ridge-climber absolute left-1/2 w-auto -translate-x-[30%]"
-            style={{ bottom: `${climb}%`, height: adventure.climberHeight }}
+            style={{ bottom: `${climb}%`, height: adventure.climberHeight ?? 72 }}
           />
         </div>
       )}
+
+      {pieces.map((b) => (
+        <span
+          key={b.src + b.from}
+          className={['ridge-build absolute bottom-1', b.glow ? 'ridge-el-glow' : ''].join(' ')}
+          style={b.side === 'left' ? { left: b.inset ?? 6 } : { right: b.inset ?? 6 }}
+        >
+          <img src={b.src} alt="" className={['block w-auto ridge-el', b.glow ? 'ridge-el-flicker' : ''].join(' ')} style={{ height: b.h }} />
+        </span>
+      ))}
 
       {objects.map((el, i) => (
         <span

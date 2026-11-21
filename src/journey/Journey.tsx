@@ -213,7 +213,7 @@ export function Journey({ session, onExit }: { session: Session; onExit: () => v
           </div>
         )}
         {interstitial && (
-          <Interstitial block={interstitial} adventure={adventureFor(session.id)} onDismiss={() => setInterstitial(null)} />
+          <Interstitial block={interstitial} adventure={adventureFor(session.id, active ? new Date(active.startedAt) : undefined)} onDismiss={() => setInterstitial(null)} />
         )}
       </>
     );
@@ -255,7 +255,7 @@ export function Journey({ session, onExit }: { session: Session; onExit: () => v
       </div>
 
       {interstitial && (
-        <Interstitial block={interstitial} adventure={adventureFor(session.id)} onDismiss={() => setInterstitial(null)} />
+        <Interstitial block={interstitial} adventure={adventureFor(session.id, active ? new Date(active.startedAt) : undefined)} onDismiss={() => setInterstitial(null)} />
       )}
     </div>
   );

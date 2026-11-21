@@ -52,7 +52,7 @@ export function Summit({
   // La routine du soir se termine de nuit, quel que soit son dernier bloc :
   // elle finit sur une flexion du rachis, et prendre l'heure du bloc donnerait
   // un ciel doré en plein thème sombre.
-  const adventure = adventureFor(session.id);
+  const adventure = adventureFor(session.id, active ? new Date(active.startedAt) : undefined);
   const baseHour = session.mode === 'night'
     ? hourOf('mobility')
     : hourOf(session.exercises.at(-1)?.block ?? 'main');

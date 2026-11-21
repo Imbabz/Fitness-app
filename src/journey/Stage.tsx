@@ -110,7 +110,10 @@ export function Stage({
 
   const Tracker = TRACKERS[exercise.tracking];
   const isSpine = exercise.block === 'spine';
-  const adventure = adventureFor(session.id);
+  const adventure = adventureFor(
+    session.id,
+    state.activeSession ? new Date(state.activeSession.startedAt) : undefined,
+  );
   const beat = adventure && beatFor(adventure, exercise.id, exercise.block);
   const showProgression = allSetsDone && progressionReady(state, exercise);
 
