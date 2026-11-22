@@ -281,6 +281,13 @@ const BY_SESSION: Record<string, Adventure> = { A: CAMPHRIER, B: YAK, C: GOLEM, 
  * la séance a commencé, pas l'heure qu'il est : une routine lancée à 23 h 55
  * ne doit pas changer d'histoire à minuit au milieu d'un exercice.
  */
+/**
+ * Pendant la mise au point du camp, il passe tous les soirs : c'est l'histoire
+ * qu'on finalise, et on la valide en la vivant. À `false`, la grue revient un
+ * soir sur deux.
+ */
+const CAMP_EVERY_EVENING = true;
+
 function eveningIndex(date: Date): number {
   const days = Math.floor(
     Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86_400_000,
@@ -289,7 +296,9 @@ function eveningIndex(date: Date): number {
 }
 
 export function adventureFor(sessionId: string, startedAt: Date = new Date()): Adventure | undefined {
-  if (sessionId === 'daily') return eveningIndex(startedAt) === 0 ? GRUE : CAMP;
+  if (sessionId === 'daily') {
+    return CAMP_EVERY_EVENING || eveningIndex(startedAt) === 1 ? CAMP : GRUE;
+  }
   // Les circuits — composés (`w-…`) ou préréglés (`preset-…`) — prennent
   // tous le cerf-volant, qui fait des tours dans le vent comme eux.
   if (sessionId.startsWith('w-') || sessionId.startsWith('preset-')) return KITE;
