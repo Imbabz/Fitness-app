@@ -22,6 +22,12 @@ import kiteRepos from '../assets/adventures/cerfvolant/plaque-repos.webp';
 import kiteSommet from '../assets/adventures/cerfvolant/plaque-sommet.webp';
 import kite from '../assets/adventures/cerfvolant/cerfvolant.webp';
 import feu from '../assets/hours/el-feu.webp';
+import campRepos from '../assets/adventures/bivouac/plaque-repos.webp';
+import campSommet from '../assets/adventures/bivouac/plaque-sommet.webp';
+import tanukiDebout from '../assets/adventures/bivouac/tanuki-debout.webp';
+import tanukiAssis from '../assets/adventures/bivouac/tanuki-assis.webp';
+import tente from '../assets/adventures/bivouac/tente.webp';
+import bois from '../assets/adventures/bivouac/bois.webp';
 
 
 /*
@@ -243,8 +249,17 @@ const KITE: Adventure = {
 const CAMP: Adventure = {
   id: 'bivouac',
   name: 'The Camp',
-  plates: { rest: grueRepos, summit: grueSommet },
+  plates: { rest: campRepos, summit: campSommet },
+  // Le camp se monte dans les marges, une pièce après l'autre, et rien n'entre
+  // dans la colonne de la figure. Sur un téléphone, la marge gauche de la
+  // scène fait 77 px avant la boîte de la figure : la tente y tient (0 → 73),
+  // le tanuki devant elle (26 → 72). À droite, le bois qui devient le feu.
+  // Les pièces apparaissent avec l'étape, jamais avec les reps.
   build: [
+    { src: tente, side: 'left', h: 54, from: 0.3, inset: 0 },
+    { src: tanukiDebout, side: 'left', h: 54, from: 0, until: 0.84, inset: 26 },
+    { src: tanukiAssis, side: 'left', h: 48, from: 0.84, inset: 24 },
+    { src: bois, side: 'right', h: 34, from: 0.6, until: 0.84, inset: 10 },
     { src: feu, side: 'right', h: 64, from: 0.84, inset: 10, glow: true },
   ],
   passage: {
