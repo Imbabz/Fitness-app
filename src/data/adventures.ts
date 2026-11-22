@@ -26,6 +26,16 @@ import tanukiDebout from '../assets/adventures/bivouac/tanuki-debout.webp';
 import tanukiAssis from '../assets/adventures/bivouac/tanuki-assis.webp';
 import tente from '../assets/adventures/bivouac/tente.webp';
 import bois from '../assets/adventures/bivouac/bois.webp';
+import skyDusk from '../assets/hours/doree.webp';
+import skyNight from '../assets/hours/nuit.webp';
+import arbreNuit from '../assets/hours/el-arbre.webp';
+import champis from '../assets/hours/el-champis.webp';
+// Les cartes de normales : le relief de chaque image peinte, pour que la lumière
+// du feu et de la lune la modèle comme un volume (voir CampSceneGL).
+import arbreN from '../assets/normals/el-arbre-n.webp';
+import champisN from '../assets/normals/el-champis-n.webp';
+import tenteN from '../assets/normals/tente-n.webp';
+import boisN from '../assets/normals/bois-n.webp';
 
 
 /*
@@ -46,6 +56,25 @@ import bois from '../assets/adventures/bivouac/bois.webp';
  * des nuées, C le golem de mousse, le soir la grue de papier, les circuits le
  * cerf-volant.
  */
+/**
+ * Une scène en profondeur, plan par plan. Les positions sont en pourcentage de
+ * la scène (`x` : le centre ; `bottom` : le pied), les hauteurs en pixels, la
+ * profondeur de 0 (le lointain) à 1 (devant l'objectif). `at` et `until` sont
+ * des fractions de l'histoire, pour que la même histoire tienne dans une
+ * routine de 4 étapes comme de 10.
+ */
+export interface SceneSpec {
+  /** Le ciel au début, puis à la fin : il passe de l'un à l'autre. */
+  skies: [string, string];
+  camera: { pan: number; zoom: number };
+  layers: Array<{ src: string; normal?: string; x: number; bottom: number; h: number; depth: number; flip?: boolean; sway?: boolean; dim?: number }>;
+  /** Les pièces de l'histoire : chacune se construit pendant son étape, une série après l'autre. */
+  pieces: Array<{ src: string; normal?: string; x: number; bottom: number; h: number; depth: number; at: number; until?: number; glow?: boolean }>;
+  /** Le personnage, une pose par étape. */
+  poses?: Array<{ at: number; src: string; x: number; h: number }>;
+  foreground: Array<{ src: string; normal?: string; x: number; bottom: number; h: number; flip?: boolean }>;
+}
+
 export interface Adventure {
   id: string;
   name: string;
@@ -101,6 +130,8 @@ export interface Adventure {
   blockBeats?: Partial<Record<Block, string>>;
   /** L'écho du repos. */
   rest: string;
+  /** La scène en profondeur, quand l'histoire en a une. Elle remplace le grimpeur et les pièces. */
+  scene?: SceneSpec;
   /**
    * Les figures redessinées en personnage de l'histoire, par clé d'animation.
    * Même squelette, mêmes articulations : seul le dessin change.
@@ -272,6 +303,30 @@ const CAMP: Adventure = {
   },
   rest: 'It sits back on its heels and watches the light go.',
   figures: {},
+  // Images provisoires, prises dans l'univers de l'app : le montagnard et ses
+  // pièces peintes les remplaceront. Ce qui compte ici, c'est la mécanique —
+  // la profondeur, la caméra, la lumière, la construction série par série.
+  scene: {
+    skies: [skyDusk, skyNight],
+    camera: { pan: 28, zoom: 0.16 },
+    layers: [
+      { src: arbreNuit, normal: arbreN, x: 14, bottom: 24, h: 118, depth: 0.3, dim: 0.6, sway: true },
+      { src: arbreNuit, normal: arbreN, x: 80, bottom: 23, h: 96, depth: 0.3, dim: 0.55, flip: true },
+      { src: arbreNuit, normal: arbreN, x: 2, bottom: 9, h: 210, depth: 0.55, sway: true },
+      { src: arbreNuit, normal: arbreN, x: 96, bottom: 10, h: 180, depth: 0.55, flip: true, sway: true },
+    ],
+    pieces: [
+      { src: tente, normal: tenteN, x: 34, bottom: 12, h: 108, depth: 0.75, at: 1 / 6 },
+      { src: bois, normal: boisN, x: 70, bottom: 10, h: 46, depth: 0.78, at: 4 / 6, until: 1 },
+      { src: bois, normal: boisN, x: 60, bottom: 11, h: 38, depth: 0.78, at: 5 / 6, until: 1 },
+      { src: feu, x: 66, bottom: 8, h: 96, depth: 0.8, at: 1, glow: true },
+    ],
+    poses: [],
+    foreground: [
+      { src: champis, normal: champisN, x: 6, bottom: -6, h: 84 },
+      { src: champis, normal: champisN, x: 97, bottom: -8, h: 66, flip: true },
+    ],
+  },
 };
 
 const BY_SESSION: Record<string, Adventure> = { A: CAMPHRIER, B: YAK, C: GOLEM, daily: GRUE };

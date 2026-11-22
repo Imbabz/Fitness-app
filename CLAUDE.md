@@ -165,8 +165,12 @@ These are not preferences. Breaking them breaks the product.
 
 ## Stack and conventions
 
-- Vite + React 18 + TypeScript, Tailwind, lucide-react. **That is the whole
-  dependency list.** Adding one requires justification in the PR description.
+- Vite + React 18 + TypeScript, Tailwind, lucide-react, and for the story
+  scene only, three.js + postprocessing (both pinned to exact versions).
+  **That is the whole dependency list.** Adding one requires justification in
+  the PR description. three.js and postprocessing are loaded lazily, only by
+  `CampSceneGL`, never by the rest of the app; no react-three-fiber, no
+  physics engine.
 - Theme colours are CSS custom properties on `<html>`. Day/night is a class
   swap, never props drilled through the tree. Day is paper and ink, night is
   indigo and moonlight — the asymmetry is deliberate, see the `theme-tokens`
@@ -180,8 +184,15 @@ These are not preferences. Breaking them breaks the product.
   there is no `sw.js` in the tree to edit. Navigations are network-first so a
   deploy is never stale, hashed assets are cache-first, and the cache name is
   derived from the built filenames so the old one is dropped on activate.
-- Animations are hand-written CSS keyframes on inline SVG. No animation
-  libraries, no Lottie, no GIFs.
+- Exercise figures and UI motion are hand-written CSS keyframes on inline SVG.
+  No animation libraries, no Lottie, no GIFs, no video.
+- The story scene is a WebGL multiplane camera (`CampSceneGL`): painted 2D
+  layers placed at real depths, lit through per-image normal maps, with depth
+  of field, light rays and bloom. Character motion is painted poses and short
+  drawn frame loops, never video. It renders at 24 fps at most and stops when
+  off screen or hidden. The CSS scene (`CampScene`) is the fallback: shown
+  while the module loads, without WebGL, on context loss, and under
+  `prefers-reduced-motion`. Keep both working.
 - Touch targets ≥ 44px. Assume chalky hands and a phone propped against a
   water bottle.
 
