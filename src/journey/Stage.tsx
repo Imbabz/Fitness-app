@@ -6,7 +6,7 @@ import { BLOCK_LABEL } from '../data/sessions';
 import { ExerciseAnimation } from '../animations/registry';
 import { StageScene } from './StageScene';
 import { FigureThumb, StoryScene } from './StoryScene';
-import { CampScene } from './CampScene';
+import { CampStage } from './CampStage';
 import { adventureFor, beatFor } from '../data/adventures';
 import { RepCounter } from '../trackers/RepCounter';
 import { HoldTimer } from '../trackers/HoldTimer';
@@ -165,7 +165,7 @@ export function Stage({
         >
           <div className="relative isolate h-[clamp(220px,34vh,300px)] w-full overflow-hidden rounded-card">
             {adventure.scene ? (
-              <CampScene
+              <CampStage
                 scene={adventure.scene}
                 stageIndex={stageIndex}
                 stageCount={session.exercises.length}

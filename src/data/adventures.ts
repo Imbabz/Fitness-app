@@ -30,6 +30,12 @@ import skyDusk from '../assets/hours/doree.webp';
 import skyNight from '../assets/hours/nuit.webp';
 import arbreNuit from '../assets/hours/el-arbre.webp';
 import champis from '../assets/hours/el-champis.webp';
+// Les cartes de normales : le relief de chaque image peinte, pour que la lumière
+// du feu et de la lune la modèle comme un volume (voir CampSceneGL).
+import arbreN from '../assets/normals/el-arbre-n.webp';
+import champisN from '../assets/normals/el-champis-n.webp';
+import tenteN from '../assets/normals/tente-n.webp';
+import boisN from '../assets/normals/bois-n.webp';
 
 
 /*
@@ -61,12 +67,12 @@ export interface SceneSpec {
   /** Le ciel au début, puis à la fin : il passe de l'un à l'autre. */
   skies: [string, string];
   camera: { pan: number; zoom: number };
-  layers: Array<{ src: string; x: number; bottom: number; h: number; depth: number; flip?: boolean; sway?: boolean; dim?: number }>;
+  layers: Array<{ src: string; normal?: string; x: number; bottom: number; h: number; depth: number; flip?: boolean; sway?: boolean; dim?: number }>;
   /** Les pièces de l'histoire : chacune se construit pendant son étape, une série après l'autre. */
-  pieces: Array<{ src: string; x: number; bottom: number; h: number; depth: number; at: number; until?: number; glow?: boolean }>;
+  pieces: Array<{ src: string; normal?: string; x: number; bottom: number; h: number; depth: number; at: number; until?: number; glow?: boolean }>;
   /** Le personnage, une pose par étape. */
   poses?: Array<{ at: number; src: string; x: number; h: number }>;
-  foreground: Array<{ src: string; x: number; bottom: number; h: number; flip?: boolean }>;
+  foreground: Array<{ src: string; normal?: string; x: number; bottom: number; h: number; flip?: boolean }>;
 }
 
 export interface Adventure {
@@ -304,21 +310,21 @@ const CAMP: Adventure = {
     skies: [skyDusk, skyNight],
     camera: { pan: 28, zoom: 0.16 },
     layers: [
-      { src: arbreNuit, x: 14, bottom: 24, h: 118, depth: 0.3, dim: 0.6, sway: true },
-      { src: arbreNuit, x: 80, bottom: 23, h: 96, depth: 0.3, dim: 0.55, flip: true },
-      { src: arbreNuit, x: 2, bottom: 9, h: 210, depth: 0.55, sway: true },
-      { src: arbreNuit, x: 96, bottom: 10, h: 180, depth: 0.55, flip: true, sway: true },
+      { src: arbreNuit, normal: arbreN, x: 14, bottom: 24, h: 118, depth: 0.3, dim: 0.6, sway: true },
+      { src: arbreNuit, normal: arbreN, x: 80, bottom: 23, h: 96, depth: 0.3, dim: 0.55, flip: true },
+      { src: arbreNuit, normal: arbreN, x: 2, bottom: 9, h: 210, depth: 0.55, sway: true },
+      { src: arbreNuit, normal: arbreN, x: 96, bottom: 10, h: 180, depth: 0.55, flip: true, sway: true },
     ],
     pieces: [
-      { src: tente, x: 34, bottom: 12, h: 108, depth: 0.75, at: 1 / 6 },
-      { src: bois, x: 70, bottom: 10, h: 46, depth: 0.78, at: 4 / 6, until: 1 },
-      { src: bois, x: 60, bottom: 11, h: 38, depth: 0.78, at: 5 / 6, until: 1 },
+      { src: tente, normal: tenteN, x: 34, bottom: 12, h: 108, depth: 0.75, at: 1 / 6 },
+      { src: bois, normal: boisN, x: 70, bottom: 10, h: 46, depth: 0.78, at: 4 / 6, until: 1 },
+      { src: bois, normal: boisN, x: 60, bottom: 11, h: 38, depth: 0.78, at: 5 / 6, until: 1 },
       { src: feu, x: 66, bottom: 8, h: 96, depth: 0.8, at: 1, glow: true },
     ],
     poses: [],
     foreground: [
-      { src: champis, x: 6, bottom: -6, h: 84 },
-      { src: champis, x: 97, bottom: -8, h: 66, flip: true },
+      { src: champis, normal: champisN, x: 6, bottom: -6, h: 84 },
+      { src: champis, normal: champisN, x: 97, bottom: -8, h: 66, flip: true },
     ],
   },
 };

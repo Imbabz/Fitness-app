@@ -46,8 +46,13 @@ function Placed({
   );
 }
 
+/** Une fraction de l'histoire devient une étape de cette séance. */
+export function storyStage(at: number, stageCount: number): number {
+  return Math.round(at * Math.max(1, stageCount - 1));
+}
+
 /** La pièce d'une étape : visible en entier après, construite série par série pendant. */
-function reveal(pieceStage: number, stageIndex: number, setsDone: number, setsTotal: number): number {
+export function reveal(pieceStage: number, stageIndex: number, setsDone: number, setsTotal: number): number {
   if (stageIndex > pieceStage) return 1;
   if (stageIndex < pieceStage) return 0;
   return Math.max(0, Math.min(1, setsDone / Math.max(1, setsTotal)));
@@ -74,7 +79,7 @@ export function CampScene({
   const p = Math.max(0, Math.min(1, stageIndex / last));
   // Une fraction de l'histoire devient une étape de cette séance : une routine
   // plus courte ou plus longue garde le même ordre et les mêmes jalons.
-  const stageOf = (at: number) => Math.round(at * last);
+  const stageOf = (at: number) => storyStage(at, stageCount);
 
   // La caméra : elle avance vers le camp et descend un peu. Le plan proche
   // bouge le plus ; le ciel, pas du tout.
