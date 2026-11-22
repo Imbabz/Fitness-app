@@ -6,6 +6,7 @@ import { BLOCK_LABEL } from '../data/sessions';
 import { ExerciseAnimation } from '../animations/registry';
 import { StageScene } from './StageScene';
 import { FigureThumb, StoryScene } from './StoryScene';
+import { CampScene } from './CampScene';
 import { adventureFor, beatFor } from '../data/adventures';
 import { RepCounter } from '../trackers/RepCounter';
 import { HoldTimer } from '../trackers/HoldTimer';
@@ -163,12 +164,23 @@ export function Stage({
           ].join(' ')}
         >
           <div className="relative isolate h-[clamp(220px,34vh,300px)] w-full overflow-hidden rounded-card">
-            <StoryScene
-              adventure={adventure}
-              block={exercise.block}
-              mode={state.mode}
-              progress={stageIndex / Math.max(1, session.exercises.length - 1)}
-            />
+            {adventure.scene ? (
+              <CampScene
+                scene={adventure.scene}
+                stageIndex={stageIndex}
+                stageCount={session.exercises.length}
+                setsDone={Math.min(setIndex, exercise.sets)}
+                setsTotal={exercise.sets}
+                mode={state.mode}
+              />
+            ) : (
+              <StoryScene
+                adventure={adventure}
+                block={exercise.block}
+                mode={state.mode}
+                progress={stageIndex / Math.max(1, session.exercises.length - 1)}
+              />
+            )}
             <FigureThumb
               animation={figure}
               loopSeconds={loopSeconds}
