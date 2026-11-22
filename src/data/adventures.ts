@@ -8,12 +8,10 @@ import yakMontee from '../assets/adventures/yak/plaque-montee.webp';
 import yakRepos from '../assets/adventures/yak/plaque-repos.webp';
 import yakSommet from '../assets/adventures/yak/plaque-sommet.webp';
 import yak from '../assets/adventures/yak/yak.webp';
-import nuages from '../assets/adventures/yak/nuages.webp';
 import golemMontee from '../assets/adventures/golem/plaque-montee.webp';
 import golemRepos from '../assets/adventures/golem/plaque-repos.webp';
 import golemSommet from '../assets/adventures/golem/plaque-sommet.webp';
 import golem from '../assets/adventures/golem/golem.webp';
-import marches from '../assets/adventures/golem/marches.webp';
 import grueRepos from '../assets/adventures/grue/plaque-repos.webp';
 import grueSommet from '../assets/adventures/grue/plaque-sommet.webp';
 import grue from '../assets/adventures/grue/grue.webp';
@@ -63,9 +61,9 @@ export interface Adventure {
     /** Le sommet. */
     summit: string;
   };
-  /** Le personnage découpé, qui grimpe dans la marge de chaque étape. */
+  /** Le personnage découpé, qui monte au milieu de la scène, d'étape en étape. */
   climber?: string;
-  /** Sa taille dans la marge, en pixels. */
+  /** Sa hauteur dans la scène, en pixels. */
   climberHeight?: number;
   /**
    * L'autre façon d'avancer : au lieu de monter, la scène se construit. Chaque
@@ -75,17 +73,18 @@ export interface Adventure {
    */
   build?: Array<{
     src: string;
-    side: 'left' | 'right';
+    /** Le centre de la pièce, en pourcentage de la largeur de la scène. */
+    x: number;
+    /** Sa hauteur dans la scène, en pixels. */
     h: number;
     from: number;
     until?: number;
-    /** Décalage depuis le bord, en pixels. */
-    inset?: number;
     glow?: boolean;
   }>;
   /**
-   * Ce sur quoi il monte : une bande prise dans l'illustration elle-même, ou
-   * un fil pour le cerf-volant. Rien pour la grue, qui monte dans le ciel.
+   * Ce sur quoi il monte : une bande d'écorce prise dans l'illustration, ou
+   * un fil pour le cerf-volant. Les autres s'élèvent dans le ciel de la
+   * plaque — en grand, une bande de nuages ou de marches faisait une colonne.
    */
   surface?: string | 'string';
   /**
@@ -114,7 +113,7 @@ const CAMPHRIER: Adventure = {
   name: 'Le Grand Camphrier',
   plates: { climb: montee, rest: repos, summit: sommet },
   climber: momonga,
-  climberHeight: 76,
+  climberHeight: 132,
   surface: ecorce,
   passage: {
     warmup: 'At the foot of the camphor tree.',
@@ -141,8 +140,7 @@ const YAK: Adventure = {
   name: 'The Cloud Yak',
   plates: { climb: yakMontee, rest: yakRepos, summit: yakSommet },
   climber: yak,
-  climberHeight: 70,
-  surface: nuages,
+  climberHeight: 120,
   passage: {
     warmup: 'On the low island.',
     main: 'Into the open sky.',
@@ -167,8 +165,7 @@ const GOLEM: Adventure = {
   name: 'The Moss Golem',
   plates: { climb: golemMontee, rest: golemRepos, summit: golemSommet },
   climber: golem,
-  climberHeight: 68,
-  surface: marches,
+  climberHeight: 118,
   passage: {
     warmup: 'The golem wakes.',
     main: 'Up the stone steps.',
@@ -193,7 +190,7 @@ const GRUE: Adventure = {
   name: 'The Paper Crane',
   plates: { rest: grueRepos, summit: grueSommet },
   climber: grue,
-  climberHeight: 52,
+  climberHeight: 92,
   passage: {
     mobility: 'A square of paper by the fire.',
     spine: 'The last fold.',
@@ -216,7 +213,7 @@ const KITE: Adventure = {
   name: 'The Kite',
   plates: { climb: kiteMontee, rest: kiteRepos, summit: kiteSommet },
   climber: kite,
-  climberHeight: 78,
+  climberHeight: 136,
   surface: 'string',
   passage: {
     warmup: 'On the windy ridge.',
@@ -250,17 +247,15 @@ const CAMP: Adventure = {
   id: 'bivouac',
   name: 'The Camp',
   plates: { rest: campRepos, summit: campSommet },
-  // Le camp se monte dans les marges, une pièce après l'autre, et rien n'entre
-  // dans la colonne de la figure. Sur un téléphone, la marge gauche de la
-  // scène fait 77 px avant la boîte de la figure : la tente y tient (0 → 73),
-  // le tanuki devant elle (26 → 72). À droite, le bois qui devient le feu.
-  // Les pièces apparaissent avec l'étape, jamais avec les reps.
+  // Le camp se monte au sol de la scène, une pièce après l'autre, avec
+  // l'étape et jamais avec les reps. Le coin haut droit reste libre : c'est
+  // celui de la vignette du mouvement.
   build: [
-    { src: tente, side: 'left', h: 54, from: 0.3, inset: 0 },
-    { src: tanukiDebout, side: 'left', h: 54, from: 0, until: 0.84, inset: 26 },
-    { src: tanukiAssis, side: 'left', h: 48, from: 0.84, inset: 24 },
-    { src: bois, side: 'right', h: 34, from: 0.6, until: 0.84, inset: 10 },
-    { src: feu, side: 'right', h: 64, from: 0.84, inset: 10, glow: true },
+    { src: tente, x: 27, h: 118, from: 0.3 },
+    { src: tanukiDebout, x: 56, h: 100, from: 0, until: 0.84 },
+    { src: tanukiAssis, x: 56, h: 90, from: 0.84 },
+    { src: bois, x: 81, h: 56, from: 0.6, until: 0.84 },
+    { src: feu, x: 81, h: 108, from: 0.84, glow: true },
   ],
   passage: {
     mobility: 'A clearing at dusk.',

@@ -449,18 +449,6 @@
     border-radius: 3px;
     background: rgb(128 98 74 / 0.45);
   }
-  /* La figure en retrait : on baisse l'opacité, jamais sous ce qui garde un
-     trait lisible — mesuré sur la page composée, pas estimé. */
-  .ridge-figure-back {
-    opacity: 0.62;
-  }
-  /* Sauf au rachis. Le vermillon sur la carte teintée tombait à 2,70:1 à
-     62 % — sous le 3:1 d'un tracé qui porte une information, sur la figure
-     même où la forme compte le plus : le Jefferson curl, le soulevé de terre.
-     À 74 % il tient 3,3:1 le jour et 3,7:1 la nuit. */
-  .text-spine.ridge-figure-back {
-    opacity: 0.74;
-  }
   /* La nuit, la même bande, assombrie : une colonne claire dans le noir
      prenait l'œil avant la figure. */
   .mode-night .ridge-trunk {
@@ -477,6 +465,20 @@
   .ridge-build.ridge-el-glow::before {
     width: 170px;
     height: 170px;
+  }
+  /* Le sol de la scène d'histoire : la plaque se fond dans la page, pour que
+     le personnage ait un sol sans que la scène soit une carte posée. */
+  .ridge-story-floor {
+    background: linear-gradient(to bottom, rgb(var(--c-base) / 0), rgb(var(--c-base) / 0.55));
+  }
+  /* Les pièces du camp, à leur taille : le même fondu au pied que les objets
+     de l'heure, mais pleinement opaques — ce sont elles qu'on regarde. */
+  .ridge-story-piece {
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 86%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 86%, transparent 100%);
+  }
+  .ridge-zoom {
+    animation: ridge-fade 200ms ease-out backwards;
   }
   .ridge-climber {
     transition: bottom 1.4s cubic-bezier(0.4, 0, 0.2, 1);

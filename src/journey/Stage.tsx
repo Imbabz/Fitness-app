@@ -5,6 +5,7 @@ import type { Exercise, LoggedSet, Session } from '../types';
 import { BLOCK_LABEL } from '../data/sessions';
 import { ExerciseAnimation } from '../animations/registry';
 import { StageScene } from './StageScene';
+import { FigureThumb, StoryScene } from './StoryScene';
 import { adventureFor, beatFor } from '../data/adventures';
 import { RepCounter } from '../trackers/RepCounter';
 import { HoldTimer } from '../trackers/HoldTimer';
@@ -115,6 +116,9 @@ export function Stage({
     state.activeSession ? new Date(state.activeSession.startedAt) : undefined,
   );
   const beat = adventure && beatFor(adventure, exercise.id, exercise.block);
+  const figure = adventure?.figures[exercise.animation] ?? exercise.animation;
+  // A prescribed tempo is an instruction, so the figure moves at it.
+  const loopSeconds = exercise.tempo ? exercise.tempo.down + exercise.tempo.up : undefined;
   const showProgression = allSetsDone && progressionReady(state, exercise);
 
   return (
@@ -147,59 +151,77 @@ export function Stage({
         </button>
       </div>
 
-      <div
-        className={[
-          'mt-2 flex flex-col items-center rounded-card px-4 py-5',
-          isSpine ? 'border border-spine/35 bg-spine/[0.07]' : '',
-        ].join(' ')}
-      >
-        {/* La figure se tient quelque part. La bande est isolée pour que la
-            scène, en -z-10, passe derrière la figure et pas derrière la carte. */}
-        <div className="relative isolate flex w-full justify-center">
-          <StageScene
-            block={exercise.block}
-            mode={state.mode}
-            adventure={adventure}
-            progress={stageIndex / Math.max(1, session.exercises.length - 1)}
-          />
-        {/* Avec une aventure, la figure passe en retrait et le personnage devant.
-            Plus pâle, mais plus grande : c'est toujours elle qui porte la
-            consigne, et elle doit rester lisible d'un coup d'œil. */}
-        <span
+      {adventure ? (
+        /* L'histoire d'abord. La scène prend la place qu'avait la figure, et
+           la figure passe en vignette dans son coin. Dessous, l'écho de
+           l'histoire, puis l'exercice et sa consigne — toujours là, toujours
+           lisibles, mais en second. */
+        <div
           className={[
-            isSpine ? 'text-spine' : 'text-accent',
-            adventure ? 'ridge-figure-back' : '',
+            'mt-1 flex flex-col items-center rounded-card',
+            isSpine ? 'border border-spine/35 bg-spine/[0.07] pb-4' : '',
           ].join(' ')}
         >
-          <ExerciseAnimation
-            animation={adventure?.figures[exercise.animation] ?? exercise.animation}
-            size={adventure ? 164 : 140}
-            // A prescribed tempo is an instruction, so the figure moves at it.
-            {...(exercise.tempo
-              ? { loopSeconds: exercise.tempo.down + exercise.tempo.up }
-              : {})}
-          />
-        </span>
+          <div className="relative isolate h-[clamp(220px,34vh,300px)] w-full overflow-hidden rounded-card">
+            <StoryScene
+              adventure={adventure}
+              block={exercise.block}
+              mode={state.mode}
+              progress={stageIndex / Math.max(1, session.exercises.length - 1)}
+            />
+            <FigureThumb
+              animation={figure}
+              loopSeconds={loopSeconds}
+              spine={isSpine}
+              name={exercise.name}
+              cue={exercise.cue}
+            />
+          </div>
+          {beat && (
+            <p className="ridge-place-line mt-3 px-3 text-balance text-center text-[1.0625rem] italic leading-snug ridge-title text-ink/85">
+              {beat}
+            </p>
+          )}
+          <h2 className="mt-3 text-center text-xl ridge-title text-ink">{exercise.name}</h2>
+          <p className="mt-0.5 text-center text-xs font-medium tracking-wide text-faint">
+            {exercise.prescription}
+          </p>
+          {exercise.cue && (
+            <p className="mt-2 px-3 text-balance text-center text-base font-medium leading-snug text-ink/90">
+              “{exercise.cue}”
+            </p>
+          )}
         </div>
-        <h2 className="mt-3 text-center text-2xl ridge-title text-ink">
-          {exercise.name}
-        </h2>
-        <p className="mt-0.5 text-center text-xs font-medium tracking-wide text-faint">
-          {exercise.prescription}
-        </p>
-        {exercise.cue && (
-          <p className="mt-3 text-balance text-center text-lg font-medium leading-snug text-ink/90">
-            “{exercise.cue}”
+      ) : (
+        <div
+          className={[
+            'mt-2 flex flex-col items-center rounded-card px-4 py-5',
+            isSpine ? 'border border-spine/35 bg-spine/[0.07]' : '',
+          ].join(' ')}
+        >
+          {/* La figure se tient quelque part. La bande est isolée pour que la
+              scène, en -z-10, passe derrière la figure et pas derrière la carte. */}
+          <div className="relative isolate flex w-full justify-center">
+            <StageScene block={exercise.block} mode={state.mode} />
+            <span className={isSpine ? 'text-spine' : 'text-accent'}>
+              <ExerciseAnimation
+                animation={figure}
+                size={140}
+                {...(loopSeconds ? { loopSeconds } : {})}
+              />
+            </span>
+          </div>
+          <h2 className="mt-3 text-center text-2xl ridge-title text-ink">{exercise.name}</h2>
+          <p className="mt-0.5 text-center text-xs font-medium tracking-wide text-faint">
+            {exercise.prescription}
           </p>
-        )}
-        {/* L'écho de l'histoire, sous la consigne et plus bas qu'elle : la
-            consigne se lit d'abord, l'histoire ensuite, si on la cherche. */}
-        {beat && (
-          <p className="ridge-place-line mt-2 text-balance text-center text-[0.8125rem] italic text-muted">
-            {beat}
-          </p>
-        )}
-      </div>
+          {exercise.cue && (
+            <p className="mt-3 text-balance text-center text-lg font-medium leading-snug text-ink/90">
+              “{exercise.cue}”
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="mt-6">
         <Tracker

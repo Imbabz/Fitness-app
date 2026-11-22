@@ -1,7 +1,6 @@
 import type { Block } from '../types';
 import { hourOf, MOTION_CLASS } from '../data/hours';
 import { moonLitPath, moonOf, seasonOf, type Season } from '../lib/sky';
-import type { Adventure } from '../data/adventures';
 
 /*
  * Le lieu, autour de la figure.
@@ -63,44 +62,19 @@ const KIND_CLASS: Record<Kind, string> = {
 export function StageScene({
   block,
   mode,
-  adventure,
-  progress = 0,
   date = new Date(),
 }: {
   block: Block;
   mode: 'day' | 'night';
-  /** L'aventure de la séance : un personnage qui monte dans la marge gauche. */
-  adventure?: Adventure | undefined;
-  /** Où en est la séance, de 0 à 1 — l'étape, jamais les reps ni la charge. */
-  progress?: number;
   date?: Date;
 }) {
   const hour = hourOf(block, date);
   const night = mode === 'night' || block === 'mobility';
-  const kind = particleKind(seasonOf(date), night);
   const moon = night ? moonOf(date) : null;
 
   // L'objet de premier plan de l'heure, en petit. Pas le lointain : celui-ci
   // est déjà pâle et flou, et à cette taille il ne resterait qu'une tache.
-  // Avec une aventure, la marge gauche est au personnage : l'objet de l'heure
-  // ne garde que la droite.
-  // Un camp qui se construit prend les deux marges : l'heure s'efface. Un
-  // personnage qui grimpe ne prend que la gauche.
-  const building = !!adventure?.build;
-  const objects = building
-    ? []
-    : (hour?.elements ?? [])
-        .filter((el) => !el.far)
-        .filter((el) => !adventure || el.side === 'right')
-        .slice(0, 2);
-  const p = Math.max(0, Math.min(1, progress));
-  const pieces = (adventure?.build ?? []).filter((b) => p >= b.from && (b.until === undefined || p < b.until));
-  // Le grimpeur monte d'un cran par étape. Il part au pied (8 %) et s'arrête
-  // sous le haut de la bande (72 %) : la cime, c'est le sommet de la séance.
-  // La course s'arrête à mi-bande : le personnage fait 76 px dans une bande
-  // de 164, et plus haut sa tête sortait par le haut. Huit étapes sur 46 %,
-  // soit un cran d'une dizaine de pixels par étape — assez pour se voir.
-  const climb = 4 + Math.max(0, Math.min(1, progress)) * 46;
+  const objects = (hour?.elements ?? []).filter((el) => !el.far).slice(0, 2);
 
   return (
     <div aria-hidden="true" className="ridge-scene pointer-events-none absolute inset-0 -z-10 overflow-hidden">
@@ -121,51 +95,6 @@ export function StageScene({
         </svg>
       )}
 
-      {adventure?.climber && (
-        <div className="ridge-climb absolute bottom-0 left-0 top-0 w-16">
-          {/* Le tronc : un trait d'écorce, pas une illustration. L'arbre en grand
-              est dans les passages ; ici il suffit qu'on sache sur quoi il monte. */}
-          {/* Ce sur quoi il monte : une bande prise dans l'illustration de
-              l'aventure (l'écorce, les nuages, les marches), fondue sur les
-              côtés — ou le fil du cerf-volant. */}
-          {adventure.surface === 'string' ? (
-            <span className="ridge-string absolute bottom-0 left-1/2 w-px -translate-x-1/2" style={{ height: `${climb + 20}%` }} />
-          ) : adventure.surface ? (
-            <span
-              className="ridge-trunk absolute bottom-0 left-1/2 top-0 w-[30px] -translate-x-1/2"
-              style={{ backgroundImage: `url(${adventure.surface})` }}
-            />
-          ) : null}
-          <img
-            src={adventure.climber}
-            alt=""
-            className="ridge-climber absolute left-1/2 -translate-x-1/2"
-            // Borné dans les deux sens, proportions gardées : un personnage
-            // large (la grue fait 74 px à sa hauteur) mordait de 9 px sur le
-            // tracé de la figure. À 62 px de large au plus, centré sur son
-            // support calé au bord, il s'arrête à 15 px de la boîte de la
-            // figure — et la figure, c'est la consigne.
-            style={{
-              bottom: `${climb}%`,
-              width: 'auto',
-              height: 'auto',
-              maxHeight: adventure.climberHeight ?? 72,
-              maxWidth: 62,
-            }}
-          />
-        </div>
-      )}
-
-      {pieces.map((b) => (
-        <span
-          key={b.src + b.from}
-          className={['ridge-build absolute bottom-1', b.glow ? 'ridge-el-glow' : ''].join(' ')}
-          style={b.side === 'left' ? { left: b.inset ?? 6 } : { right: b.inset ?? 6 }}
-        >
-          <img src={b.src} alt="" className={['block w-auto ridge-el', b.glow ? 'ridge-el-flicker' : ''].join(' ')} style={{ height: b.h }} />
-        </span>
-      ))}
-
       {objects.map((el, i) => (
         <span
           key={el.src + i}
@@ -185,6 +114,16 @@ export function StageScene({
         </span>
       ))}
 
+      <SceneParticles night={night} date={date} />
+    </div>
+  );
+}
+
+/** Les particules de la saison. Partagées avec la scène de l'histoire. */
+export function SceneParticles({ night, date }: { night: boolean; date: Date }) {
+  const kind = particleKind(seasonOf(date), night);
+  return (
+    <>
       {PARTICLES.map((p, i) => (
         <span
           key={i}
@@ -201,6 +140,6 @@ export function StageScene({
           }
         />
       ))}
-    </div>
+    </>
   );
 }
