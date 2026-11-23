@@ -360,7 +360,7 @@ const CAMP: Adventure = {
       cols: 4,
       rows: 3,
       fps: 10,
-      frameAspect: 151 / 311,
+      frameAspect: 165 / 289,
       x: 50,
       h: 120,
       depth: 0.77,
