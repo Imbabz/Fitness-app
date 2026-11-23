@@ -13,7 +13,7 @@
  * not survive several. The one decode happens at import, in analyse.ts.
  */
 
-import { context, existingContext, reverb } from './audio';
+import { context, existingContext, reverb, tapForLevel } from './audio';
 import { subscribe } from './arc';
 import { highlightOf } from './analyse';
 import { categoryOf, getTrack, listTracks, tracksIn, type TrackMeta } from './tracks';
@@ -272,6 +272,7 @@ function buildGraph(ac: AudioContext) {
   }
   lp.connect(out);
   out.connect(ac.destination);
+  tapForLevel(out);
 }
 
 /** Lock-screen title and controls. The visible half of "like a music app". */

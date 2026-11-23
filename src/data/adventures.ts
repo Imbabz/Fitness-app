@@ -22,28 +22,31 @@ import kite from '../assets/adventures/cerfvolant/cerfvolant.webp';
 import feu from '../assets/hours/el-feu.webp';
 import campRepos from '../assets/adventures/bivouac/plaque-repos.webp';
 import campSommet from '../assets/adventures/bivouac/plaque-sommet.webp';
-import tanukiDebout from '../assets/adventures/bivouac/tanuki-debout.webp';
-import tanukiAssis from '../assets/adventures/bivouac/tanuki-assis.webp';
 import tente from '../assets/adventures/bivouac/tente.webp';
 import bois from '../assets/adventures/bivouac/bois.webp';
+import fWalkC from '../assets/adventures/firmin/walk-c.webp';
+import fWalkN from '../assets/adventures/firmin/walk-n.webp';
+import fIdleC from '../assets/adventures/firmin/idle-c.webp';
+import fIdleN from '../assets/adventures/firmin/idle-n.webp';
+import fHammerC from '../assets/adventures/firmin/hammer-c.webp';
+import fHammerN from '../assets/adventures/firmin/hammer-n.webp';
+import fKneelC from '../assets/adventures/firmin/kneel_blow-c.webp';
+import fKneelN from '../assets/adventures/firmin/kneel_blow-n.webp';
+import fFluteC from '../assets/adventures/firmin/flute-c.webp';
+import fFluteN from '../assets/adventures/firmin/flute-n.webp';
+import jTrotC from '../assets/adventures/jack/trot-c.webp';
+import jTrotN from '../assets/adventures/jack/trot-n.webp';
+import jSitC from '../assets/adventures/jack/sit-c.webp';
+import jSitN from '../assets/adventures/jack/sit-n.webp';
+import jLieC from '../assets/adventures/jack/lie-c.webp';
+import jLieN from '../assets/adventures/jack/lie-n.webp';
+import { FIRMIN_ASPECT, JACK_ASPECT, JACK_H } from './characters';
 import skyDusk from '../assets/hours/doree.webp';
 import skyNight from '../assets/hours/nuit.webp';
-import arbreNuit from '../assets/hours/el-arbre.webp';
-import champis from '../assets/hours/el-champis.webp';
 // Les cartes de normales : le relief de chaque image peinte, pour que la lumière
 // du feu et de la lune la modèle comme un volume (voir CampSceneGL).
-import arbreN from '../assets/normals/el-arbre-n.webp';
-import champisN from '../assets/normals/el-champis-n.webp';
 import tenteN from '../assets/normals/tente-n.webp';
 import boisN from '../assets/normals/bois-n.webp';
-import mIdleC from '../assets/adventures/montagnard/idle-c.webp';
-import mIdleN from '../assets/adventures/montagnard/idle-n.webp';
-import mWalkC from '../assets/adventures/montagnard/walk-c.webp';
-import mWalkN from '../assets/adventures/montagnard/walk-n.webp';
-import mHammerC from '../assets/adventures/montagnard/hammer-c.webp';
-import mHammerN from '../assets/adventures/montagnard/hammer-n.webp';
-import mKneelC from '../assets/adventures/montagnard/kneel_blow-c.webp';
-import mKneelN from '../assets/adventures/montagnard/kneel_blow-n.webp';
 
 
 /*
@@ -86,7 +89,7 @@ export interface SceneSpec {
    * chaque geste, une planche de couleur et une de normales. `plan` donne le
    * geste de chaque moment de l'histoire, réparti sur les étapes de la séance.
    */
-  character?: {
+  characters?: Array<{
     actions: Record<string, { c: string; n: string }>;
     plan: string[];
     cols: number;
@@ -96,7 +99,9 @@ export interface SceneSpec {
     x: number;
     h: number;
     depth: number;
-  };
+    /** Les gestes qui suivent la musique (la flûte) : rythme et balancement. */
+    musical?: string[];
+  }>;
 }
 
 export interface Adventure {
@@ -289,86 +294,84 @@ const KITE: Adventure = {
 /*
  * Le bivouac.
  *
- * L'autre histoire du soir, qui alterne avec la grue : un voyageur arrive dans
- * une clairière, monte sa tente, allume un feu et s'assoit. Ici on ne monte
- * pas, on construit — chaque étape ajoute quelque chose au camp, et la
- * dernière allume le feu. Le jour où la séance se termine, le camp est fait.
- *
- * Les images du voyageur (un tanuki), de la tente et du bois arrivent avec la
- * prochaine recharge de génération ; en attendant, seul le feu, qui existait
- * déjà, est en place.
+ * Le refuge du soir : Firmin arrive dans une clairière avec Jack, son chien de
+ * berger, monte la tente, ramasse le bois, allume le feu, puis joue de la
+ * flûte. Chaque étape ajoute quelque chose au camp, chaque série fait avancer
+ * la pièce de l'étape. Le jour où la séance se termine, le camp est fait.
  */
 const CAMP: Adventure = {
   id: 'bivouac',
   name: 'The Camp',
   plates: { rest: campRepos, summit: campSommet },
-  // Le camp se monte au sol de la scène, une pièce après l'autre, avec
-  // l'étape et jamais avec les reps. Le coin haut droit reste libre : c'est
-  // celui de la vignette du mouvement.
-  build: [
-    { src: tente, x: 27, h: 118, from: 0.3 },
-    { src: tanukiDebout, x: 56, h: 100, from: 0, until: 0.84 },
-    { src: tanukiAssis, x: 56, h: 90, from: 0.84 },
-    { src: bois, x: 81, h: 56, from: 0.6, until: 0.84 },
-    { src: feu, x: 81, h: 108, from: 0.84, glow: true },
-  ],
   passage: {
     mobility: 'A clearing at dusk.',
     spine: 'A small flame.',
   },
+  // Deux lignes au plus, au présent. Firmin fait des gestes d'histoire, jamais
+  // ceux de l'exercice : la démonstration, c'est la vignette.
   beats: {
-    'd-cat-cow': 'The tanuki unrolls the canvas and shakes it out.',
-    'd-cobra': 'It lifts the ridge pole, and the tent rises.',
-    'd-deadbug': 'One peg, then the opposite one.',
-    'd-side-plank': 'A guy line pulled taut on one side, then the other.',
-    'd-bird-dog': 'It reaches far for dry twigs, keeping its balance.',
-    'd-wall-glides': 'It stacks the wood, slowly, a little higher.',
-    'd-jefferson': 'It bends down, very slowly, and blows on the first flame.',
+    'd-cat-cow': 'Firmin reaches the clearing as the light goes. Jack runs ahead through the heather.',
+    'd-cobra': 'He unrolls the canvas and lifts the ridge pole. The tent rises, slowly.',
+    'd-deadbug': 'One peg, then the opposite one. Jack watches every blow.',
+    'd-side-plank': 'A guy line pulled taut, then the other. The tent stands still in the wind.',
+    'd-bird-dog': 'He gathers dry wood at the edge of the pines. Jack settles down to wait.',
+    'd-wall-glides': 'He kneels and blows on the kindling, gently. A first small flame.',
+    'd-jefferson': 'Firmin sits by the fire and takes out his flute. Jack sleeps, and the night listens.',
   },
-  rest: 'It sits back on its heels and watches the light go.',
+  rest: 'He pours tea from the copper pot and waits.',
   figures: {},
-  // Images provisoires, prises dans l'univers de l'app : le montagnard et ses
-  // pièces peintes les remplaceront. Ce qui compte ici, c'est la mécanique —
-  // la profondeur, la caméra, la lumière, la construction série par série.
   scene: {
     skies: [skyDusk, skyNight],
     camera: { pan: 28, zoom: 0.16 },
-    layers: [
-      { src: arbreNuit, normal: arbreN, x: 14, bottom: 24, h: 118, depth: 0.3, dim: 0.6, sway: true },
-      { src: arbreNuit, normal: arbreN, x: 80, bottom: 23, h: 96, depth: 0.3, dim: 0.55, flip: true },
-      { src: arbreNuit, normal: arbreN, x: 2, bottom: 9, h: 210, depth: 0.55, sway: true },
-      { src: arbreNuit, normal: arbreN, x: 96, bottom: 10, h: 180, depth: 0.55, flip: true, sway: true },
-    ],
+    // Le décor est peint en code (src/journey/campArt.ts) : ici, seulement
+    // les pièces de l'histoire et les personnages.
+    layers: [],
     pieces: [
       { src: tente, normal: tenteN, x: 34, bottom: 12, h: 108, depth: 0.75, at: 1 / 6 },
-      { src: bois, normal: boisN, x: 70, bottom: 10, h: 46, depth: 0.78, at: 4 / 6, until: 1 },
-      { src: bois, normal: boisN, x: 60, bottom: 11, h: 38, depth: 0.78, at: 5 / 6, until: 1 },
-      { src: feu, x: 66, bottom: 8, h: 96, depth: 0.8, at: 1, glow: true },
+      { src: bois, normal: boisN, x: 70, bottom: 10, h: 46, depth: 0.78, at: 3 / 6, until: 5 / 6 },
+      { src: bois, normal: boisN, x: 60, bottom: 11, h: 38, depth: 0.78, at: 4 / 6, until: 5 / 6 },
+      // Le feu prend pendant que Firmin souffle dessus, une série après l'autre.
+      { src: feu, x: 66, bottom: 8, h: 96, depth: 0.8, at: 5 / 6, glow: true },
     ],
     poses: [],
-    // Le montagnard, version de travail : un modèle 3D stylisé, rendu en
-    // sprites. Il arrive, regarde la tente se dresser, plante les piquets,
-    // se pose, puis s'agenouille et souffle sur le feu.
-    character: {
-      actions: {
-        walk: { c: mWalkC, n: mWalkN },
-        idle: { c: mIdleC, n: mIdleN },
-        hammer: { c: mHammerC, n: mHammerN },
-        kneel: { c: mKneelC, n: mKneelN },
+    // Firmin et Jack, rendus depuis leurs modèles 3D (tools/firmin.py, tools/jack.py).
+    characters: [
+      {
+        actions: {
+          walk: { c: fWalkC, n: fWalkN },
+          idle: { c: fIdleC, n: fIdleN },
+          hammer: { c: fHammerC, n: fHammerN },
+          kneel: { c: fKneelC, n: fKneelN },
+          flute: { c: fFluteC, n: fFluteN },
+        },
+        plan: ['walk', 'idle', 'hammer', 'hammer', 'idle', 'kneel', 'flute'],
+        musical: ['flute'],
+        cols: 4,
+        rows: 3,
+        fps: 10,
+        frameAspect: FIRMIN_ASPECT,
+        x: 49,
+        h: 124,
+        depth: 0.77,
       },
-      plan: ['walk', 'idle', 'hammer', 'hammer', 'idle', 'kneel', 'kneel'],
-      cols: 4,
-      rows: 3,
-      fps: 10,
-      frameAspect: 165 / 289,
-      x: 50,
-      h: 120,
-      depth: 0.77,
-    },
-    foreground: [
-      { src: champis, normal: champisN, x: 6, bottom: -6, h: 84 },
-      { src: champis, normal: champisN, x: 97, bottom: -8, h: 66, flip: true },
+      {
+        actions: {
+          trot: { c: jTrotC, n: jTrotN },
+          sit: { c: jSitC, n: jSitN },
+          lie: { c: jLieC, n: jLieN },
+        },
+        plan: ['trot', 'sit', 'sit', 'lie', 'sit', 'lie', 'lie'],
+        cols: 4,
+        rows: 3,
+        fps: 9,
+        frameAspect: JACK_ASPECT,
+        // À gauche de Firmin, devant la tente : jamais sous lui quand il s'assoit.
+        x: 40,
+        h: JACK_H,
+        depth: 0.8,
+      },
     ],
+    foreground: [],
   },
 };
 

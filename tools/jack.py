@@ -1,6 +1,6 @@
-"""Le montagnard : modèle, squelette, gestes, rendu en sprites peints.
+"""Jack, le chien de Firmin : modèle, squelette, gestes, rendu en sprites peints.
 
-Lancement : FRAMES=12 python montagnard.py -- <sortie> [action ...]
+Lancement : FRAMES=12 python montagnard2.py -- <sortie> [action ...]
 Variables : SIDE=1 (vue de profil, pour régler les poses), PREVIEW=1 (une
 seule image éclairée, en grand, pour juger le modèle), RES=<px>.
 
@@ -40,26 +40,14 @@ scene = bpy.context.scene
 
 # ------------------------------------------------------------------ matériaux
 PALETTE = {
-    'coat': (0.56, 0.25, 0.15),     # rouille
-    'coat_dark': (0.42, 0.18, 0.12),
-    'sleeve': (0.52, 0.23, 0.14),
-    'hood': (0.64, 0.46, 0.24),     # ocre
-    'hood_rim': (0.52, 0.36, 0.19),
-    'scarf': (0.74, 0.55, 0.32),
-    'skin': (0.88, 0.67, 0.55),
-    'cheek': (0.90, 0.56, 0.46),
-    'beard': (0.84, 0.83, 0.80),
-    'beard_shadow': (0.70, 0.69, 0.68),
+    # Jack : un chien de berger hirsute, gris et crème.
+    'fur': (0.56, 0.55, 0.59),
+    'fur_dark': (0.38, 0.37, 0.42),
+    'cream': (0.88, 0.83, 0.73),
+    'nose': (0.16, 0.13, 0.13),
     'eye': (0.09, 0.07, 0.06),
     'glint': (0.98, 0.96, 0.92),
-    'mitt': (0.50, 0.38, 0.25),
-    'pants': (0.37, 0.28, 0.21),
-    'boot': (0.28, 0.19, 0.13),
-    'cord': (0.78, 0.66, 0.45),
-    'wood': (0.47, 0.31, 0.19),
-    'canvas': (0.91, 0.86, 0.75),
-    'patch': (0.72, 0.50, 0.31),
-    'pot': (0.36, 0.38, 0.40),
+    'collar': (0.60, 0.27, 0.16),
 }
 
 
@@ -119,7 +107,7 @@ def material(name, rgb, wool=True):
     return m
 
 
-MATS = {k: material(k, v, wool=k not in ('eye', 'glint', 'pot', 'skin', 'cheek')) for k, v in PALETTE.items()}
+MATS = {k: material(k, v, wool=k not in ('eye', 'glint', 'nose')) for k, v in PALETTE.items()}
 
 # La normale en espace caméra, avec le grain de la laine en relief.
 NORMAL_MAT = bpy.data.materials.new('normal_pass')
@@ -159,19 +147,16 @@ bpy.ops.object.mode_set(mode='EDIT')
 for b in list(arm.edit_bones):
     arm.edit_bones.remove(b)
 BONES = {
-    'root': ((0, 0, 0), (0, 0, 0.2), None),
-    'hips': ((0, 0, 0.5), (0, 0, 0.66), 'root'),
-    'spine': ((0, 0, 0.66), (0, 0, 0.9), 'hips'),
-    'chest': ((0, 0, 0.9), (0, 0, 1.06), 'spine'),
-    'head': ((0, 0, 1.08), (0, 0, 1.42), 'chest'),
-    'arm.L': ((0.21, 0, 0.98), (0.27, 0, 0.77), 'chest'),
-    'fore.L': ((0.27, 0, 0.77), (0.29, -0.03, 0.58), 'arm.L'),
-    'arm.R': ((-0.21, 0, 0.98), (-0.27, 0, 0.77), 'chest'),
-    'fore.R': ((-0.27, 0, 0.77), (-0.29, -0.03, 0.58), 'arm.R'),
-    'thigh.L': ((0.1, 0, 0.5), (0.11, 0, 0.29), 'hips'),
-    'shin.L': ((0.11, 0, 0.29), (0.11, 0.01, 0.08), 'thigh.L'),
-    'thigh.R': ((-0.1, 0, 0.5), (-0.11, 0, 0.29), 'hips'),
-    'shin.R': ((-0.11, 0, 0.29), (-0.11, 0.01, 0.08), 'thigh.R'),
+    # Un quadrupède, le museau vers l'objectif (-Y).
+    'root': ((0, 0, 0), (0, 0, 0.1), None),
+    'body': ((0, 0.13, 0.36), (0, -0.13, 0.37), 'root'),
+    'neck': ((0, -0.13, 0.37), (0, -0.2, 0.47), 'body'),
+    'head': ((0, -0.2, 0.47), (0, -0.34, 0.5), 'neck'),
+    'tail': ((0, 0.15, 0.38), (0, 0.3, 0.46), 'body'),
+    'leg.FL': ((0.075, -0.11, 0.3), (0.075, -0.115, 0.04), 'body'),
+    'leg.FR': ((-0.075, -0.11, 0.3), (-0.075, -0.115, 0.04), 'body'),
+    'leg.BL': ((0.08, 0.1, 0.3), (0.08, 0.11, 0.04), 'body'),
+    'leg.BR': ((-0.08, 0.1, 0.3), (-0.08, 0.11, 0.04), 'body'),
 }
 for name, (h, t, parent) in BONES.items():
     b = arm.edit_bones.new(name)
@@ -292,126 +277,53 @@ def near(th, at, width):
     return math.exp(-(d * d) / (width * width))
 
 
+
 # ------------------------------------------------------------------ le corps
-# Le manteau : une cloche lourde qui s'évase, l'ourlet ondule, un pli marque
-# le devant où les deux pans se croisent.
-coat = lathe('coat', [(0.26, 0.29), (0.32, 0.305), (0.42, 0.29), (0.56, 0.262), (0.72, 0.24), (0.86, 0.235), (0.97, 0.215), (1.04, 0.17), (1.08, 0.1)],
-             mod=lambda th, z, r: r * (1 + (0.055 * math.sin(7 * th + 0.6) if z < 0.36 else 0) - 0.05 * near(th, FRONT + 0.18, 0.09)),
-             cap_bottom=False)
-finish(coat, 'coat', 'spine', wobble=0.008)
-# Le revers du pan avant, plus sombre, et les pièces cousues.
-for i, (loc, sz) in enumerate([((0.16, -0.2, 0.46), (0.085, 0.018, 0.07)), ((-0.18, -0.15, 0.84), (0.06, 0.018, 0.055))]):
-    finish(sphere(f'patch{i}', loc, sz), 'patch', 'spine', level=1, wobble=0)
-# La ceinture : une corde nouée.
-finish(torus('belt', (0, 0, 0.64), 0.252, 0.016, scale=(1, 1, 1)), 'cord', 'spine', level=1, wobble=0)
-for i in range(2):
-    finish(sphere(f'knot{i}', (0.06 + i * 0.03, -0.25, 0.62 - i * 0.05), (0.022, 0.018, 0.03 + i * 0.02)), 'cord', 'spine', level=1, wobble=0)
-# Les épaules, rondes, voûtées.
-finish(sphere('shoulders', (0, 0.02, 0.97), (0.25, 0.2, 0.15)), 'coat', 'chest')
-# L'écharpe, épaisse, qui déborde.
-finish(torus('scarf', (0, -0.01, 1.07), 0.13, 0.065, scale=(1.05, 0.95, 0.75)), 'scarf', 'chest', wobble=0.008)
-finish(sphere('scarf_tail', (0.1, -0.15, 0.95), (0.04, 0.025, 0.12), rot=(0.2, 0, 0.25)), 'scarf', 'chest')
+def shag(x, y, z):
+    # Le poil : la surface ondule en mèches.
+    k = 1 + 0.06 * math.sin(9 * x + 5 * z) * math.cos(7 * y)
+    return x * k, y, z * k
+
+
+finish(sphere('body', (0, 0.0, 0.37), (0.13, 0.24, 0.13), shape=shag), 'fur', 'body', wobble=0.014)
+finish(sphere('chest', (0, -0.13, 0.33), (0.105, 0.1, 0.12), shape=shag), 'cream', 'body', wobble=0.012)
+finish(sphere('back', (0, 0.05, 0.45), (0.1, 0.18, 0.05), shape=shag), 'fur_dark', 'body', wobble=0.01)
+finish(torus('collar', (0, -0.17, 0.43), 0.07, 0.012, rot=(math.radians(60), 0, 0)), 'collar', 'neck', level=1, wobble=0)
 
 # ------------------------------------------------------------------ la tête
-HC = Vector((0, -0.02, 1.27))
-finish(sphere('head', HC, (0.15, 0.145, 0.155)), 'skin', 'head', wobble=0.003)
-# Le nez : rond, rouge de froid. Les joues aussi.
-finish(sphere('nose', HC + Vector((0, -0.15, -0.02)), (0.048, 0.046, 0.044)), 'cheek', 'head', wobble=0)
+HC = Vector((0, -0.27, 0.49))
+finish(sphere('neckfur', (0, -0.19, 0.43), (0.085, 0.09, 0.1), shape=shag), 'fur', 'neck', wobble=0.01)
+finish(sphere('head', HC, (0.095, 0.1, 0.09), shape=shag), 'fur', 'head', wobble=0.01)
+finish(sphere('snout', HC + Vector((0, -0.085, -0.03)), (0.05, 0.065, 0.042)), 'cream', 'head', wobble=0.005)
+finish(sphere('nose', HC + Vector((0, -0.148, -0.012)), (0.02, 0.014, 0.015)), 'nose', 'head', level=1, wobble=0)
+# La frange tombe sur les yeux : on les devine.
+finish(sphere('fringe', HC + Vector((0, -0.07, 0.05)), (0.085, 0.045, 0.038), shape=shag), 'cream', 'head', wobble=0.01)
 for s in (-1, 1):
-    finish(sphere(f'cheek{s}', HC + Vector((0.08 * s, -0.11, -0.01)), (0.04, 0.02, 0.032)), 'cheek', 'head', wobble=0)
-    # Les yeux : petits, vifs, un reflet. Les sourcils, broussailleux, les
-    # couvrent à moitié : le visage reste un peu caché, comme demandé.
-    finish(sphere(f'eye{s}', HC + Vector((0.055 * s, -0.137, 0.03)), (0.018, 0.01, 0.023)), 'eye', 'head', level=1, wobble=0)
-    finish(sphere(f'glint{s}', HC + Vector((0.05 * s + 0.007, -0.147, 0.04)), (0.006, 0.004, 0.006)), 'glint', 'head', level=1, wobble=0)
-    finish(sphere(f'brow{s}', HC + Vector((0.06 * s, -0.138, 0.064)), (0.046, 0.024, 0.018), rot=(0, 0.18 * s, -0.12 * s)), 'beard', 'head', wobble=0.004)
+    finish(sphere(f'eye{s}', HC + Vector((0.038 * s, -0.088, 0.02)), (0.012, 0.008, 0.012)), 'eye', 'head', level=1, wobble=0)
+    finish(sphere(f'glint{s}', HC + Vector((0.034 * s, -0.095, 0.025)), (0.004, 0.003, 0.004)), 'glint', 'head', level=1, wobble=0)
+    finish(sphere(f'ear{s}', HC + Vector((0.085 * s, 0.01, 0.0)), (0.03, 0.05, 0.075), rot=(0.2, 0.3 * s, 0.25 * s)), 'fur_dark', 'head', wobble=0.008)
 
+# ------------------------------------------------------------------ pattes, queue
+for side, x, y, bone in (('FL', 0.075, -0.11, 'leg.FL'), ('FR', -0.075, -0.11, 'leg.FR'), ('BL', 0.08, 0.1, 'leg.BL'), ('BR', -0.08, 0.1, 'leg.BR')):
+    finish(tube(f'leg.{side}', (x, y, 0.3), (x, y - 0.005, 0.06), 0.045, 0.035, seg=12), 'cream' if side[0] == 'F' else 'fur', bone, wobble=0.006)
+    finish(sphere(f'paw.{side}', (x, y - 0.025, 0.03), (0.04, 0.055, 0.03)), 'cream', bone, level=1, wobble=0.004)
+finish(tube('tail', (0, 0.15, 0.38), (0, 0.3, 0.46), 0.04, 0.03, seg=12), 'fur', 'tail', wobble=0.01)
+finish(sphere('tuft', (0, 0.31, 0.47), (0.045, 0.06, 0.05), shape=shag), 'cream', 'tail', wobble=0.01)
 
-# La barbe : une grande masse qui part des joues et coule sur l'écharpe, avec
-# des mèches. Une moustache par-dessus, qui cache la bouche.
-def beard_shape(x, y, z):
-    t = max(0.0, -z)              # 0 en haut, 1 en bas
-    x *= 1 - 0.45 * t             # elle s'affine vers la pointe
-    y = y * (1 - 0.2 * t) - 0.18 * t * t
-    x += 0.04 * math.sin(z * 9 + y * 4) * t   # des mèches
-    return x, y, z
-
-
-finish(sphere('beard', HC + Vector((0, -0.09, -0.15)), (0.155, 0.1, 0.22), shape=beard_shape), 'beard', 'head', wobble=0.01)
-finish(sphere('beard_under', HC + Vector((0, -0.05, -0.14)), (0.14, 0.08, 0.17)), 'beard_shadow', 'head')
-for s in (-1, 1):
-    finish(sphere(f'mous{s}', HC + Vector((0.052 * s, -0.155, -0.055)), (0.066, 0.034, 0.03), rot=(0, 0.35 * s, 0)), 'beard', 'head', wobble=0.004)
-
-
-# La capuche : une coque ouverte sur le visage, dont la pointe retombe en
-# arrière. Son bord, roulé, plus sombre, encadre le visage.
-def hood_shape(x, y, z):
-    if z > 0:
-        y += 0.55 * z * z     # la pointe part en arrière, sans se dresser
-        z += 0.08 * z * z
-    return x, y, z
-
-
-hood = sphere('hood', HC + Vector((0, 0.02, 0.03)), (0.2, 0.2, 0.205), seg=32, rings=18, shape=hood_shape)
-bm = bmesh.new()
-bm.from_mesh(hood.data)
-# (les coordonnées sont déjà à l'échelle : 0,175 de rayon)
-cut = [f for f in bm.faces if f.calc_center_median().y < -0.07 and f.calc_center_median().z < 0.11]
-bmesh.ops.delete(bm, geom=cut, context='FACES')
-bmesh.ops.solidify(bm, geom=bm.faces[:], thickness=0.022)
-bm.to_mesh(hood.data)
-bm.free()
-finish(hood, 'hood', 'head', wobble=0.008)
-finish(torus('hood_rim', HC + Vector((0, -0.14, 0.01)), 0.145, 0.034, scale=(1.0, 0.55, 1.2), rot=(math.radians(84), 0, 0)), 'hood_rim', 'head', wobble=0.005)
-
-# ------------------------------------------------------------------ bras, jambes
-for s, side in ((1, 'L'), (-1, 'R')):
-    finish(tube(f'arm.{side}', (0.21 * s, 0, 0.99), (0.27 * s, 0, 0.77), 0.075, 0.066), 'sleeve', f'arm.{side}')
-    finish(tube(f'fore.{side}', (0.27 * s, 0, 0.78), (0.29 * s, -0.03, 0.6), 0.068, 0.064), 'sleeve', f'fore.{side}')
-    finish(torus(f'cuff.{side}', (0.29 * s, -0.03, 0.61), 0.062, 0.02, rot=(0.1, 0.05 * s, 0)), 'sleeve', f'fore.{side}', wobble=0)
-    finish(sphere(f'mitt.{side}', (0.295 * s, -0.035, 0.54), (0.062, 0.055, 0.075)), 'mitt', f'fore.{side}')
-    finish(sphere(f'thumb.{side}', (0.27 * s, -0.08, 0.565), (0.025, 0.025, 0.035), rot=(0.4, 0, 0)), 'mitt', f'fore.{side}')
-    finish(tube(f'thigh.{side}', (0.1 * s, 0, 0.5), (0.11 * s, 0, 0.29), 0.085, 0.07), 'pants', f'thigh.{side}')
-    finish(tube(f'shin.{side}', (0.11 * s, 0, 0.3), (0.11 * s, 0.01, 0.12), 0.068, 0.062), 'pants', f'shin.{side}')
-    # Les bottes, larges et usées, et les cordes qui les tiennent.
-    finish(sphere(f'boot.{side}', (0.11 * s, -0.04, 0.055), (0.08, 0.125, 0.06), shape=lambda x, y, z: (x, y, max(z, -0.7))), 'boot', f'shin.{side}')
-    for k in range(2):
-        finish(torus(f'bootcord.{side}{k}', (0.11 * s, 0.0, 0.1 + 0.035 * k), 0.066, 0.008), 'cord', f'shin.{side}', level=1, wobble=0)
-
-# ------------------------------------------------------------------ le sac
-for x in (-0.13, 0.13):
-    finish(tube(f'post{x}', (x, 0.23, 0.6), (x, 0.24, 1.22), 0.022, 0.02, seg=10), 'wood', 'chest', level=1, wobble=0.003)
-for z in (0.74, 1.0):
-    finish(tube(f'bar{z}', (-0.15, 0.24, z), (0.15, 0.24, z), 0.018, 0.018, seg=10), 'wood', 'chest', level=1, wobble=0.003)
-roll = tube('roll', (-0.22, 0.26, 1.2), (0.22, 0.26, 1.2), 0.085, 0.085, seg=24)
-finish(roll, 'canvas', 'chest', wobble=0.006)
-for x in (-0.1, 0.1):
-    finish(torus(f'strap{x}', (x, 0.26, 1.2), 0.088, 0.01, rot=(0, math.pi / 2, 0)), 'cord', 'chest', level=1, wobble=0)
-pot = lathe('pot', [(0, 0.0), (0.0, 0.05), (0.06, 0.055), (0.07, 0.05)], center=(0.2, 0.2, 0.68), seg=20, cap_top=False)
-finish(pot, 'pot', 'chest', level=1, wobble=0)
-
-# Le bâton, noueux, dans la main droite.
-# Il est planté au sol, pas soudé à la main : la main se pose dessus.
-stick = tube('stick', (-0.34, -0.1, 0.0), (-0.33, -0.1, 1.18), 0.02, 0.017, seg=10)
-finish(stick, 'wood', 'root', level=1, wobble=0.004)
-knob = sphere('knob', (-0.33, -0.1, 1.19), (0.032, 0.03, 0.04))
-finish(knob, 'wood', 'root', level=1)
-
-# ------------------------------------------------------------------ caméra, rendu
+# ------------------------------------------------------------------ caméra : la même que Firmin
 cam_data = bpy.data.cameras.new('cam')
 cam_data.type = 'ORTHO'
-cam_data.ortho_scale = 1.8
+cam_data.ortho_scale = 1.9
 cam = bpy.data.objects.new('cam', cam_data)
 scene.collection.objects.link(cam)
 if os.environ.get('SIDE'):
-    cam.location = (4.5, 0, 0.72)
+    cam.location = (4.5, 0, 0.4)
     cam.rotation_euler = Euler((math.radians(90), 0, math.radians(90)))
 else:
-    # À hauteur d'homme, tourné vers la droite de l'écran : il regarde le feu.
     yaw = math.radians(42)
-    cam.location = (4.6 * math.sin(yaw), -4.6 * math.cos(yaw), 1.45)
+    cam.location = (4.6 * math.sin(yaw), -4.6 * math.cos(yaw), 1.5)
     cam.rotation_euler = Euler((math.radians(82.5), 0, yaw))
 scene.camera = cam
-
 scene.render.engine = 'CYCLES'
 scene.cycles.device = 'CPU'
 scene.cycles.samples = 16
@@ -421,32 +333,9 @@ scene.render.film_transparent = True
 scene.render.image_settings.file_format = 'PNG'
 scene.render.image_settings.color_mode = 'RGBA'
 scene.view_settings.view_transform = 'Standard'
+scene.render.use_freestyle = False
 
-# Le trait : fin, chaud, et qui tremble un peu, comme tiré à la main.
-scene.render.use_freestyle = True
-scene.render.line_thickness_mode = 'ABSOLUTE'
-scene.render.line_thickness = 1.0 * RES / 320
-fs = scene.view_layers[0].freestyle_settings
-ls = fs.linesets[0] if fs.linesets else fs.linesets.new('ink')
-if ls.linestyle is None:
-    ls.linestyle = bpy.data.linestyles.new('ink')
-st = ls.linestyle
-st.color = (0.2, 0.12, 0.09)
-st.alpha = 0.85
-st.thickness = 1.2
-ls.select_by_visibility = True
-ls.select_silhouette = True
-ls.select_border = True
-ls.select_crease = True
-fs.crease_angle = math.radians(120)
-wob = st.thickness_modifiers.new('tremble', 'NOISE')
-wob.amplitude = 0.8
-wob.period = 12
-geo_mod = st.geometry_modifiers.new('main', 'PERLIN_NOISE_1D')
-geo_mod.amplitude = 0.6
-geo_mod.frequency = 6
 
-# ------------------------------------------------------------------ gestes
 def pose(rot, root=(0, 0, 0)):
     for pb in rig.pose.bones:
         pb.rotation_mode = 'XYZ'
@@ -455,35 +344,26 @@ def pose(rot, root=(0, 0, 0)):
 
 
 def act(name, t):
-    """Un geste au temps t (0 → 1, en boucle). +X penche un os vers l'avant
-    pour le buste, vers l'arrière pour les jambes et les bras."""
+    """+X : le corps et la tête baissent le museau ; une patte part vers l'arrière.
+    (Vérifié de profil : un os horizontal tourné de +X pique du nez.)"""
     w = math.sin(t * 2 * math.pi)
     w2 = math.sin(t * 4 * math.pi)
-    if name == 'idle':
-        return pose({'chest': (2 * w, 0, 0), 'head': (-3 * w, 4 * math.sin(t * 2 * math.pi + 1), 0),
-                     'arm.R': (-8, 0, -10), 'fore.R': (-18, 0, 0), 'arm.L': (4 * w, 0, 4)})
-    if name == 'walk':
-        return pose({'hips': (0, 0, 6 * w), 'spine': (8, 0, -3 * w), 'head': (-6, 0, 3 * w),
-                     'thigh.L': (-24 * w, 0, 0), 'shin.L': (max(0, 30 * w2) + 10, 0, 0),
-                     'thigh.R': (24 * w, 0, 0), 'shin.R': (max(0, -30 * w2) + 10, 0, 0),
-                     'arm.L': (20 * w, 0, 4), 'arm.R': (-20 - 14 * w, 0, -6), 'fore.R': (-30, 0, 0)},
-                    root=(0, 0, 0.015 * abs(w2)))
-    if name == 'kneel_blow':
-        return pose({'spine': (24 + 3 * w, 0, 0), 'chest': (8 + 2 * w, 0, 0), 'head': (10 - 4 * w, 0, 0),
-                     'thigh.L': (-80, 0, 0), 'shin.L': (80, 0, 0), 'thigh.R': (10, 0, 0), 'shin.R': (100, 0, 0),
-                     'arm.L': (-50, 0, 10), 'fore.L': (-40, 0, 0), 'arm.R': (-45, 0, -10), 'fore.R': (-50, 0, 0)},
-                    root=(0, 0, -0.24))
+    if name == 'trot':
+        return pose({'body': (2 * w2, 0, 0), 'neck': (4 * w2 - 6, 0, 0), 'tail': (-10, 0, 30 * w),
+                     'leg.FL': (26 * w, 0, 0), 'leg.BR': (26 * w, 0, 0), 'leg.FR': (-26 * w, 0, 0), 'leg.BL': (-26 * w, 0, 0)},
+                    root=(0, 0, 0.012 * abs(w2)))
     if name == 'sit':
-        return pose({'spine': (12 + 2 * w, 0, 0), 'head': (4 - 2 * w, 0, 0),
-                     'thigh.L': (-88, 0, 8), 'shin.L': (55, 0, 0), 'thigh.R': (-88, 0, -8), 'shin.R': (55, 0, 0),
-                     'arm.L': (-40, 0, 6), 'fore.L': (-30, 0, 0), 'arm.R': (-40, 0, -6), 'fore.R': (-30, 0, 0)},
-                    root=(0, 0, -0.4))
-    if name == 'hammer':
-        k = 0.5 + 0.5 * math.cos(t * 2 * math.pi)
-        return pose({'spine': (20, 0, 0), 'head': (12, 0, 0),
-                     'thigh.L': (-80, 0, 0), 'shin.L': (80, 0, 0), 'thigh.R': (10, 0, 0), 'shin.R': (100, 0, 0),
-                     'arm.R': (-60 - 70 * k, 0, -8), 'fore.R': (-30 * k, 0, 0), 'arm.L': (-40, 0, 10), 'fore.L': (-40, 0, 0)},
-                    root=(0, 0, -0.24))
+        # Assis, il regarde Firmin, penche la tête, la queue balaie le sol.
+        # Le corps se redresse de 38° ; les pattes avant compensent pour rester
+        # droites, les arrière se replient vers l'avant sous lui.
+        return pose({'body': (-38, 0, 0), 'neck': (26, 0, 0), 'head': (6, 0, 12 * math.sin(t * 2 * math.pi)),
+                     'leg.FL': (38, 0, 0), 'leg.FR': (38, 0, 0), 'leg.BL': (-52, 0, 6), 'leg.BR': (-52, 0, -6),
+                     'tail': (40, 0, 18 * w)}, root=(0, 0, -0.2))
+    if name == 'lie':
+        # Couché près du feu, il respire, le bout de la queue bat.
+        return pose({'body': (1.5 * w, 0, 0), 'neck': (10, 0, 0), 'head': (8 + 2 * w, 0, 6),
+                     'leg.FL': (-82, 0, 0), 'leg.FR': (-82, 0, 0), 'leg.BL': (-78, 0, 6), 'leg.BR': (-78, 0, -6),
+                     'tail': (-30, 0, 20 + 14 * math.sin(t * 4 * math.pi))}, root=(0, 0, -0.2))
     raise ValueError(name)
 
 
@@ -495,7 +375,6 @@ def set_pass(kind):
     for o in meshes:
         for i in range(len(o.data.materials)):
             o.data.materials[i] = original[o.name][i] if kind == 'albedo' else NORMAL_MAT
-    scene.render.use_freestyle = kind == 'albedo'
     scene.view_settings.view_transform = 'Standard' if kind == 'albedo' else 'Raw'
 
 
@@ -507,8 +386,6 @@ if PREVIEW:
     sys.exit(0)
 
 for name in ACTIONS:
-    hide = name in ('kneel_blow', 'sit', 'hammer')
-    stick.hide_render = knob.hide_render = hide
     for f in range(FRAMES):
         act(name, f / FRAMES)
         bpy.context.view_layer.update()

@@ -36,6 +36,8 @@ import {
 } from 'postprocessing';
 import type { SceneSpec } from '../data/adventures';
 import { reveal, storyStage } from './CampScene';
+import { musicLevel } from '../lib/audio';
+import { normalFromAlpha, paintForest, paintForeground, paintGround, paintNearPine, paintPeaks, paintSky, PALETTE, type Hour } from './campArt';
 
 /*
  * La clairière, filmée.
@@ -60,7 +62,7 @@ const FOV = 30;
 const GROUND = -2.2;
 const CAM_FROM = new Vector3(1.4, -0.9, 10);
 const CAM_TO = new Vector3(-0.2, -1.2, 6.6);
-const LOOK = new Vector3(0.1, -0.6, -6);
+const LOOK = new Vector3(0.1, -0.05, -6);
 /** La hauteur de référence de la scène CSS, pour convertir ses pixels. */
 const CSS_SCENE_H = 287;
 
@@ -104,7 +106,8 @@ const VERT = /* glsl */ `
  * Sans carte de normales, l'image garde sa couleur, teintée par la nuit.
  */
 const FRAG = /* glsl */ `
-  uniform sampler2D map, nmap;
+  uniform sampler2D map, nmap, map2;
+  uniform float uMix, uPaired; // le crépuscule et la nuit d'un même plan, fondus
   uniform vec4 uRect; // la case de la planche : décalage xy, taille zw
   uniform vec3 uTint, uHazeColor, uAmbient, uSkyColor, uFireColor, uFirePos, uSkyDir;
   uniform float uHaze, uReveal, uFade, uLit, uFlip, uFire;
@@ -113,7 +116,7 @@ const FRAG = /* glsl */ `
   void main() {
     if (vUv.y > uReveal) discard;
     vec2 st = uRect.xy + vUv * uRect.zw;
-    vec4 c = texture2D(map, st);
+    vec4 c = mix(texture2D(map, st), texture2D(map2, st), uMix);
     float a = c.a * smoothstep(0.0, uFade + 0.0001, vUv.y);
     if (a < 0.08) discard;
     vec3 col = c.rgb * uTint;
@@ -129,7 +132,9 @@ const FRAG = /* glsl */ `
       float fire = max(dot(n, lf), 0.0) * att;
       // Le liseré : les bords (normale presque de profil) tournés vers le feu.
       float rim = pow(1.0 - n.z, 1.6) * max(dot(normalize(n.xy + 1e-4), normalize(lf.xy + 1e-4)), 0.0) * att;
-      col = c.rgb * (uAmbient + uSkyColor * sky + uFireColor * fire * 1.6) + uFireColor * rim * 1.2;
+      // Un plan peint en deux palettes porte déjà sa nuit : pas d'ambiance par-dessus.
+      vec3 amb = mix(uAmbient, vec3(0.82), uPaired);
+      col = c.rgb * (amb + uSkyColor * sky + uFireColor * fire * 1.6) + uFireColor * rim * 1.2;
     }
     gl_FragColor = vec4(mix(col, uHazeColor, uHaze), a);
   }`;
@@ -191,6 +196,7 @@ export default function CampSceneGL({
       return t;
     };
     const uTime = { value: 0 };
+    const nightMix = { value: 0 };
     // La lumière est partagée par tous les plans : un seul endroit à animer.
     const light = {
       ambient: { value: new Color(1, 1, 1) },
@@ -217,6 +223,9 @@ export default function CampSceneGL({
             uRect: { value: [0, 0, 1, 1] },
             uFade: { value: o.fade ?? 0 },
             nmap: { value: o.nmap ?? null },
+            map2: { value: map },
+            uMix: nightMix,
+            uPaired: { value: 0 },
             uLit: { value: o.nmap ? 1 : 0 },
             uFlip: { value: o.flip ? -1 : 1 },
             uAmbient: light.ambient,
@@ -276,14 +285,50 @@ export default function CampSceneGL({
       return m;
     }
 
-    // Le ciel, très loin : le crépuscule, puis la nuit par-dessus.
-    const skyGeo = keep(new PlaneGeometry(96, 45.4));
-    const skyDusk = new Mesh(skyGeo, keep(new MeshBasicMaterial({ map: tex(spec.skies[0]), depthWrite: false })));
-    const nightMat = keep(new MeshBasicMaterial({ map: tex(spec.skies[1]), transparent: true, opacity: 0, depthWrite: false }));
-    const skyNight = new Mesh(skyGeo, nightMat);
-    skyDusk.position.set(0, 9, -70);
-    skyNight.position.set(0, 9, -69.9);
-    scene.add(skyDusk, skyNight);
+    // ------------------------------------------------------------ la clairière peinte
+    // Chaque plan est peint deux fois (campArt.ts), au crépuscule et à la nuit,
+    // et le shader passe de l'un à l'autre avec la routine.
+    let seed = 7;
+    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    const pair = (paint: (h: Hour) => HTMLCanvasElement) => {
+      const mk = (c: HTMLCanvasElement) => {
+        const t = keep(new CanvasTexture(c));
+        t.colorSpace = SRGBColorSpace;
+        t.anisotropy = 4;
+        return t;
+      };
+      const dusk = paint('dusk');
+      return { d: mk(dusk), n: mk(paint('night')), src: dusk };
+    };
+    function painted(
+      pr: { d: Texture; n: Texture; src: HTMLCanvasElement },
+      w: number,
+      h: number,
+      x: number,
+      y: number,
+      z: number,
+      o: { wind?: number; normal?: boolean; flat?: boolean; flip?: boolean } = {},
+    ) {
+      const g = keep(new PlaneGeometry(w, h));
+      if (!o.flat) g.translate(0, h / 2, 0);
+      let nmap: Texture | null = null;
+      if (o.normal) {
+        nmap = keep(new CanvasTexture(normalFromAlpha(pr.src)));
+        nmap.colorSpace = NoColorSpace;
+      }
+      const mat = layerMat(pr.d, { wind: o.wind ?? 0, nmap, flip: !!o.flip });
+      mat.uniforms.map2!.value = pr.n;
+      mat.uniforms.uPaired!.value = 1;
+      if (o.flat) mat.alphaToCoverage = false;
+      const m = new Mesh(g, mat);
+      m.position.set(x, y, z);
+      if (o.flip) m.scale.x = -1;
+      scene.add(m);
+      return m;
+    }
+
+    // Le ciel, très loin.
+    painted(pair(paintSky), 120, 75, 0, GROUND - 22, -72, { flat: false });
 
     // La source des rayons : le soleil bas, puis la lune.
     const sunMat = keep(new MeshBasicMaterial({ color: new Color('#ffd6a0'), transparent: true }));
@@ -291,56 +336,20 @@ export default function CampSceneGL({
     sun.position.set(6, 1.2, -60);
     scene.add(sun);
 
-    // Les montagnes, en deux crêtes de lavis.
-    const mountains = canvasTex(1024, 256, (g) => {
-      const ridge = (pts: number[][], top: string, bottom: string) => {
-        const grad = g.createLinearGradient(0, 0, 0, 256);
-        grad.addColorStop(0, top);
-        grad.addColorStop(1, bottom);
-        g.fillStyle = grad;
-        g.beginPath();
-        g.moveTo(0, 256);
-        pts.forEach(([x, y]) => g.lineTo(x! * 1024, y! * 256));
-        g.lineTo(1024, 256);
-        g.closePath();
-        g.fill();
-      };
-      ridge([[0, 0.62], [0.08, 0.38], [0.17, 0.55], [0.3, 0.18], [0.42, 0.5], [0.55, 0.3], [0.68, 0.58], [0.8, 0.32], [0.92, 0.5], [1, 0.4]], '#a7add0', '#8b90b4');
-      ridge([[0, 0.8], [0.12, 0.6], [0.25, 0.74], [0.4, 0.55], [0.56, 0.78], [0.7, 0.6], [0.86, 0.76], [1, 0.64]], '#7a7fa6', '#666a90');
-    });
-    const mountainMesh = panel(mountains, 9, 4, 0, -40, { haze: 0.15 });
-    mountainMesh.position.y = GROUND - 1.5;
+    // Les sommets taillés, puis deux rangées de forêt qui s'enfoncent dans la brume.
+    painted(pair(paintPeaks), 86, 21.8, 0, GROUND + 0.4, -50);
+    painted(pair((h) => paintForest(h, 'far')), 62, 7.2, 0.5, GROUND - 1.2, -31);
+    painted(pair((h) => paintForest(h, 'mid')), 48, 7.4, -0.5, GROUND - 0.9, -21);
 
-    // Le sol de la clairière, peint au pinceau : une base, puis des centaines
-    // de touches douces d'herbe et de terre. Le hasard est fixé (une graine),
-    // pour que le sol ne change pas d'une étape à l'autre.
-    let seed = 7;
-    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-    const groundTex = canvasTex(512, 512, (g) => {
-      const grad = g.createLinearGradient(0, 0, 0, 512);
-      grad.addColorStop(0, '#6b7882');
-      grad.addColorStop(0.5, '#56655a');
-      grad.addColorStop(1, '#46523f');
-      g.fillStyle = grad;
-      g.fillRect(0, 0, 512, 512);
-      const tones = ['#4f6048', '#64735a', '#7a8466', '#5c5444', '#3f4a3a', '#8a8f72'];
-      for (let i = 0; i < 1400; i++) {
-        g.globalAlpha = 0.05 + rnd() * 0.08;
-        g.fillStyle = tones[Math.floor(rnd() * tones.length)]!;
-        g.beginPath();
-        g.ellipse(rnd() * 512, rnd() * 512, 4 + rnd() * 18, 1.5 + rnd() * 4, rnd() * 0.6 - 0.3, 0, Math.PI * 2);
-        g.fill();
-      }
-      g.globalAlpha = 1;
-    });
-    groundTex.wrapS = groundTex.wrapT = RepeatWrapping;
-    groundTex.repeat.set(4, 3);
-    const ground = new Mesh(keep(new PlaneGeometry(80, 60)), layerMat(groundTex));
-    ground.material.alphaToCoverage = false;
+    // Le sol, à plat : bruyère, herbe rase, terre tassée du camp, sentier.
+    const ground = painted(pair(paintGround), 70, 52, 0, GROUND, -20, { flat: true });
     ground.rotation.x = -Math.PI / 2;
-    ground.position.set(0, GROUND, -25);
-    tinted.push(ground.material);
-    scene.add(ground);
+
+    // Deux grands sapins encadrent la scène, assez près pour que le feu les touche.
+    const nearL = pair((h) => paintNearPine(h, 61));
+    const nearR = pair((h) => paintNearPine(h, 71));
+    painted(nearL, 5.6, 11.2, -6.4, GROUND - 0.2, -10, { normal: true, wind: 0.08 });
+    painted(nearR, 5.0, 10, 6.9, GROUND - 0.2, -11.5, { normal: true, wind: 0.07, flip: true });
 
     // Les étoiles, qui n'apparaissent qu'avec la nuit.
     const starGeo = keep(new BufferGeometry());
@@ -500,26 +509,33 @@ export default function CampSceneGL({
     // Le montagnard : un sprite animé rendu depuis son modèle 3D. Couleur et
     // normales défilent ensemble, si bien que le feu et la lune l'éclairent
     // comme tout le reste. Un geste par étape, jamais un mouvement d'exercice.
-    const ch = spec.character;
-    let hero: Mesh | null = null;
-    const heroTex: Record<string, { c: Texture; n: Texture }> = {};
-    if (ch) {
+    // Les personnages : des sprites animés rendus depuis leurs modèles 3D.
+    // Couleur et normales défilent ensemble, si bien que le feu et la lune les
+    // éclairent comme tout le reste. Un geste par étape, jamais un mouvement
+    // d'exercice.
+    const cast = (spec.characters ?? []).map((ch) => {
+      const frames: Record<string, { c: Texture; n: Texture }> = {};
       for (const [name, a] of Object.entries(ch.actions)) {
         const c = tex(a.c);
         const n = tex(a.n);
         n.colorSpace = NoColorSpace;
-        heroTex[name] = { c, n };
+        frames[name] = { c, n };
       }
-      const first = heroTex[ch.plan[0]!]!;
+      const first = frames[ch.plan[0]!]!;
       const z = zOf(ch.depth);
       const vh = visibleHeight(z);
       const h = (ch.h / CSS_SCENE_H) * vh;
       const halfW = (vh / 2) * 1.22;
-      hero = panel(first.c, h, ch.frameAspect, (ch.x / 100 - 0.5) * 2 * halfW + 0.4, z, { nmap: first.n });
-      hero.position.y = GROUND - h * 0.02;
-      addShadow(hero);
-    }
+      const mesh = panel(first.c, h, ch.frameAspect, (ch.x / 100 - 0.5) * 2 * halfW + 0.4, z, { nmap: first.n });
+      mesh.position.y = GROUND - h * 0.02;
+      addShadow(mesh);
+      return { ch, frames, mesh, clock: 0 };
+    });
+    let level = 0;
 
+    // Le premier plan peint : bruyère, herbes hautes, un rocher, tout près.
+    painted(pair((h) => paintForeground(h, 81)), 3.4, 1.42, -2.4, GROUND - 0.25, 3.4, { normal: true, wind: 0.03 });
+    painted(pair((h) => paintForeground(h, 91)), 3.0, 1.25, 2.7, GROUND - 0.3, 3.7, { normal: true, wind: 0.03, flip: true });
     const fore = spec.foreground.map((f) => fromSpec(f.src, f.x, f.h * 0.75, 1, { wind: 0.05, flip: !!f.flip, normal: f.normal }));
 
     // Les effets. Rayons et mise au point dans la même passe : deux passes
@@ -561,7 +577,8 @@ export default function CampSceneGL({
     canvas.addEventListener('webglcontextlost', lost);
 
     const nightTint = new Color(0.42, 0.47, 0.68);
-    const nightSky = new Color(0.32, 0.36, 0.55);
+    const mistDusk = new Color(PALETTE.dusk.mist);
+    const mistNight = new Color(PALETTE.night.mist);
     const white = new Color(1, 1, 1);
     const tint = new Color();
     let p = live.current.stageIndex / Math.max(1, live.current.stageCount - 1);
@@ -582,7 +599,7 @@ export default function CampSceneGL({
 
       camera.position.lerpVectors(CAM_FROM, CAM_TO, p);
       camera.lookAt(LOOK);
-      nightMat.opacity = p;
+      nightMix.value = p;
       const night = MathUtils.smoothstep(p, 0.45, 0.75);
       sun.position.set(MathUtils.lerp(6, -7, night), MathUtils.lerp(1.2 - p * 2, 9, night), -60);
       sunMat.color.set(night > 0.5 ? '#dfe6ff' : '#ffd6a0');
@@ -616,12 +633,10 @@ export default function CampSceneGL({
       light.fire.value = fire;
       if (fireMesh) light.firePos.value.set(fireMesh.position.x, GROUND + 0.7, fireMesh.position.z + 0.3);
       // Le ciel s'assombrit vraiment, les étoiles viennent avec la nuit.
-      (skyDusk.material as MeshBasicMaterial).color.copy(white).lerp(nightSky, p);
-      nightMat.color.copy(white).lerp(nightSky, p * 0.9);
       starMat.uniforms.uAlpha!.value = MathUtils.smoothstep(p, 0.5, 0.9);
       mists.forEach((m) => {
         m.t.offset.x = (now / 1000) * m.speed;
-        m.mat.color.copy(white).lerp(nightTint, p);
+        m.mat.color.copy(mistDusk).lerp(mistNight, p);
         m.mat.opacity = m.alpha * (1 - p * 0.35);
       });
       for (const { of, blob } of shadows) {
@@ -633,20 +648,32 @@ export default function CampSceneGL({
       }
       if (fireMesh) emberMat.uniforms.uOrigin!.value.set(fireMesh.position.x, GROUND + 0.5, fireMesh.position.z + 0.1);
       emberMat.uniforms.uAlpha!.value = fire;
-      flyMat.uniforms.uAlpha!.value = MathUtils.smoothstep(p, 0.55, 0.95);
+      // Les lucioles s'éclairent un peu avec la musique.
+      flyMat.uniforms.uAlpha!.value = MathUtils.smoothstep(p, 0.55, 0.95) * (0.8 + level * 0.6);
 
-      if (ch && hero) {
+      // Le niveau de la musique, lissé : Firmin joue avec elle.
+      level += (musicLevel() - level) * 0.15;
+      for (const actor of cast) {
+        const { ch, frames, mesh } = actor;
         // Le geste de l'étape, joué en boucle à son rythme de dessin animé.
         const k = Math.round((L.stageIndex / lastStage) * (ch.plan.length - 1));
-        const t = heroTex[ch.plan[k]!]!;
-        const u = (hero.material as ShaderMaterial).uniforms;
+        const name = ch.plan[k]!;
+        const t = frames[name]!;
+        const u = (mesh.material as ShaderMaterial).uniforms;
         u.map!.value = t.c;
+        u.map2!.value = t.c; // le même dessin de jour comme de nuit
         u.nmap!.value = t.n;
-        const f = Math.floor((now / 1000) * ch.fps) % (ch.cols * ch.rows);
+        const musical = ch.musical?.includes(name) ?? false;
+        // Avec la musique, la flûte suit le niveau : plus vive quand ça joue,
+        // plus lente dans le silence, et le corps se balance avec la phrase.
+        const speed = musical ? 0.55 + level * 0.9 : 1;
+        actor.clock += (1000 / 24 / 1000) * ch.fps * speed;
+        const f = Math.floor(actor.clock) % (ch.cols * ch.rows);
         const cw = 1 / ch.cols;
         const rh = 1 / ch.rows;
         // Une planche se lit de haut en bas ; une texture, de bas en haut.
         u.uRect!.value = [(f % ch.cols) * cw, 1 - (Math.floor(f / ch.cols) + 1) * rh, cw, rh];
+        mesh.rotation.z = musical ? Math.sin(now / 900) * 0.025 * (0.35 + level) : 0;
       }
 
       // Le feu vacille sur deux rythmes qui ne se répètent jamais tout à fait.
