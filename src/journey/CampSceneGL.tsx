@@ -105,18 +105,20 @@ const VERT = /* glsl */ `
  */
 const FRAG = /* glsl */ `
   uniform sampler2D map, nmap;
+  uniform vec4 uRect; // la case de la planche : décalage xy, taille zw
   uniform vec3 uTint, uHazeColor, uAmbient, uSkyColor, uFireColor, uFirePos, uSkyDir;
   uniform float uHaze, uReveal, uFade, uLit, uFlip, uFire;
   varying vec2 vUv;
   varying vec3 vWorld;
   void main() {
     if (vUv.y > uReveal) discard;
-    vec4 c = texture2D(map, vUv);
+    vec2 st = uRect.xy + vUv * uRect.zw;
+    vec4 c = texture2D(map, st);
     float a = c.a * smoothstep(0.0, uFade + 0.0001, vUv.y);
     if (a < 0.08) discard;
     vec3 col = c.rgb * uTint;
     if (uLit > 0.5) {
-      vec3 n = texture2D(nmap, vUv).rgb * 2.0 - 1.0;
+      vec3 n = texture2D(nmap, st).rgb * 2.0 - 1.0;
       n.x *= uFlip;
       n = normalize(n);
       vec3 toFire = uFirePos - vWorld;
@@ -212,6 +214,7 @@ export default function CampSceneGL({
             uHazeColor: { value: new Color('#8d93b8') },
             uTint: { value: new Color(1, 1, 1) },
             uReveal: { value: 1 },
+            uRect: { value: [0, 0, 1, 1] },
             uFade: { value: o.fade ?? 0 },
             nmap: { value: o.nmap ?? null },
             uLit: { value: o.nmap ? 1 : 0 },
@@ -494,6 +497,29 @@ export default function CampSceneGL({
     scene.add(glow);
 
     // Le premier plan, tout près de l'objectif : flou, sombre, il bouge le plus.
+    // Le montagnard : un sprite animé rendu depuis son modèle 3D. Couleur et
+    // normales défilent ensemble, si bien que le feu et la lune l'éclairent
+    // comme tout le reste. Un geste par étape, jamais un mouvement d'exercice.
+    const ch = spec.character;
+    let hero: Mesh | null = null;
+    const heroTex: Record<string, { c: Texture; n: Texture }> = {};
+    if (ch) {
+      for (const [name, a] of Object.entries(ch.actions)) {
+        const c = tex(a.c);
+        const n = tex(a.n);
+        n.colorSpace = NoColorSpace;
+        heroTex[name] = { c, n };
+      }
+      const first = heroTex[ch.plan[0]!]!;
+      const z = zOf(ch.depth);
+      const vh = visibleHeight(z);
+      const h = (ch.h / CSS_SCENE_H) * vh;
+      const halfW = (vh / 2) * 1.22;
+      hero = panel(first.c, h, ch.frameAspect, (ch.x / 100 - 0.5) * 2 * halfW + 0.4, z, { nmap: first.n });
+      hero.position.y = GROUND - h * 0.02;
+      addShadow(hero);
+    }
+
     const fore = spec.foreground.map((f) => fromSpec(f.src, f.x, f.h * 0.75, 1, { wind: 0.05, flip: !!f.flip, normal: f.normal }));
 
     // Les effets. Rayons et mise au point dans la même passe : deux passes
@@ -608,6 +634,20 @@ export default function CampSceneGL({
       if (fireMesh) emberMat.uniforms.uOrigin!.value.set(fireMesh.position.x, GROUND + 0.5, fireMesh.position.z + 0.1);
       emberMat.uniforms.uAlpha!.value = fire;
       flyMat.uniforms.uAlpha!.value = MathUtils.smoothstep(p, 0.55, 0.95);
+
+      if (ch && hero) {
+        // Le geste de l'étape, joué en boucle à son rythme de dessin animé.
+        const k = Math.round((L.stageIndex / lastStage) * (ch.plan.length - 1));
+        const t = heroTex[ch.plan[k]!]!;
+        const u = (hero.material as ShaderMaterial).uniforms;
+        u.map!.value = t.c;
+        u.nmap!.value = t.n;
+        const f = Math.floor((now / 1000) * ch.fps) % (ch.cols * ch.rows);
+        const cw = 1 / ch.cols;
+        const rh = 1 / ch.rows;
+        // Une planche se lit de haut en bas ; une texture, de bas en haut.
+        u.uRect!.value = [(f % ch.cols) * cw, 1 - (Math.floor(f / ch.cols) + 1) * rh, cw, rh];
+      }
 
       // Le feu vacille sur deux rythmes qui ne se répètent jamais tout à fait.
       if (fireMesh && fire > 0) fireMesh.scale.y = 1 + Math.sin(now / 90) * 0.03 + Math.sin(now / 37) * 0.02;

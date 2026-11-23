@@ -36,6 +36,14 @@ import arbreN from '../assets/normals/el-arbre-n.webp';
 import champisN from '../assets/normals/el-champis-n.webp';
 import tenteN from '../assets/normals/tente-n.webp';
 import boisN from '../assets/normals/bois-n.webp';
+import mIdleC from '../assets/adventures/montagnard/idle-c.webp';
+import mIdleN from '../assets/adventures/montagnard/idle-n.webp';
+import mWalkC from '../assets/adventures/montagnard/walk-c.webp';
+import mWalkN from '../assets/adventures/montagnard/walk-n.webp';
+import mHammerC from '../assets/adventures/montagnard/hammer-c.webp';
+import mHammerN from '../assets/adventures/montagnard/hammer-n.webp';
+import mKneelC from '../assets/adventures/montagnard/kneel_blow-c.webp';
+import mKneelN from '../assets/adventures/montagnard/kneel_blow-n.webp';
 
 
 /*
@@ -73,6 +81,22 @@ export interface SceneSpec {
   /** Le personnage, une pose par étape. */
   poses?: Array<{ at: number; src: string; x: number; h: number }>;
   foreground: Array<{ src: string; normal?: string; x: number; bottom: number; h: number; flip?: boolean }>;
+  /**
+   * Le personnage, en planches de sprites rendues depuis son modèle 3D : pour
+   * chaque geste, une planche de couleur et une de normales. `plan` donne le
+   * geste de chaque moment de l'histoire, réparti sur les étapes de la séance.
+   */
+  character?: {
+    actions: Record<string, { c: string; n: string }>;
+    plan: string[];
+    cols: number;
+    rows: number;
+    fps: number;
+    frameAspect: number;
+    x: number;
+    h: number;
+    depth: number;
+  };
 }
 
 export interface Adventure {
@@ -322,6 +346,25 @@ const CAMP: Adventure = {
       { src: feu, x: 66, bottom: 8, h: 96, depth: 0.8, at: 1, glow: true },
     ],
     poses: [],
+    // Le montagnard, version de travail : un modèle 3D stylisé, rendu en
+    // sprites. Il arrive, regarde la tente se dresser, plante les piquets,
+    // se pose, puis s'agenouille et souffle sur le feu.
+    character: {
+      actions: {
+        walk: { c: mWalkC, n: mWalkN },
+        idle: { c: mIdleC, n: mIdleN },
+        hammer: { c: mHammerC, n: mHammerN },
+        kneel: { c: mKneelC, n: mKneelN },
+      },
+      plan: ['walk', 'idle', 'hammer', 'hammer', 'idle', 'kneel', 'kneel'],
+      cols: 4,
+      rows: 3,
+      fps: 10,
+      frameAspect: 151 / 311,
+      x: 50,
+      h: 120,
+      depth: 0.77,
+    },
     foreground: [
       { src: champis, normal: champisN, x: 6, bottom: -6, h: 84 },
       { src: champis, normal: champisN, x: 97, bottom: -8, h: 66, flip: true },
