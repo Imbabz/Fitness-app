@@ -31,6 +31,7 @@ import {
   existingContext,
   releaseSink,
   reverb,
+  tapForLevel,
   texture,
   type Sink,
   type SynthKind,
@@ -446,6 +447,7 @@ export function startScene(id: string, atLevel = 0.3) {
     const out = ac.createGain();
     out.gain.setValueAtTime(0.0001, ac.currentTime);
     out.connect(ac.destination);
+    tapForLevel(out);
     master = out;
 
     scene.build(ac, sink, out);
@@ -484,6 +486,7 @@ export function startTheme(id: ThemeId, atLevel = 0.28) {
     const out = ac.createGain();
     out.gain.setValueAtTime(0.0001, ac.currentTime);
     out.connect(ac.destination);
+    tapForLevel(out);
     master = out;
 
     // Textures bypass the pad filter and the reverb: reverberating rain only

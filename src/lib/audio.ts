@@ -320,3 +320,41 @@ export function echo(
     return null;
   }
 }
+
+/*
+ * Le niveau de la musique, pour que la scène l'écoute.
+ *
+ * Firmin joue de la flûte en même temps que la musique : son souffle et son
+ * balancement suivent le volume réel de ce qui joue. Les sorties de la musique
+ * (player.ts) et des ambiances (soundtrack.ts) passent aussi par cet
+ * analyseur, branché en dérivation : il mesure, il ne change rien au son.
+ */
+let analyser: AnalyserNode | null = null;
+let levelBuf: Float32Array | null = null;
+
+export function tapForLevel(node: AudioNode) {
+  const ac = existingContext();
+  if (!ac) return;
+  if (!analyser) {
+    analyser = ac.createAnalyser();
+    analyser.fftSize = 1024;
+    levelBuf = new Float32Array(analyser.fftSize);
+    // Un analyseur qui ne mène nulle part n'est pas toujours calculé : on le
+    // relie à la sortie à travers un gain nul.
+    const mute = ac.createGain();
+    mute.gain.value = 0;
+    analyser.connect(mute);
+    mute.connect(ac.destination);
+  }
+  node.connect(analyser);
+}
+
+/** Le niveau de ce qui joue, de 0 (silence) à 1. Ne crée jamais de contexte audio. */
+export function musicLevel(): number {
+  if (!analyser || !levelBuf) return 0;
+  analyser.getFloatTimeDomainData(levelBuf as Float32Array<ArrayBuffer>);
+  let sum = 0;
+  for (let i = 0; i < levelBuf.length; i++) sum += levelBuf[i]! * levelBuf[i]!;
+  return Math.min(1, Math.sqrt(sum / levelBuf.length) * 5);
+}
+
